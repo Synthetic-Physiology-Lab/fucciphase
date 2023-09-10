@@ -18,7 +18,7 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "BSD-3-Clause" }
 authors = [
-    { name = "Joran Deschamps", email = "first.last@example.com" },
+    { name = "Joran Deschamps", email = "joran.deschamps@fht.org" },
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -36,9 +36,8 @@ dependencies = []
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 # "extras" (e.g. for `pip install .[test]`)
 [project.optional-dependencies]
-# add dependencies used for testing here
 test = ["pytest", "pytest-cov"]
-# add anything else you like to have in your dev environment here
+
 dev = [
     "black",
     "ipython",
@@ -49,8 +48,8 @@ dev = [
 ]
 
 [project.urls]
-homepage = "https://github.com/jdeschamps/fucciphase"
-repository = "https://github.com/jdeschamps/fucciphase"
+homepage = "https://github.com/nobias-ht/fucciphase"
+repository = "https://github.com/nobias-ht/fucciphase"
 
 # Entry points
 # https://peps.python.org/pep-0621/#entry-points
