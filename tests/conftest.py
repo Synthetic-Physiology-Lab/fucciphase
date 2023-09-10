@@ -3,7 +3,7 @@ import pytest
 
 
 @pytest.fixture
-def trackmate_df():
+def trackmate_example():
     """Create a mock trackmate dataframe.
 
     This dataframe simulates the naive import of a trackmate csv file."""
@@ -17,6 +17,22 @@ def trackmate_df():
             "POSITION_Y": ["Y", "Y", "(micron)", 94.66421077, 81.67105699, 94.66421077],
             "POSITION_T": ["T", "T", "(sec)", 2699.980774, 26099.81415, 67499.51935],
             "FRAME": ["Frame", "Frame", "", 3, 29, 75],
+            "MEAN_INTENSITY_CH3": [
+                "Mean intensity ch3",
+                "Mean ch3",
+                "(counts)",
+                544.5488114,
+                1194.44928,
+                419.8042824,
+            ],
+            "MEAN_INTENSITY_CH4": [
+                "Mean intensity ch4",
+                "Mean ch4",
+                "(counts)",
+                137.4776146,
+                147.8754012,
+                206.0246564,
+            ],
         }
     )
 
@@ -24,10 +40,29 @@ def trackmate_df():
 
 
 @pytest.fixture
-def trackmate_csv(tmp_path, trackmate_df: pd.DataFrame):
+def trackmate_df(trackmate_example: pd.DataFrame) -> pd.DataFrame:
+    """Create a mock trackmate dataframe without the extraneous
+    rows (header duplicates and units).
+
+    Returns
+    -------
+    pd.DataFrame
+        Mock trackmate dataframe.
+    """
+    # remove the first three rows, re-index the dataframe and
+    # convert the types
+    trackmate_example.drop(index=[0, 1, 2], inplace=True)
+    trackmate_example.reset_index(drop=True, inplace=True)
+    trackmate_example = trackmate_example.convert_dtypes()
+
+    return trackmate_example
+
+
+@pytest.fixture
+def trackmate_csv(tmp_path, trackmate_example: pd.DataFrame):
     """Save a mock trackmate csv file."""
     # export to csv
     csv_path = tmp_path / "trackmate.csv"
-    trackmate_df.to_csv(csv_path, index=False)
+    trackmate_example.to_csv(csv_path, index=False)
 
     return csv_path
