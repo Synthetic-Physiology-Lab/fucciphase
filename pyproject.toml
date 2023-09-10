@@ -17,9 +17,7 @@ description = "Cell cycle analysis plugin."
 readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "BSD-3-Clause" }
-authors = [
-    { name = "Joran Deschamps", email = "joran.deschamps@fht.org" },
-]
+authors = [{ name = "Joran Deschamps", email = "joran.deschamps@fht.org" }]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Programming Language :: Python :: 3",
@@ -30,8 +28,11 @@ classifiers = [
     # "License :: OSI Approved :: BSD License",
     # "Typing :: Typed",
 ]
-# add your package dependencies here
-dependencies = []
+dependencies = [
+    "numpy",
+    "pandas",
+    "openpyxl",
+] # add your package dependencies here
 
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
 # "extras" (e.g. for `pip install .[test]`)
@@ -42,8 +43,8 @@ dev = [
     "black",
     "ipython",
     "mypy",
-    "pdbpp",  # https://github.com/pdbpp/pdbpp
-    "rich",  # https://github.com/Textualize/rich
+    "pdbpp",   # https://github.com/pdbpp/pdbpp
+    "rich",    # https://github.com/Textualize/rich
     "ruff",
 ]
 
@@ -65,12 +66,12 @@ line-length = 88
 target-version = "py38"
 # https://beta.ruff.rs/docs/rules/
 extend-select = [
-    "E",    # style errors
-    "W",    # style warnings
-    "F",    # flakes
-    "D",    # pydocstyle
-    "I",    # isort
-    "U",    # pyupgrade
+    "E", # style errors
+    "W", # style warnings
+    "F", # flakes
+    "D", # pydocstyle
+    "I", # isort
+    "U", # pyupgrade
     # "S",    # bandit
     "C",    # flake8-comprehensions
     "B",    # flake8-bugbear
