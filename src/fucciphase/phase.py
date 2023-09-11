@@ -212,7 +212,7 @@ def _get_phase_trigo(normalised_intensity: np.ndarray) -> List[str]:
     """
     phase = []
 
-    for _i, val in enumerate(normalised_intensity):
+    for _, val in enumerate(normalised_intensity):
         if val <= FucciPhase.perc_end_EG1:
             phase.append(PhasesName.EARLY_G1.value)
         elif val <= FucciPhase.perc_end_G1:
