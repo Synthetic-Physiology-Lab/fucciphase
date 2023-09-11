@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from fucciphase.utils import norm, normalize_channel
+from fucciphase.utils import norm, normalize_channels
 
 
 def test_norm():
@@ -30,7 +30,7 @@ def test_normalize(trackmate_df: pd.DataFrame):
     # normalize the channels
     channel1 = "MEAN_INTENSITY_CH1"
     channel2 = "MEAN_INTENSITY_CH2"
-    new_channels = normalize_channel(trackmate_df, [channel1, channel2])
+    new_channels = normalize_channels(trackmate_df, [channel1, channel2])
 
     # check that the columns have been added
     channel1_norm = "MEAN_INTENSITY_CH1_NORM"
