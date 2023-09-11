@@ -22,4 +22,4 @@ def compute_phase_color(df: pd.DataFrame, channel1: str, channel2: str) -> None:
     ValueError
         If the dataframe does not contain the normalized channels.
     """
-    pass
+    pass  # TODO

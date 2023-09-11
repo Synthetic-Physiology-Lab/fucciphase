@@ -1,21 +1,21 @@
 import pytest
-from fucciphase.phase import FucciColorIndex, _get_phase_bichannel
+from fucciphase.phase import FucciPhase, _get_phase_bichannel
 
 
 def test_fucci_phases():
     """Test that the Fucci phases cover 256 values."""
     tot = (
-        FucciColorIndex.end_early_G1
-        - FucciColorIndex.start_early_G1
+        FucciPhase.end_early_G1
+        - FucciPhase.start_early_G1
         + 1
-        + FucciColorIndex.end_G1
-        - FucciColorIndex.start_G1
+        + FucciPhase.end_G1
+        - FucciPhase.start_G1
         + 1
-        + FucciColorIndex.end_S
-        - FucciColorIndex.start_S
+        + FucciPhase.end_S
+        - FucciPhase.start_S
         + 1
-        + FucciColorIndex.end_G2_M
-        - FucciColorIndex.start_G2_M
+        + FucciPhase.end_G2_M
+        - FucciPhase.start_G2_M
         + 1
     )
     assert tot == 256

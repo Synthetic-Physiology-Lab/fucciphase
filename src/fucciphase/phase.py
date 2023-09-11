@@ -4,7 +4,7 @@ from typing import List, Tuple
 import numpy as np
 import pandas as pd
 
-from .utils import get_norm_channel_name
+from .utils import get_norm_channel_name, norm
 
 
 class NewColumns(str, Enum):
@@ -30,8 +30,8 @@ class NewColumns(str, Enum):
         return NewColumns.MANUAL_SPOT_COLOR.value
 
 
-class Phase(str, Enum):
-    """Phase of the cell cycle."""
+class PhasesName(str, Enum):
+    """Phases of the cell cycle."""
 
     EARLY_G1 = "EG1"
     G1 = "G1"
@@ -39,25 +39,32 @@ class Phase(str, Enum):
     G2_M = "G2/M"
 
 
-class FucciColorIndex:
+class FucciPhase:
     """FUCCI phases normalized intensity.
 
     TODO: add explanations.
 
     Time spent in each phase:
+        (python)
         - EG1 4%
         - G1 36%
         - S 5%
         - G2M 55%
 
+        (java)
+        double maxEG1 = 0.04; -> 4%
+        double maxG1 = 0.4; -> 36%
+        double maxT = 0.46; -> 6%
+        double maxG2_M = 1; -> 54%
+
     In order to order a color code across phases, we create a 255-range
     with each phase start and end adjusted:
-            - EG1 from 0 to 3
+        - EG1 from 0 to 3
         - G1 from 4 to 40
         - S from 41 to 46
         - G2M from 47 to 100
 
-    # TODO currently wrong
+    # TODO currently wrong (percentage vs 255 scale)
 
     """
 
@@ -70,10 +77,14 @@ class FucciColorIndex:
     start_G2_M = 114
     end_G2_M = 255
 
+    # TODO unify both
+    perc_end_EG1 = 0.04
+    perc_end_G1 = 0.4
+    perc_end_S = 0.46
+    perc_end_G2_M = 1
 
-def _get_phase_bichannel(
-    intensity1: float, intensity2: float
-) -> Tuple[Phase, int, int]:
+
+def _get_phase_bichannel(intensity1: float, intensity2: float) -> Tuple[str, int, int]:
     """Return the phase of the cell cycle, and its intensity range based on
     the values of two channels intensity.
 
@@ -93,16 +104,16 @@ def _get_phase_bichannel(
     """
     if intensity1 <= 0.1 and intensity2 <= 0.1:
         return (
-            Phase.EARLY_G1,
-            FucciColorIndex.start_early_G1,
-            FucciColorIndex.end_early_G1,
+            PhasesName.EARLY_G1.value,
+            FucciPhase.start_early_G1,
+            FucciPhase.end_early_G1,
         )
     elif intensity1 <= 0.1 and intensity2 > 0.1:
-        return Phase.G1, FucciColorIndex.start_G1, FucciColorIndex.end_G1
+        return PhasesName.G1.value, FucciPhase.start_G1, FucciPhase.end_G1
     elif intensity1 > 0.1 and intensity2 > 0.1:
-        return Phase.S, FucciColorIndex.start_S, FucciColorIndex.end_S
+        return PhasesName.S.value, FucciPhase.start_S, FucciPhase.end_S
     else:
-        return Phase.G2_M, FucciColorIndex.start_G2_M, FucciColorIndex.end_G2_M
+        return PhasesName.G2_M.value, FucciPhase.start_G2_M, FucciPhase.end_G2_M
 
 
 def compute_phase_bichannel(
@@ -156,14 +167,14 @@ def compute_phase_bichannel(
 
         # get fucci phase, and its start and end
         phase, start, end = _get_phase_bichannel(ch1_norm, ch2_norm)
-        phase_label.append(phase.value)
+        phase_label.append(phase)
 
         # record factor and offset
         color_factor[index] = end - start
         color_offset[index] = start
 
         # record unique mean
-        if phase == Phase.G1:  # TODO this was strange in the python code
+        if phase == PhasesName.G1:  # TODO this was strange in the python code
             mean_intensity_unique[index] = ch1_norm
         else:
             mean_intensity_unique[index] = ch2_norm
@@ -186,27 +197,59 @@ def compute_phase_bichannel(
     ]
 
 
+def _get_phase_trigo(normalised_intensity: np.ndarray) -> List[str]:
+    """Return a vector of the phase corresponding to the normalised intensity.
+
+    Parameters
+    ----------
+    normalised_intensity : np.ndarray
+        Normalised intensity
+
+    Returns
+    -------
+    np.ndarray
+        Phases vector
+    """
+    phase = []
+
+    for _i, val in enumerate(normalised_intensity):
+        if val <= FucciPhase.perc_end_EG1:
+            phase.append(PhasesName.EARLY_G1.value)
+        elif val <= FucciPhase.perc_end_G1:
+            phase.append(PhasesName.G1.value)
+        elif val <= FucciPhase.perc_end_S:
+            phase.append(PhasesName.S.value)
+        else:
+            phase.append(PhasesName.G2_M.value)
+
+    return phase
+
+
 def compute_phase_trigo(df: pd.DataFrame, channel1: str, channel2: str) -> List[str]:
-    """_summary_.
+    """Compute a unique intensity, phase and color using the two channels and
+    add the corresponding columns in place in the dataframe.
+
+    The unique intensity is computed as the normalised angle between the normalised
+    intensity on a circle.
 
     Parameters
     ----------
     df : pd.DataFrame
-        _description_
+        Dataframe
     channel1 : str
-        _description_
+        First channel
     channel2 : str
-        _description_
+        Second channel
 
     Returns
     -------
     List[str]
-        _description_
+        The names of the new columns in the dataframe
 
     Raises
     ------
     ValueError
-        _description_
+        If the dataframe does not contain the normalized channels.
     """
     # sanity check: check that the normalized channels are present
     for channel in [channel1, channel2]:
@@ -224,7 +267,22 @@ def compute_phase_trigo(df: pd.DataFrame, channel1: str, channel2: str) -> List[
     cos_ch1 = np.cos(df[channel1_norm])
     sin_ch2 = np.sin(df[channel2_norm])
 
-    # compute angle
-    np.arctan2(sin_ch2, cos_ch1)
+    # compute normalised angle
+    angle = norm(np.arctan2(sin_ch2, cos_ch1))
 
-    return []
+    # compute gray value
+    gray_value = [f"r{val};g{val};b{val};" for val in angle * 255]
+
+    # compute phases
+    phase = _get_phase_trigo(angle)
+
+    # update the dataframe
+    df[NewColumns.unique_intensity()] = angle
+    df[NewColumns.phase()] = phase
+    df[NewColumns.color()] = gray_value
+
+    return [
+        NewColumns.unique_intensity(),
+        NewColumns.phase(),
+        NewColumns.color(),
+    ]

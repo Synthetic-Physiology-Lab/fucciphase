@@ -43,7 +43,7 @@ def norm(vector: Union[pd.Series, np.ndarray]) -> Union[pd.Series, np.ndarray]:
     return norm_ch
 
 
-def normalize_channel(df: pd.DataFrame, channels: Union[str, List[str]]) -> List[str]:
+def normalize_channels(df: pd.DataFrame, channels: Union[str, List[str]]) -> List[str]:
     """Normalize channels, add in place the resulting columns to the
     dataframe, and return the new columns' name.
 
