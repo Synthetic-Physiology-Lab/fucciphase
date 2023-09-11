@@ -1,6 +1,6 @@
 import pandas as pd
 import pytest
-from fucciphase.fucci_phase import FucciPhases, normalize_channels
+from fucciphase.fucci_phase import FucciPhases, normalize_channel
 
 
 def test_fucci_phases():
@@ -43,17 +43,28 @@ def test_normalize(trackmate_df: pd.DataFrame):
     been added to the dataframe."""
 
     # normalize the channels
-    normalize_channels(trackmate_df)
+    channel1 = "MEAN_INTENSITY_CH1"
+    channel2 = "MEAN_INTENSITY_CH2"
+    normalize_channel(trackmate_df, channel1)
+    normalize_channel(trackmate_df, channel2)
 
     # check that the columns have been added
-    assert "MEAN_INTENSITY_CH3_NORM" in trackmate_df.columns
-    assert "MEAN_INTENSITY_CH4_NORM" in trackmate_df.columns
+    channel1_norm = "MEAN_INTENSITY_CH1_NORM"
+    channel2_norm = "MEAN_INTENSITY_CH2_NORM"
+    assert channel1_norm in trackmate_df.columns
+    assert channel2_norm in trackmate_df.columns
 
     # check that the values are correct
-    ch3 = trackmate_df["MEAN_INTENSITY_CH3_NORM"]
-    norm_ch3 = (ch3 - ch3.min()) / (ch3.max() - ch3.min())
-    assert (norm_ch3 == trackmate_df["MEAN_INTENSITY_CH3_NORM"]).all()
+    ch1 = trackmate_df[channel1_norm]
+    norm_ch1 = (ch1 - ch1.min()) / (ch1.max() - ch1.min())
+    assert (norm_ch1 == trackmate_df[channel1_norm]).all()
 
-    ch4 = trackmate_df["MEAN_INTENSITY_CH4_NORM"]
-    norm_ch4 = (ch4 - ch4.min()) / (ch4.max() - ch4.min())
-    assert (norm_ch4 == trackmate_df["MEAN_INTENSITY_CH4_NORM"]).all()
+    ch2 = trackmate_df[channel2_norm]
+    norm_ch2 = (ch2 - ch2.min()) / (ch2.max() - ch2.min())
+    assert (norm_ch2 == trackmate_df[channel2_norm]).all()
+
+
+def test_compute_phase_color():
+    """Test the compute_phase_color function."""
+    # TODO
+    pass

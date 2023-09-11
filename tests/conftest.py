@@ -17,17 +17,17 @@ def trackmate_example():
             "POSITION_Y": ["Y", "Y", "(micron)", 94.66421077, 81.67105699, 94.66421077],
             "POSITION_T": ["T", "T", "(sec)", 2699.980774, 26099.81415, 67499.51935],
             "FRAME": ["Frame", "Frame", "", 3, 29, 75],
-            "MEAN_INTENSITY_CH3": [
-                "Mean intensity ch3",
-                "Mean ch3",
+            "MEAN_INTENSITY_CH1": [
+                "Mean intensity ch1",
+                "Mean ch1",
                 "(counts)",
                 544.5488114,
                 1194.44928,
                 419.8042824,
             ],
-            "MEAN_INTENSITY_CH4": [
-                "Mean intensity ch4",
-                "Mean ch4",
+            "MEAN_INTENSITY_CH2": [
+                "Mean intensity ch2",
+                "Mean ch2",
                 "(counts)",
                 137.4776146,
                 147.8754012,
