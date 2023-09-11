@@ -1,4 +1,4 @@
 """Convenience functions for fucciphase."""
-__all__ = ["get_norm_channel_name"]
+__all__ = ["normalize_channel", "get_norm_channel_name", "norm"]
 
-from .utils import get_norm_channel_name
+from .normalize import get_norm_channel_name, norm, normalize_channel
