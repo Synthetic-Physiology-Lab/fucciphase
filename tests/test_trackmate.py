@@ -9,7 +9,7 @@ def test_import_spotless_xml(spotless_trackmate_xml):
     # check readout
     assert tm_xml._tree is not None
     assert tm_xml._root is not None
-    assert tm_xml.model is not None
+    assert tm_xml._model is not None
     assert tm_xml._allspots is not None
     assert tm_xml.nspots == 0
     assert len(tm_xml.features) == 0
@@ -22,10 +22,10 @@ def test_import_xml(trackmate_xml):
     # check readout
     assert tm_xml._tree is not None
     assert tm_xml._root is not None
-    assert tm_xml.model is not None
+    assert tm_xml._model is not None
     assert tm_xml._allspots is not None
     assert tm_xml.nspots == 4
-    assert len(tm_xml.features) == 30
+    assert len(tm_xml.features) == 27
 
 
 def test_import_as_pandas_spotless(spotless_trackmate_xml):
@@ -86,9 +86,7 @@ def test_update_features(tmp_path, trackmate_xml):
 
     # re-export dataframe to pandas
     df_2 = tm_xml.to_pandas()
-    # TODO check values
-    assert new_feature1 in df_2.columns
-    assert new_feature2 in df_2.columns
+    assert df.equals(df_2[df.columns])  # make sure the columns are ordered similarly
 
     # write xml
     save_path = tmp_path / "test.xml"
@@ -96,4 +94,11 @@ def test_update_features(tmp_path, trackmate_xml):
 
     # re-import xml
     tm_xml_2 = TrackMateXML(save_path)
-    assert df_2.equals(tm_xml_2.to_pandas())
+    df_3 = tm_xml_2.to_pandas()
+
+    # the new columns are present but of different dtypes
+    assert new_feature1 in df_3.columns
+    assert new_feature2 in df_3.columns
+
+    for c in [new_feature1, new_feature2]:
+        assert (df_3[c].astype(int) == df[c]).all()

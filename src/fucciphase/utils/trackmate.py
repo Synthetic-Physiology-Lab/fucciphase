@@ -1,11 +1,13 @@
 import xml.etree.ElementTree as et
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import pandas as pd
 
 # TrackMate XML tags
 MODEL = "Model"
+FEATURES = "FeatureDeclarations"
+SPOT_FEATURES = "SpotFeatures"
 ALL_SPOTS = "AllSpots"
 N_SPOTS = "nspots"
 ID = "ID"
@@ -36,8 +38,8 @@ class TrackMateXML:
     ----------
     nspots : int
         Number of spots in the xml file.
-    features : List[str]
-        List of all features in the xml file. Empty if there is not spot in the xml.
+    features : Dict[str, type]
+        List of all features in the xml file, and whether they are integer features.
     """
 
     def __init__(self, xml_path: Union[str, Path]) -> None:
@@ -59,12 +61,46 @@ class TrackMateXML:
         self._allspots: Optional[et.Element] = None
 
         self.nspots: int = 0
-        self.features: List[str] = []
+        self.features: Dict[str, type] = {}
 
         # import model and all spots
-        self._import_model()
+        self._import_data()
 
-    def _import_model(self) -> None:
+    def _get_features(self) -> None:
+        """Compare spot features and features declaration, keep the intersection and
+        register the dtypes in a public member.
+        """
+        if self._model is not None:
+            features = {}
+            for element in self._model:
+                if element.tag == FEATURES:
+                    for feature in element:
+                        if feature.tag == SPOT_FEATURES:
+                            for spot_feature in feature:
+                                # get feature name
+                                feature_name = spot_feature.attrib["feature"]
+
+                                # check if feature is integer
+                                is_integer = spot_feature.attrib["isint"] == "true"
+
+                                # add feature to dictionary
+                                features[feature_name] = int if is_integer else float
+
+            # get spot features
+            if self._allspots is not None:
+                spot_features: List[str] = []
+                for frame in self._allspots:
+                    for spot in frame:
+                        spot_features.extend(spot.attrib.keys())
+                        break
+                    break
+
+            # keep only features that are in bot spot features and features
+            features_key = set(features.keys())
+            features_to_keep = features_key - (features_key - set(spot_features))
+            self.features = {feature: features[feature] for feature in features_to_keep}
+
+    def _import_data(self) -> None:
         """Import the model and all spots from the xml file.
 
         Raises
@@ -77,13 +113,13 @@ class TrackMateXML:
         # get model
         for element in self._root:
             if element.tag == MODEL:
-                self.model = element
+                self._model = element
 
-        if self.model is None:
+        if self._model is None:
             raise ValueError('"Model" tag not found in xml file.')
 
         # get allspots
-        for element in self.model:
+        for element in self._model:
             if element.tag == ALL_SPOTS:
                 self._allspots = element
                 self.nspots = int(element.attrib[N_SPOTS])
@@ -91,12 +127,8 @@ class TrackMateXML:
         if self._allspots is None:
             raise ValueError('"AllSpots" tag not found in xml file.')
 
-        # get spot features
-        for frame in self._allspots:
-            for spot in frame:
-                self.features = list(spot.attrib.keys())
-                break
-            break
+        # get feature declarations
+        self._get_features()
 
     def to_pandas(self) -> pd.DataFrame:
         """Export the spots as a pandas dataframe.
@@ -124,7 +156,8 @@ class TrackMateXML:
                         df.loc[spot_count] = spot.attrib
                         spot_count += 1
 
-        return df
+        # convert types
+        return df.astype(self.features)
 
     def update_features(self, df: pd.DataFrame) -> None:
         """Update the xml tree with new features, where features are columns of the
@@ -150,6 +183,10 @@ class TrackMateXML:
         new_features = set(df.columns) - set(self.features)
 
         if self._allspots is not None:
+            # update features
+            for feature in new_features:
+                self.features[feature] = df[feature].dtype
+
             # if there are spots and features
             if len(df) > 0 and len(new_features) > 0:
                 # loop over the frames and spots
@@ -161,9 +198,9 @@ class TrackMateXML:
                         # get spot
                         spot_df = df[df[ID] == spot_id]
 
-                        # add the new features as strings
+                        # add the new feature
                         for feature in new_features:
-                            spot.attrib[feature] = str(spot_df[feature])
+                            spot.attrib[feature] = str(spot_df[feature].values[0])
 
     def save_xml(self, xml_path: Union[str, Path]) -> None:
         """Save the xml file.
