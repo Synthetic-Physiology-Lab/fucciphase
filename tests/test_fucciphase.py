@@ -3,7 +3,7 @@ from fucciphase.simulator import simulate_single_track
 from fucciphase.utils import normalize_channels
 
 
-def test_smoke_pipeline():
+def test_smoke_pipeline_simulated():
     """Test that the pipeline can run on simulated data."""
     # simulate a single track
     df = simulate_single_track()

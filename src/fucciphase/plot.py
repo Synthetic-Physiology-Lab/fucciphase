@@ -5,7 +5,9 @@ from .phase import NewColumns
 from .utils import get_norm_channel_name
 
 
-def plot_phase(df: pd.DataFrame, channel1: str, channel2: str) -> None:
+def plot_phase(
+    df: pd.DataFrame, channel1: str, channel2: str, detect_phases: bool = False
+) -> None:
     """Plot the two channels, the unique intensity and vertical lines
     corresponding to the change of phase.
 
@@ -24,6 +26,8 @@ def plot_phase(df: pd.DataFrame, channel1: str, channel2: str) -> None:
         First channel
     channel2 : str
         Second channel
+    detect_phases : bool, optional
+        If True, detect the phases and plot vertical lines, by default False
 
     Raises
     ------
@@ -53,7 +57,8 @@ def plot_phase(df: pd.DataFrame, channel1: str, channel2: str) -> None:
     plt.plot(t, channel2_norm, label=channel2)
     plt.plot(t, unique_intensity, label="unique intensity")
 
-    for i in range(len(phase)):
-        if i > 0:
-            if phase[i] != phase[i - 1]:
-                plt.axvline(x=t[i], color="k", linestyle="--")
+    if detect_phases:
+        for i in range(len(phase)):
+            if i > 0:
+                if phase[i] != phase[i - 1]:
+                    plt.axvline(x=t[i], color="k", linestyle="--")
