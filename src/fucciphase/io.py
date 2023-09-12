@@ -1,7 +1,33 @@
 from pathlib import Path
-from typing import Union
+from typing import Tuple, Union
 
 import pandas as pd
+
+from .utils import TrackMateXML
+
+
+def read_trackmate_xml(xml_path: Union[Path, str]) -> Tuple[pd.DataFrame, TrackMateXML]:
+    """Read a trackmate exported xml file.
+
+    Parameters
+    ----------
+    xml_path : Union[Path, str]
+        Path to the xml file.
+
+    Returns
+    -------
+    df : pandas.DataFrame
+        Dataframe containing the xml data.
+    trackmate : TrackMateXML
+        TrackMateXML object.
+    """
+    # read in the xml file
+    trackmate = TrackMateXML(xml_path)
+
+    # convert the spots to a dataframe
+    df = trackmate.to_pandas()
+
+    return df, trackmate
 
 
 def read_trackmate_csv(csv_path: Union[Path, str]) -> pd.DataFrame:

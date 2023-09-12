@@ -13,6 +13,7 @@ N_SPOTS = "nspots"
 ID = "ID"
 
 
+# TODO test on very large trackmate files, since this is potentially a bottleneck here
 class TrackMateXML:
     """Class to handle TrackMate xml files.
 
@@ -62,9 +63,22 @@ class TrackMateXML:
 
         self.nspots: int = 0
         self.features: Dict[str, type] = {}
+        self.spot_features: List[str] = []
 
         # import model and all spots
         self._import_data()
+
+    def _get_spot_features(self) -> None:
+        """Get the spot features from the tree."""
+        if self._allspots is not None:
+            spot_features: List[str] = []
+            for frame in self._allspots:
+                for spot in frame:
+                    spot_features.extend(spot.attrib.keys())
+                    break
+                break
+
+            self.spot_features = spot_features
 
     def _get_features(self) -> None:
         """Compare spot features and features declaration, keep the intersection and
@@ -87,17 +101,11 @@ class TrackMateXML:
                                 features[feature_name] = int if is_integer else float
 
             # get spot features
-            if self._allspots is not None:
-                spot_features: List[str] = []
-                for frame in self._allspots:
-                    for spot in frame:
-                        spot_features.extend(spot.attrib.keys())
-                        break
-                    break
+            self._get_spot_features()
 
-            # keep only features that are in bot spot features and features
+            # keep only features that are in both spot features and features
             features_key = set(features.keys())
-            features_to_keep = features_key - (features_key - set(spot_features))
+            features_to_keep = features_key - (features_key - set(self.spot_features))
             self.features = {feature: features[feature] for feature in features_to_keep}
 
     def _import_data(self) -> None:
@@ -156,7 +164,7 @@ class TrackMateXML:
                         df.loc[spot_count] = spot.attrib
                         spot_count += 1
 
-        # convert types
+        # convert features to their declared types
         return df.astype(self.features)
 
     def update_features(self, df: pd.DataFrame) -> None:
@@ -180,7 +188,7 @@ class TrackMateXML:
             raise ValueError(f"Column {ID} not found in dataframe.")
 
         # new features
-        new_features = set(df.columns) - set(self.features)
+        new_features = set(df.columns) - set(self.spot_features)
 
         if self._allspots is not None:
             # update features

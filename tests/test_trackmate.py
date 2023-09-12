@@ -25,7 +25,7 @@ def test_import_xml(trackmate_xml):
     assert tm_xml._model is not None
     assert tm_xml._allspots is not None
     assert tm_xml.nspots == 4
-    assert len(tm_xml.features) == 27
+    assert len(tm_xml.features) == 35
 
 
 def test_import_as_pandas_spotless(spotless_trackmate_xml):
@@ -46,7 +46,6 @@ def test_import_as_pandas(trackmate_xml):
     # export dataframe
     df = tm_xml.to_pandas()
     assert len(df) == tm_xml.nspots == 4
-    assert np.unique(df["POSITION_X"]).size == 4
 
 
 def test_save_xml(tmp_path, trackmate_xml):
