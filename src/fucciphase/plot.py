@@ -49,7 +49,7 @@ def plot_phase(
     t = df["FRAME"].to_numpy()
     channel1_norm = df[get_norm_channel_name(channel1)]
     channel2_norm = df[get_norm_channel_name(channel2)]
-    unique_intensity = df[NewColumns.unified_intensity()]
+    unique_intensity = df[NewColumns.cell_cycle()]
     phase = df[NewColumns.phase()].to_numpy()
 
     # plot
