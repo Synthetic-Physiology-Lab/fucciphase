@@ -44,9 +44,10 @@ dev = [
     "black",
     "ipython",
     "mypy",
-    "pdbpp",   # https://github.com/pdbpp/pdbpp
-    "rich",    # https://github.com/Textualize/rich
+    "pdbpp",      # https://github.com/pdbpp/pdbpp
+    "rich",       # https://github.com/Textualize/rich
     "ruff",
+    "pre-commit",
 ]
 
 jupyter = ["jupyter"]
