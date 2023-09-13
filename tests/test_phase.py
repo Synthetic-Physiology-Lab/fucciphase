@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-from fucciphase.phase import NewColumns, compute_cell_cycle
+from fucciphase.phase import NewColumns, compute_cell_cycle, generate_cycle_phases
 from fucciphase.utils import get_norm_channel_name
 
 
@@ -50,3 +50,82 @@ def test_compute_cell_cycle():
     assert cell_cycle.argmin() == ch2.argmin()
     assert cell_cycle[:25].argmax() == ch2[:25].argmax()
     assert cell_cycle[25:].argmax() == ch2[25:].argmax()
+
+    # check the color
+    # TODO how to test that the color scheme is correct?
+
+
+@pytest.mark.parametrize(
+    "phase, thresholds",
+    [
+        # different number of elements than expected
+        (["S", "G1"], [0.1, 0.4, 0.2, 0.8]),
+        (["M", "S", "G1"], [0.4]),
+        # duplicated elements
+        (["M", "S", "G1", "M"], [0.4, 0.2, 0.8]),
+        (["M", "S", "G1"], [0.4, 0.4]),
+        # not between 0 and 1
+        (["M", "S", "G1", "T"], [-0.1, 0.4, 0.8]),
+        (["M", "S", "G1", "T"], [0.1, 0.4, 1]),
+    ],
+)
+def test_generate_cycle_phases_errors(phase, thresholds):
+    """Test that errors are raised"""
+    # create dataframe
+    df = pd.DataFrame(
+        {
+            NewColumns.cell_cycle(): np.arange(0, 10) / 10,
+        }
+    )
+
+    # check that the error is raised
+    with pytest.raises(ValueError):
+        generate_cycle_phases(df, phase, thresholds)
+
+
+def test_generate_phases_no_cell_cycle():
+    """Test than an error is raised when the cell cycle column is missing."""
+    df = pd.DataFrame(
+        {
+            "Cell": np.arange(0, 10) / 10,
+        }
+    )
+
+    # get phase and thresholds
+    phases = ["S", "G1", "T", "G2M"]
+    thresholds = [0.4, 0.04, 0.56]
+
+    with pytest.raises(ValueError):
+        generate_cycle_phases(df, phases, thresholds)
+
+
+def test_generate_phases():
+    """Test that the phases are correctly attributed."""
+    # create data
+    ramp_up = np.arange(0, 10) / 10.0
+    ramp_down = 1 - np.arange(0, 10) / 10.0
+    df = pd.DataFrame(
+        {
+            NewColumns.cell_cycle(): np.concatenate([ramp_up, ramp_down]),
+        }
+    )
+
+    # create phases and thresholds
+    phases = ["S", "T", "G1", "G2M"]
+    thresholds = [0.81, 0.41, 0.11]
+
+    # expected result
+    phase_vector = ["G1" for _ in range(2)]
+    phase_vector.extend(["T" for _ in range(3)])
+    phase_vector.extend(["S" for _ in range(4)])
+    phase_vector.extend(["G2M" for _ in range(1)])
+    phase_vector.extend(["G2M" for _ in range(2)])
+    phase_vector.extend(["S" for _ in range(4)])
+    phase_vector.extend(["T" for _ in range(3)])
+    phase_vector.extend(["G1" for _ in range(1)])
+
+    # generate phases
+    generate_cycle_phases(df, phases, thresholds)
+
+    # check that the phases are correct
+    assert all(df[NewColumns.phase()] == np.array(phase_vector))

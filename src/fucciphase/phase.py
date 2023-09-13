@@ -101,3 +101,91 @@ def compute_cell_cycle(df: pd.DataFrame, channel1: str, channel2: str) -> List[s
         NewColumns.cell_cycle(),
         NewColumns.color(),
     ]
+
+
+def generate_cycle_phases(
+    df: pd.DataFrame, phases: List[str], thresholds: List[float]
+) -> None:
+    """Add a column in place to the dataframe with the phase of the cell cycle, where
+    the phase is determined using a threshold on the cell cycle percentage.
+
+    The dataframe must have been previously processed using the compute_cell_cycle()
+    function.
+
+    The thresholds must be between 0 and 1, 1 excluded, and must be unique. Each
+    threshold is the upper bound for the corresponding phase, the last phase being the
+    one attributed to values larger than all thresholds.
+
+    Example:
+        phases = ["EG1", "G1", "T", "G2M"]
+        threshold = [0.04, 0.4, 0.56]
+
+    TODO: indications on how to determine the thresholds experimentally.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe with a CELL_CYCLE_PERC column
+    phases : List[str]
+        List of phases corresponding to the thresholds
+    thresholds : List[float]
+        List of cell cycle percentage thresholds, must be between 0 and 1.
+
+    Raises
+    ------
+    ValueError
+        If the CELL_CYCLE_PERC column is missing
+    ValueError
+        If the number of phases and thresholds do not match (one more phase expected)
+    ValueError
+        If the thresholds are not unique
+    ValueError
+        If the phases are not unique
+    ValueError
+        If the thresholds are not between 0 and 1, one excluded
+    """
+    # check that the cell cycle column is present
+    if NewColumns.cell_cycle() not in df.columns:
+        raise ValueError(
+            f"Column {NewColumns.cell_cycle()} not found, call "
+            f"compute_cell_cycle() on the dataframe."
+        )
+
+    # check that the number of phases and thresholds match
+    if len(phases) != len(thresholds) + 1:
+        raise ValueError(
+            f"There must be one more phase than thresholds (got {len(phases)} for "
+            f"{len(thresholds)} thresholds)."
+        )
+
+    # check that all thresholds are unique
+    if len(thresholds) != len(set(thresholds)):
+        raise ValueError("Thresholds must be unique.")
+
+    # check that all phases are unique
+    if len(phases) != len(set(phases)):
+        raise ValueError("Phases must be unique.")
+
+    # check that the thresholds are between 0 and 1
+    if not all(0 < t < 1 for t in thresholds):
+        raise ValueError("Thresholds must be between 0 and 1.")
+
+    # sort the thresholds and phases by increasing threshold
+    # in case they are given in the wrong order
+    # sort according to the thresholds:
+    sorted_phases = [x for _, x in sorted(zip(thresholds, phases[:-1]))]
+    sorted_phases.append(phases[-1])  # add the last element back
+
+    sorted_thresholds = sorted(thresholds)
+
+    # add 1 since the thresholds will be used as bin edges
+    sorted_thresholds = [0, *list(sorted_thresholds), 1.1]
+
+    # get the cell cycle column
+    cell_cycle = df[NewColumns.cell_cycle()]
+
+    # compute a new column with the phases, each phase attributed using the
+    # thresholds on the cell cycle value
+    df[NewColumns.phase()] = pd.cut(
+        cell_cycle, bins=sorted_thresholds, labels=sorted_phases, right=False
+    )

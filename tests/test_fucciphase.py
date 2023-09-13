@@ -1,5 +1,5 @@
 from fucciphase.io import read_trackmate_xml
-from fucciphase.phase import NewColumns, compute_cell_cycle
+from fucciphase.phase import NewColumns, compute_cell_cycle, generate_cycle_phases
 from fucciphase.utils import normalize_channels, simulate_single_track
 
 
@@ -13,10 +13,17 @@ def test_smoke_pipeline_simulated():
     channel2 = "MEAN_INTENSITY_CH4"
     normalize_channels(df, [channel1, channel2])
 
-    # compute the phase
+    # compute the cell cycle percentage
     compute_cell_cycle(df, channel1, channel2)
     assert NewColumns.cell_cycle() in df.columns
     assert NewColumns.color() in df.columns
+
+    # compute the phases
+    generate_cycle_phases(
+        df,
+        phases=["G1", "T", "S", "G2M"],  # one more phase than thresholds
+        thresholds=[0.04, 0.44, 0.56],
+    )
 
 
 def test_smoke_pipeline_trackmate(tmp_path, trackmate_xml):
@@ -29,8 +36,15 @@ def test_smoke_pipeline_trackmate(tmp_path, trackmate_xml):
     channel2 = "MEAN_INTENSITY_CH2"
     normalize_channels(df, [channel1, channel2])
 
-    # compute the phase
+    # compute the cell cycle percentage
     compute_cell_cycle(df, channel1, channel2)
+
+    # compute the phases
+    generate_cycle_phases(
+        df,
+        phases=["G1", "T", "S", "G2M"],  # one more phase than thresholds
+        thresholds=[0.04, 0.44, 0.56],
+    )
 
     # update the XML
     tmxml.update_features(df)
