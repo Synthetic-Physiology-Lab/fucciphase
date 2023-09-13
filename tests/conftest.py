@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+from fucciphase.utils import simulate_single_track
 
 
 @pytest.fixture
@@ -10,34 +11,36 @@ def trackmate_example() -> pd.DataFrame:
 
     This dataframe simulates the naive import of a trackmate csv file, which
     includes duplicated headers and units."""
-    # create mock dataframe
-    df = pd.DataFrame(
+    # simulate two tracks
+    track1 = simulate_single_track(track_id=42, mean=0.4)
+    track2 = simulate_single_track(track_id=402, mean=0.3)
+
+    # concatenate the two dataframes
+    df = pd.concat([track1, track2])
+
+    # sort by frame
+    df.sort_values(by=["FRAME"], inplace=True)
+
+    # create dataframe with headers (from Trackmate csv export)
+    df_header = pd.DataFrame(
         {
-            "LABEL": ["Label", "Label", "", "ID4072", "ID2322", "ID4144"],
-            "ID": ["Spot ID", "Spot ID", "", 4072, 2322, 4144],
-            "TRACK_ID": ["Track ID", "Track ID", "", 85, 85, 85],
-            "POSITION_X": ["X", "X", "(micron)", 76.15995973, 57.23480319, 23.91266266],
-            "POSITION_Y": ["Y", "Y", "(micron)", 94.66421077, 81.67105699, 94.66421077],
-            "POSITION_T": ["T", "T", "(sec)", 2699.980774, 26099.81415, 67499.51935],
-            "FRAME": ["Frame", "Frame", "", 3, 29, 75],
-            "MEAN_INTENSITY_CH1": [
-                "Mean intensity ch1",
-                "Mean ch1",
-                "(counts)",
-                544.5488114,
-                1194.44928,
-                419.8042824,
-            ],
-            "MEAN_INTENSITY_CH2": [
-                "Mean intensity ch2",
-                "Mean ch2",
-                "(counts)",
-                137.4776146,
-                147.8754012,
-                206.0246564,
-            ],
+            "LABEL": ["Label", "Label", ""],
+            "ID": ["Spot ID", "Spot ID", ""],
+            "TRACK_ID": ["Track ID", "Track ID", ""],
+            "POSITION_X": ["X", "X", "(micron)"],
+            "POSITION_Y": ["Y", "Y", "(micron)"],
+            "POSITION_T": ["T", "T", "(sec)"],
+            "FRAME": ["Frame", "Frame", ""],
+            "MEAN_INTENSITY_CH1": ["Mean intensity ch1", "Mean ch1", "(counts)"],
+            "MEAN_INTENSITY_CH2": ["Mean intensity ch2", "Mean ch2", "(counts)"],
         }
     )
+
+    # concatenate the two dataframes (again)
+    df = pd.concat([df_header, df])
+
+    # reset index
+    df.reset_index(drop=True, inplace=True)
 
     return df
 

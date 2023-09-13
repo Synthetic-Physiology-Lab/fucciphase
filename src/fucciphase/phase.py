@@ -6,11 +6,9 @@ import pandas as pd
 
 from .utils import get_norm_channel_name, norm
 
-# TODO moving avg
 # TODO phase determination
 # TODO pass mim/max
-# TODO new gray value
-# TODO fix windows CI
+# TODO rename channels w respect to their color, e.g. low_wavelength, high_wavelength
 
 
 class NewColumns(str, Enum):

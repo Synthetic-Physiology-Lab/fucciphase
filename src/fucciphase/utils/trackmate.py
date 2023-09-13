@@ -2,6 +2,7 @@ import xml.etree.ElementTree as et
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
+import numpy as np
 import pandas as pd
 
 # TrackMate XML tags
@@ -61,9 +62,9 @@ class TrackMateXML:
         self._model: Optional[et.Element] = None
         self._allspots: Optional[et.Element] = None
 
-        self.nspots: int = 0
-        self.features: Dict[str, type] = {}
-        self.spot_features: List[str] = []
+        self.nspots: int = 0  # number of spots
+        self.features: Dict[str, type] = {}  # features and their types
+        self.spot_features: List[str] = []  # list of spot features
 
         # import model and all spots
         self._import_data()
@@ -138,6 +139,36 @@ class TrackMateXML:
         # get feature declarations
         self._get_features()
 
+    def _add_track_ids(self, df: pd.DataFrame) -> None:
+        # extract track IDs (if there are spots)
+        if len(df) > 0:
+            track_ids = np.zeros_like(df[ID].values)
+            if self._model is not None:
+                for element in self._model:
+                    if element.tag == "AllTracks":
+                        for track in element:
+                            track_id = track.attrib["TRACK_ID"]
+
+                            for edge in track:
+                                spot_source = edge.attrib["SPOT_SOURCE_ID"]
+                                spot_target = edge.attrib["SPOT_TARGET_ID"]
+
+                                # get row index of the source and target spots
+                                source_index = df[df[ID] == spot_source].index[0]
+                                target_index = df[df[ID] == spot_target].index[0]
+
+                                # update track IDs
+                                track_ids[source_index] = track_id
+                                track_ids[target_index] = track_id
+
+                # update dataframe
+                df["TRACK_ID"] = track_ids
+        else:
+            df["TRACK_ID"] = []
+
+        # add track id to the spot features (this avoids exporting it to the xml later)
+        self.spot_features.append("TRACK_ID")
+
     def to_pandas(self) -> pd.DataFrame:
         """Export the spots as a pandas dataframe.
 
@@ -163,6 +194,9 @@ class TrackMateXML:
                         # add the spot to the dataframe
                         df.loc[spot_count] = spot.attrib
                         spot_count += 1
+
+        # add tracks IDs
+        self._add_track_ids(df)
 
         # convert features to their declared types
         return df.astype(self.features)

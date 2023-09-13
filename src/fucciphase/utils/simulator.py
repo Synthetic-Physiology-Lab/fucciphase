@@ -27,11 +27,18 @@ def simulate_single_channel(
     """
     ch: np.ndarray = amp * np.exp(-((t - mean) ** 2) / (2 * sigma**2))
 
-    return ch
+    return np.round(ch, 2)
 
 
-def simulate_single_track() -> pd.DataFrame:
+def simulate_single_track(track_id: float = 42, mean: float = 0.5) -> pd.DataFrame:
     """Simulate a single track.
+
+    Parameters
+    ----------
+    track_id : int
+        Track ID
+    mean : float
+        Temporal mean corresponding to the crossing between the two channels
 
     Returns
     -------
@@ -41,10 +48,10 @@ def simulate_single_track() -> pd.DataFrame:
     # create the time vector
     t = 24 * np.arange(0, 50) / 50
     sigma = 0.2 * 24
-    mean1 = 0.5 * 24 - sigma
-    mean2 = 0.5 * 24 + sigma
-    amp1 = 1
-    amp2 = 0.9
+    mean1 = mean * 24 - sigma
+    mean2 = mean * 24 + sigma
+    amp1 = 50
+    amp2 = 0.9 * 50
 
     # create the channels as Gaussian of time
     ch1 = simulate_single_channel(t, mean1, sigma, amp1)
@@ -54,10 +61,11 @@ def simulate_single_track() -> pd.DataFrame:
     df = pd.DataFrame(
         {
             "LABEL": [f"ID{i}" for i in range(len(t))],
-            "ID": [str(i) for i in range(len(t))],
-            "TRACK_ID": [85 for _ in range(len(t))],
-            "POSITION_X": [105.567 for _ in range(len(t))],
-            "POSITION_Y": [82.23 for _ in range(len(t))],
+            "ID": list(range(len(t))),
+            "TRACK_ID": [track_id for _ in range(len(t))],
+            "POSITION_X": [np.round(mean * i * 0.02, 2) for i in range(len(t))],
+            "POSITION_Y": [np.round(mean * i * 0.3, 2) for i in range(len(t))],
+            "POSITION_T": [np.round(i * 0.01, 2) for i in range(len(t))],
             "FRAME": list(range(len(t))),
             "MEAN_INTENSITY_CH1": [0 for _ in range(len(t))],
             "MEAN_INTENSITY_CH2": [1 for _ in range(len(t))],

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-from fucciphase.utils import norm, normalize_channels
+import pytest
+from fucciphase.utils import moving_average, norm, normalize_channels
 
 
 def test_norm():
@@ -23,26 +24,47 @@ def test_norm():
     assert norm_df.equals(expected_df["vector"])
 
 
-def test_normalize(trackmate_df: pd.DataFrame):
+@pytest.mark.parametrize("use_ma", [True, False])
+def test_normalize(trackmate_df: pd.DataFrame, use_ma):
     """Normalize the channels and test that the columns have
     been added to the dataframe."""
 
     # normalize the channels
-    channel1 = "MEAN_INTENSITY_CH1"
-    channel2 = "MEAN_INTENSITY_CH2"
-    new_channels = normalize_channels(trackmate_df, [channel1, channel2])
+    channel1 = "MEAN_INTENSITY_CH3"
+    channel2 = "MEAN_INTENSITY_CH4"
+    new_channels = normalize_channels(
+        trackmate_df, [channel1, channel2], use_moving_average=use_ma
+    )
 
     # check that the columns have been added
-    channel1_norm = "MEAN_INTENSITY_CH1_NORM"
-    channel2_norm = "MEAN_INTENSITY_CH2_NORM"
+    channel1_norm = "MEAN_INTENSITY_CH3_NORM"
+    channel2_norm = "MEAN_INTENSITY_CH4_NORM"
     assert channel1_norm in trackmate_df.columns and channel1_norm in new_channels
     assert channel2_norm in trackmate_df.columns and channel2_norm in new_channels
 
-    # check that the values are correct
-    ch1 = trackmate_df[channel1_norm]
-    norm_ch1 = (ch1 - ch1.min()) / (ch1.max() - ch1.min())
-    assert (norm_ch1 == trackmate_df[channel1_norm]).all()
+    # check if normalized
+    assert trackmate_df[channel1_norm].min() == 0
+    assert trackmate_df[channel1_norm].max() == 1
+    assert trackmate_df[channel2_norm].min() == 0
+    assert trackmate_df[channel2_norm].max() == 1
 
-    ch2 = trackmate_df[channel2_norm]
-    norm_ch2 = (ch2 - ch2.min()) / (ch2.max() - ch2.min())
-    assert (norm_ch2 == trackmate_df[channel2_norm]).all()
+
+@pytest.mark.parametrize(
+    "window, expected",
+    [
+        (3, [0.5, 1, 2, 3, 4, 5, 6, 7, 8, 8.5]),
+        (5, [1, 1.5, 2, 3, 4, 5, 6, 7, 7.5, 8]),
+        (7, [1.5, 2, 2.5, 3, 4, 5, 6, 6.5, 7, 7.5]),
+    ],
+)
+def test_moving_average(window, expected):
+    """Test that the moving average function works as expected."""
+    v = np.arange(0, 10)
+
+    # expected value as a np array
+    expected = np.array(expected)
+
+    # run moving average
+    result = moving_average(v, window)
+    assert result.shape == expected.shape
+    assert (result == expected).all()

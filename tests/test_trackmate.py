@@ -29,7 +29,7 @@ def test_import_xml(trackmate_xml):
 
 
 def test_import_as_pandas_spotless(spotless_trackmate_xml):
-    """Test that spotless xml file lead to empty dataframe"""
+    """Test that a spotless xml file lead to empty dataframe"""
     # import xml
     tm_xml = TrackMateXML(spotless_trackmate_xml)
 

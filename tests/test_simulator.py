@@ -1,5 +1,5 @@
 import numpy as np
-from fucciphase.simulator import simulate_single_channel, simulate_single_track
+from fucciphase.utils.simulator import simulate_single_channel, simulate_single_track
 
 
 def test_simulate_single_channel():
@@ -18,8 +18,8 @@ def test_simulate_single_channel():
     # check that the min and max are different
     assert ch.min() != ch.max()
 
-    # check that the peak corresponds to the mean position
-    assert ch.argmax() == mean
+    # check that the peak corresponds to about the mean position (rounding errors)
+    assert np.abs(ch.argmax() - mean) <= 1
 
 
 def test_simulate_single_track():

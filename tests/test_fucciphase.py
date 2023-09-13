@@ -1,7 +1,6 @@
 from fucciphase.io import read_trackmate_xml
 from fucciphase.phase import NewColumns, compute_phase_trigo
-from fucciphase.simulator import simulate_single_track
-from fucciphase.utils import normalize_channels
+from fucciphase.utils import normalize_channels, simulate_single_track
 
 
 def test_smoke_pipeline_simulated():
