@@ -1,9 +1,13 @@
 import numpy as np
 import pandas as pd
 
+# TODO improve simulation, use sine waves
 
-def simulate_single_channel(t: np.ndarray, mean: float, sigma: float) -> np.ndarray:
-    """Simulate a single cell.
+
+def simulate_single_channel(
+    t: np.ndarray, mean: float, sigma: float, amp: float = 1.0
+) -> np.ndarray:
+    """Simulate a single channel.
 
     Parameters
     ----------
@@ -13,13 +17,15 @@ def simulate_single_channel(t: np.ndarray, mean: float, sigma: float) -> np.ndar
         Mean of the Gaussian
     sigma : float
         Standard deviation of the Gaussian
+    amp : float
+        Amplitude of the Gaussian
 
     Returns
     -------
     np.ndarray
         Intensity vector
     """
-    ch: np.ndarray = np.exp(-((t - mean) ** 2) / (2 * sigma**2))
+    ch: np.ndarray = amp * np.exp(-((t - mean) ** 2) / (2 * sigma**2))
 
     return ch
 
@@ -37,10 +43,12 @@ def simulate_single_track() -> pd.DataFrame:
     sigma = 0.2 * 24
     mean1 = 0.5 * 24 - sigma
     mean2 = 0.5 * 24 + sigma
+    amp1 = 1
+    amp2 = 0.9
 
     # create the channels as Gaussian of time
-    ch1 = simulate_single_channel(t, mean1, sigma)
-    ch2 = simulate_single_channel(t, mean2, sigma)
+    ch1 = simulate_single_channel(t, mean1, sigma, amp1)
+    ch2 = simulate_single_channel(t, mean2, sigma, amp2)
 
     # create dataframe
     df = pd.DataFrame(
