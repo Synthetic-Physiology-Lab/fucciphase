@@ -6,5 +6,6 @@ try:
     __version__ = version("fucciphase")
 except PackageNotFoundError:
     __version__ = "uninstalled"
-__author__ = "Joran Deschamps"
-__email__ = "first.last@example.com"
+__all__ = ["__version__", "process_trackmate", "process_dataframe"]
+
+from .fucci_phase import process_dataframe, process_trackmate

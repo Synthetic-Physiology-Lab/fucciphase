@@ -77,11 +77,15 @@ def test_normalize_manual_minmax(trackmate_df: pd.DataFrame):
     df = trackmate_df.copy()
 
     # normalize
-    _ = normalize_channels(trackmate_df, [channel1, channel2])
+    _ = normalize_channels(trackmate_df, [channel1, channel2], use_moving_average=False)
 
     # normalize by passing the values
     _ = normalize_channels(
-        df, [channel1, channel2], manual_min=min_ch, manual_max=max_ch
+        df,
+        [channel1, channel2],
+        manual_min=min_ch,
+        manual_max=max_ch,
+        use_moving_average=False,
     )
 
     # check that the values are the same

@@ -92,6 +92,8 @@ def moving_average(vector: Union[pd.Series, np.ndarray], window: int = 7) -> np.
     if window >= len(vector):
         return vector
 
+    vector = np.array(vector, dtype=float)
+
     # compute the cumulative sum
     cumsum = np.cumsum(vector)
 
@@ -127,7 +129,7 @@ def moving_average(vector: Union[pd.Series, np.ndarray], window: int = 7) -> np.
 def normalize_channels(
     df: pd.DataFrame,
     channels: Union[str, List[str]],
-    use_moving_average: bool = False,
+    use_moving_average: bool = True,
     moving_average_window: int = 7,
     manual_min: Optional[List[float]] = None,
     manual_max: Optional[List[float]] = None,
