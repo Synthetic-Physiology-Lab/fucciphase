@@ -49,6 +49,8 @@ dev = [
     "ruff",
 ]
 
+jupyter = ["jupyter"]
+
 [project.urls]
 homepage = "https://github.com/nobias-ht/fucciphase"
 repository = "https://github.com/nobias-ht/fucciphase"

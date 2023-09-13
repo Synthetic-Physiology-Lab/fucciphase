@@ -6,7 +6,6 @@ import pandas as pd
 
 from .utils import get_norm_channel_name, norm
 
-# TODO phase determination
 # TODO rename channels w respect to their color, e.g. low_wavelength, high_wavelength
 
 
