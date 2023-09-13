@@ -28,7 +28,6 @@ def test_norm():
 def test_normalize(trackmate_df: pd.DataFrame, use_ma):
     """Normalize the channels and test that the columns have
     been added to the dataframe."""
-
     # normalize the channels
     channel1 = "MEAN_INTENSITY_CH3"
     channel2 = "MEAN_INTENSITY_CH4"
@@ -47,6 +46,46 @@ def test_normalize(trackmate_df: pd.DataFrame, use_ma):
     assert trackmate_df[channel1_norm].max() == 1
     assert trackmate_df[channel2_norm].min() == 0
     assert trackmate_df[channel2_norm].max() == 1
+
+
+def test_normalize_manual_minmax_wrong_list(trackmate_df: pd.DataFrame):
+    """Test that manual normalization raises an error if not enough min/max values"""
+    channel1 = "MEAN_INTENSITY_CH3"
+    channel2 = "MEAN_INTENSITY_CH4"
+
+    # get min, max, for both channels
+    min_ch = [trackmate_df[channel1].min()]
+    max_ch = [trackmate_df[channel1].max()]
+
+    # test error
+    with pytest.raises(ValueError):
+        normalize_channels(
+            trackmate_df, [channel1, channel2], manual_min=min_ch, manual_max=max_ch
+        )
+
+
+def test_normalize_manual_minmax(trackmate_df: pd.DataFrame):
+    """Test manual normalization"""
+    channel1 = "MEAN_INTENSITY_CH3"
+    channel2 = "MEAN_INTENSITY_CH4"
+
+    # get min, max, for both channels
+    min_ch = [trackmate_df[channel1].min(), trackmate_df[channel2].min()]
+    max_ch = [trackmate_df[channel1].max(), trackmate_df[channel2].max()]
+
+    # duplicate dataframe
+    df = trackmate_df.copy()
+
+    # normalize
+    _ = normalize_channels(trackmate_df, [channel1, channel2])
+
+    # normalize by passing the values
+    _ = normalize_channels(
+        df, [channel1, channel2], manual_min=min_ch, manual_max=max_ch
+    )
+
+    # check that the values are the same
+    assert df.equals(trackmate_df)
 
 
 @pytest.mark.parametrize(

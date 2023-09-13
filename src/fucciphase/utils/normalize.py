@@ -129,8 +129,8 @@ def normalize_channels(
     channels: Union[str, List[str]],
     use_moving_average: bool = False,
     moving_average_window: int = 7,
-    manual_min: Optional[float] = None,
-    manual_max: Optional[float] = None,
+    manual_min: Optional[List[float]] = None,
+    manual_max: Optional[List[float]] = None,
 ) -> List[str]:
     """Normalize channels, add in place the resulting columns to the
     dataframe, and return the new columns' name.
@@ -138,7 +138,8 @@ def normalize_channels(
     A moving average can be applied to each individual track before normalization.
 
     Normalization is performed by subtracting the min and dividing by (max - min).
-    Note that the resulting values are rounded to the 2nd decimal.
+    These values are computed across all spots in each channel. Note that the resulting
+    normalized values are rounded to the 2nd decimal.
 
     The min and max values can be provided manually. They should be determined by
     imaging a large number of cells statically and computing the min and max values
@@ -156,9 +157,9 @@ def normalize_channels(
         Whether to apply a moving average to each track before normalization.
     moving_average_window : int
         Size of the window used for the moving average, default 7.
-    manual_min : Optional[float]
+    manual_min : Optional[List[float]]
         If provided, the minimum value to use for normalization.
-    manual_max : Optional[float]
+    manual_max : Optional[List[float]]
         If provided, the maximum value to use for normalization.
 
     Returns
@@ -174,9 +175,22 @@ def normalize_channels(
     if not isinstance(channels, list):
         channels = [channels]
 
+    if manual_min is not None:
+        # check that it has the same number of entries as there are channels
+        if len(manual_min) != len(channels):
+            raise ValueError(
+                f"Expected {len(channels)} values for manual_min, got {len(manual_min)}"
+            )
+    if manual_max is not None:
+        # check that it has the same number of entries as there are channels
+        if len(manual_max) != len(channels):
+            raise ValueError(
+                f"Expected {len(channels)} values for manual_max, got {len(manual_max)}"
+            )
+
     # check that the dataframe contains the channek
     new_columns = []
-    for channel in channels:
+    for i, channel in enumerate(channels):
         if channel not in df.columns:
             raise ValueError(f"Column {channel} not found")
 
@@ -202,8 +216,9 @@ def normalize_channels(
             avg_channel = channel
 
         # normalize channel
-        max_ch = df[avg_channel].max()
-        min_ch = df[avg_channel].min()
+        max_ch = manual_max[i] if manual_max is not None else df[avg_channel].max()
+        min_ch = manual_min[i] if manual_min is not None else df[avg_channel].min()
+
         norm_ch = np.round(
             (df[avg_channel] - min_ch) / (max_ch - min_ch),
             2,  # number of decimals
