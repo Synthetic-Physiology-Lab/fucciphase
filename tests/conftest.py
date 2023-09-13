@@ -71,8 +71,26 @@ def trackmate_csv(tmp_path, trackmate_example: pd.DataFrame) -> Path:
     return csv_path
 
 
+def _write_to_file(path: Path, xml: str) -> None:
+    """Write XML string to file, ensuring utf-8 encoding.
+
+    Parameters
+    ----------
+    path : Path
+        File in which to save the XML string
+    xml : str
+        XML string
+    """
+    # write file
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(xml)
+
+    return path
+
+
 @pytest.fixture
 def spotless_trackmate_xml(tmp_path) -> Path:
+    """Create on the disk a TrackMate XML containing no spots."""
     # destination path
     path = tmp_path / "Spotless.xml"
 
@@ -337,14 +355,14 @@ def spotless_trackmate_xml(tmp_path) -> Path:
     </TrackMate>"""
 
     # write file
-    with open(path, "w") as f:
-        f.write(xml)
+    _write_to_file(path, xml)
 
     return path
 
 
 @pytest.fixture
 def trackmate_xml(tmp_path) -> Path:
+    """Save to the disk a TrackMate XML containing two tracks across two channels."""
     # destination path
     path = tmp_path / "TwoTracks.xml"
 
@@ -700,7 +718,6 @@ def trackmate_xml(tmp_path) -> Path:
     """
 
     # write file
-    with open(path, "w") as f:
-        f.write(xml)
+    _write_to_file(path, xml)
 
     return path
