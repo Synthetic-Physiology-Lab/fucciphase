@@ -26,9 +26,9 @@ def process_dataframe(
 
     This function applies the following steps:
         - if `use_moving_average` is True, apply a moving average to each track
-        and each channel
+          and each channel
         - if `manual_min` and `manual_max` are None, normalize the channels globally.
-        Otherwise, use them to normalize each channel.
+          Otherwise, use them to normalize each channel.
         - compute the cell cycle percentage using a trigonometric approach
         - if `phases` and `thresholds` are not None, compute the phases of the cell
 
@@ -92,9 +92,9 @@ def process_trackmate(
     This function applies the following steps:
         - load the XML file and generate a dataframe from the spots and tracks
         - if `use_moving_average` is True, apply a moving average to each track
-        and each channel
+          and each channel
         - if `manual_min` and `manual_max` are None, normalize the channels globally.
-        Otherwise, use them to normalize each channel.
+          Otherwise, use them to normalize each channel.
         - compute the cell cycle percentage using a trigonometric approach
         - if `phases` and `thresholds` are not None, compute the phases of the cell
         - save an updated XML copy with the new features
