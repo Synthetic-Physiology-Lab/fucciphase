@@ -9,18 +9,18 @@ ci:
 
 repos:
   - repo: https://github.com/abravalheri/validate-pyproject
-    rev: v0.13
+    rev: v0.14
     hooks:
       - id: validate-pyproject
 
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.282
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.0.292
     hooks:
       - id: ruff
         args: [--fix]
 
   - repo: https://github.com/psf/black
-    rev: 23.7.0
+    rev: 23.9.1
     hooks:
       - id: black
 
@@ -43,6 +43,6 @@ repos:
 
   # strip out jupyter notebooks
   - repo: https://github.com/kynan/nbstripout
-    rev: 0.6.0
+    rev: 0.6.1
     hooks:
       - id: nbstripout
