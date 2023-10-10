@@ -10,8 +10,8 @@ from .utils import normalize_channels
 
 def process_dataframe(
     df: pd.DataFrame,
-    small_wavelength: str,
-    large_wavelength: str,
+    g1_channel: str,
+    s_g2_channel: str,
     use_moving_average: bool = True,
     window_size: int = 7,
     manual_min: Optional[List[float]] = None,
@@ -38,9 +38,9 @@ def process_dataframe(
     ----------
     df : pandas.DataFrame
         Dataframe
-    small_wavelength : str
+    g1_channel : str
         Smaller wavelength FUCCI channel
-    large_wavelength : str
+    s_g2_channel : str
         Longer wavelength FUCCI channel
     use_moving_average : bool, optional
         Use moving average before normalization, by default True
@@ -59,7 +59,7 @@ def process_dataframe(
     # normalize the channels
     normalize_channels(
         df,
-        [small_wavelength, large_wavelength],
+        [g1_channel, s_g2_channel],
         use_moving_average=use_moving_average,
         moving_average_window=window_size,
         manual_min=manual_min,
@@ -67,7 +67,7 @@ def process_dataframe(
     )
 
     # compute the cell cycle percentage
-    compute_cell_cycle(df, small_wavelength, large_wavelength)
+    compute_cell_cycle(df, g1_channel, s_g2_channel)
 
     # compute the phases
     if phases is not None and thresholds is not None:
@@ -76,8 +76,8 @@ def process_dataframe(
 
 def process_trackmate(
     xml_path: Union[str, Path],
-    small_wavelength: str,
-    large_wavelength: str,
+    g1_channel: str,
+    s_g2_channel: str,
     use_moving_average: bool = True,
     window_size: int = 5,
     manual_min: Optional[List[float]] = None,
@@ -105,9 +105,9 @@ def process_trackmate(
     ----------
     xml_path : Union[str, Path]
         Path to the XML file
-    small_wavelength : str
+    g1_channel : str
         Smaller wavelength FUCCI channel
-    large_wavelength : str
+    s_g2_channel : str
         Longer wavelength FUCCI channel
     use_moving_average : bool, optional
         Use moving average before normalization, by default True
@@ -134,8 +134,8 @@ def process_trackmate(
     # process the dataframe
     process_dataframe(
         df,
-        small_wavelength=small_wavelength,
-        large_wavelength=large_wavelength,
+        g1_channel=g1_channel,
+        s_g2_channel=s_g2_channel,
         use_moving_average=use_moving_average,
         window_size=window_size,
         manual_min=manual_min,
