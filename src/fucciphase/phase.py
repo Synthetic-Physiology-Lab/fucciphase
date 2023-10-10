@@ -82,9 +82,9 @@ def compute_cell_cycle(
     g1_channel_norm = get_norm_channel_name(g1_channel)
     s_g2_channel_norm = get_norm_channel_name(s_g2_channel)
 
-    # compute cosine and sine
-    cos_ch1 = np.cos(df[g1_channel_norm])
-    sin_ch2 = np.sin(df[s_g2_channel_norm])
+    # define cosine and sine
+    cos_ch1 = df[g1_channel_norm]
+    sin_ch2 = df[s_g2_channel_norm]
 
     # compute normalised unified intensity
     unified_intensity = norm(np.arctan2(sin_ch2, cos_ch1))

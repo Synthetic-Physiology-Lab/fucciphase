@@ -126,6 +126,8 @@ def moving_average(vector: Union[pd.Series, np.ndarray], window: int = 7) -> np.
     return np.concatenate([pre_vector, middle_vector, post_vector], dtype=float)
 
 
+# TODO make function less complex when clear phase indicator established
+# flake8: noqa: C901
 def normalize_channels(
     df: pd.DataFrame,
     channels: Union[str, List[str]],
@@ -139,15 +141,17 @@ def normalize_channels(
 
     A moving average can be applied to each individual track before normalization.
 
-    Normalization is performed by subtracting the min and dividing by (max - min).
+    Normalization is performed by inferring the min at the position of the maximum
+    of the other channel. Then, the min is subtracted and the result is divided
+    by (max - min).
     These values are computed across all spots in each channel. Note that the resulting
     normalized values are rounded to the 2nd decimal.
 
     The min and max values can be provided manually. They should be determined by
     imaging a large number of cells statically and computing the min and max values
     observed.
-
-    TODO: add not about ergodicity, more details about static imaging
+    This option is meant for static imaging. It is assumed that there are enough cells
+    in the image to have enough samples from each phase of the cell cycle.
 
     Parameters
     ----------
@@ -176,7 +180,8 @@ def normalize_channels(
     """
     if not isinstance(channels, list):
         channels = [channels]
-
+    if len(channels) != 2:
+        raise ValueError("The current implementation only works with two channels.")
     if manual_min is not None:
         # check that it has the same number of entries as there are channels
         if len(manual_min) != len(channels):
@@ -190,9 +195,9 @@ def normalize_channels(
                 f"Expected {len(channels)} values for manual_max, got {len(manual_max)}"
             )
 
-    # check that the dataframe contains the channek
+    # check that the dataframe contains the channel
     new_columns = []
-    for i, channel in enumerate(channels):
+    for channel in channels:
         if channel not in df.columns:
             raise ValueError(f"Column {channel} not found")
 
@@ -214,12 +219,21 @@ def normalize_channels(
 
                 # update the dataframe by adding a new column
                 df.loc[track.index, avg_channel] = ma
-        else:
-            avg_channel = channel
 
-        # normalize channel
+    # normalize channels
+    for i, channel in enumerate(channels):
+        avg_channel = get_avg_channel_name(channel)
+        # TODO maybe can be coded more beautiful
+        other_channel_index = i + 1 if i == 0 else i - 1
+        avg_other_channel = get_avg_channel_name(channels[other_channel_index])
+        max_index_other_channel = df[avg_other_channel].argmax()
+        # normalize channel w.r.t other channel
         max_ch = manual_max[i] if manual_max is not None else df[avg_channel].max()
-        min_ch = manual_min[i] if manual_min is not None else df[avg_channel].min()
+        min_ch = (
+            manual_min[i]
+            if manual_min is not None
+            else df[avg_channel][max_index_other_channel]
+        )
 
         norm_ch = np.round(
             (df[avg_channel] - min_ch) / (max_ch - min_ch),
