@@ -62,6 +62,11 @@ pip install -e ".[test, dev]"
 pre-commit install
 ```
 
+If you want to build the documentation, replace the abovementioned pip install by:
+```bash
+pip install -e ".[test, dev, doc]"
+```
+
 ## Cite us
 
 (SOON)

@@ -11,6 +11,7 @@ def plot_phase(df: pd.DataFrame, channel1: str, channel2: str) -> None:
 
     The dataframe must be preprocessed with one of the available phase
     computation function and must contain the following columns:
+
         - normalised channels (channel1 + "_NORM", etc)
         - cell cycle percentage
         - FRAME
