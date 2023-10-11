@@ -42,10 +42,24 @@ def test_normalize(trackmate_df: pd.DataFrame, use_ma):
     assert channel2_norm in trackmate_df.columns and channel2_norm in new_channels
 
     # check if normalized
-    assert trackmate_df[channel1_norm].min() == 0
-    assert trackmate_df[channel1_norm].max() == 1
-    assert trackmate_df[channel2_norm].min() == 0
-    assert trackmate_df[channel2_norm].max() == 1
+    # test only without moving average (enough on raw data to ensure correctness)
+    if not use_ma:
+        idx_min_channel1 = trackmate_df[channel2].argmax()
+        idx_min_channel2 = trackmate_df[channel1].argmax()
+        min_channel1 = trackmate_df[channel1][idx_min_channel1]
+        min_channel2 = trackmate_df[channel2][idx_min_channel2]
+        channel1_norm_expected = (trackmate_df[channel1] - min_channel1) / (
+            trackmate_df[channel1].max() - min_channel1
+        )
+        channel1_norm_expected = np.round(channel1_norm_expected, decimals=2)
+        channel2_norm_expected = (trackmate_df[channel2] - min_channel2) / (
+            trackmate_df[channel2].max() - min_channel2
+        )
+        channel2_norm_expected = np.round(channel2_norm_expected, decimals=2)
+        assert trackmate_df[channel1_norm].min() == channel1_norm_expected.min()
+        assert trackmate_df[channel1_norm].max() == channel1_norm_expected.max()
+        assert trackmate_df[channel2_norm].min() == channel2_norm_expected.min()
+        assert trackmate_df[channel2_norm].max() == channel2_norm_expected.max()
 
 
 def test_normalize_manual_minmax_wrong_list(trackmate_df: pd.DataFrame):
@@ -70,7 +84,9 @@ def test_normalize_manual_minmax(trackmate_df: pd.DataFrame):
     channel2 = "MEAN_INTENSITY_CH4"
 
     # get min, max, for both channels
-    min_ch = [trackmate_df[channel1].min(), trackmate_df[channel2].min()]
+    max_idx_ch1 = trackmate_df[channel1].argmax()
+    max_idx_ch2 = trackmate_df[channel2].argmax()
+    min_ch = [trackmate_df[channel1][max_idx_ch2], trackmate_df[channel2][max_idx_ch1]]
     max_ch = [trackmate_df[channel1].max(), trackmate_df[channel2].max()]
 
     # duplicate dataframe

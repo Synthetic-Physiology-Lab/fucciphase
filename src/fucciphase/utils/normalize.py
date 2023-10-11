@@ -222,10 +222,14 @@ def normalize_channels(
 
     # normalize channels
     for i, channel in enumerate(channels):
-        avg_channel = get_avg_channel_name(channel)
         # TODO maybe can be coded more beautiful
         other_channel_index = i + 1 if i == 0 else i - 1
-        avg_other_channel = get_avg_channel_name(channels[other_channel_index])
+        if use_moving_average:
+            avg_channel = get_avg_channel_name(channel)
+            avg_other_channel = get_avg_channel_name(channels[other_channel_index])
+        else:
+            avg_channel = channel
+            avg_other_channel = channels[other_channel_index]
         max_index_other_channel = df[avg_other_channel].argmax()
         # normalize channel w.r.t other channel
         max_ch = manual_max[i] if manual_max is not None else df[avg_channel].max()
@@ -234,7 +238,7 @@ def normalize_channels(
             if manual_min is not None
             else df[avg_channel][max_index_other_channel]
         )
-
+        print("Channel: ", channel, "Min: ", min_ch, "Max: ", max_ch)
         norm_ch = np.round(
             (df[avg_channel] - min_ch) / (max_ch - min_ch),
             2,  # number of decimals
