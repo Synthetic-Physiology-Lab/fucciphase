@@ -181,6 +181,8 @@ def normalize_channels(
     if not isinstance(channels, list):
         channels = [channels]
     if len(channels) != 2:
+        # only two channels possible with normalization depending on other channel
+        # can change in future implementations!
         raise ValueError("The current implementation only works with two channels.")
     if manual_min is not None:
         # check that it has the same number of entries as there are channels
@@ -224,6 +226,7 @@ def normalize_channels(
     for i, channel in enumerate(channels):
         # TODO maybe can be coded more beautiful
         other_channel_index = i + 1 if i == 0 else i - 1
+        # moving average creates a new column with an own name
         if use_moving_average:
             avg_channel = get_avg_channel_name(channel)
             avg_other_channel = get_avg_channel_name(channels[other_channel_index])
