@@ -24,6 +24,7 @@ class NewColumns(str, Enum):
     CELL_CYCLE_PERC = "CELL_CYCLE_PERC"
     MANUAL_SPOT_COLOR = "MANUAL_SPOT_COLOR"
     PHASE = "PHASE"
+    DISCRETE_PHASE = "DISCRETE_PHASE"
 
     @staticmethod
     def cell_cycle() -> str:
@@ -39,6 +40,11 @@ class NewColumns(str, Enum):
     def color() -> str:
         """Return the name of the color column."""
         return NewColumns.MANUAL_SPOT_COLOR.value
+
+    @staticmethod
+    def discrete_phase() -> str:
+        """Return the name of the discrete phase column."""
+        return NewColumns.DISCRETE_PHASE.value
 
 
 def compute_cell_cycle(
@@ -188,3 +194,87 @@ def generate_cycle_phases(
     df[NewColumns.phase()] = pd.cut(
         cell_cycle, bins=sorted_thresholds, labels=sorted_phases, right=False
     )
+
+
+def estimate_cell_phase(
+    df: pd.DataFrame,
+    g1_channel: str,
+    s_g2_channel: str,
+    g1_background: float,
+    s_g2_background: float,
+    g1_threshold: float,
+    s_g2_threshold: float,
+) -> None:
+    """Add a column in place to the dataframe with the estimated phase of the cell
+    cycle, where the phase is determined by thresholding the channel intensities.
+
+    The provided thresholds are used to decide if a channel is switched on (ON).
+    For that, the background is subtracted from the mean intensity.
+    The obtained values are normalized w.r.t. the maximum mean intensity in the
+    respective channel available in the DataFrame.
+    Hence, the threshold values should be between 0 and 1.
+    This method will not work reliably if not enough cells from different phases
+    are contained in the DataFrame.
+
+
+    Parameters
+    ----------
+    df: pd.DataFrame
+        Dataframe with a CELL_CYCLE_PERC column
+    g1_channel : str
+        First channel indicating G1
+    s_g2_channel : str
+        Second channel indicating S/G2
+    g1_background: float
+        Single value representing background of channel
+    s_g2_background: float
+        Single value representing background of channel
+    g1_threshold:
+        Threshold to consider G1 channel ON
+    s_g2_threshold: float
+        Threshold to consider S/G2 channel ON
+
+    Raises
+    ------
+    ValueError
+        If the dataframe does not contain the normalized channels.
+    ValueError
+        If the thresholds are not between 0 and 1.
+    """
+    # sanity check: check that channels are present
+    for channel in [g1_channel, s_g2_channel]:
+        if channel not in df.columns:
+            raise ValueError(
+                f"Column {channel} not found, provide correct input parameters."
+            )
+    # check thresholds
+    if not 0 < g1_threshold < 1 and not 0 < s_g2_threshold < 1:
+        raise ValueError("Provide threshold values between 0 and 1.")
+
+    # get intensities and subtract background
+    g1_channel_intensity = df[g1_channel] - g1_background
+    s_g2_channel_intensity = df[s_g2_channel] - s_g2_background
+
+    # threshold channels to decide if ON / OFF (data is in list per spot)
+    g1_on_channel = g1_channel_intensity > g1_threshold * g1_channel_intensity.max()
+    s_g2_on_channel = (
+        s_g2_channel_intensity > s_g2_threshold * s_g2_channel_intensity.max()
+    )
+
+    # store phases
+    phase_names = []
+    for g1_on, s_g2_on in zip(g1_on_channel, s_g2_on_channel):
+        phase_names.append(discrete_phase_logic(g1_on, s_g2_on))
+    df[NewColumns.discrete_phase()] = pd.Series(phase_names, dtype=str)  # add as str
+
+
+def discrete_phase_logic(g1_on: bool, s_g2_on: bool) -> str:
+    """Return the discrete phase based channel ON / OFF data."""
+    if not g1_on and not s_g2_on:
+        return "EG1"
+    elif g1_on and not s_g2_on:
+        return "G1"
+    elif not g1_on and s_g2_on:
+        return "S/G2/M"
+    else:
+        return "T"
