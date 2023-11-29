@@ -24,7 +24,9 @@ class NewColumns(str, Enum):
     CELL_CYCLE_PERC = "CELL_CYCLE_PERC"
     MANUAL_SPOT_COLOR = "MANUAL_SPOT_COLOR"
     PHASE = "PHASE"
-    DISCRETE_PHASE = "DISCRETE_PHASE"
+    DISCRETE_PHASE_MAX = "DISCRETE_PHASE_MAX"
+    DISCRETE_PHASE_BG = "DISCRETE_PHASE_BG"
+    DISCRETE_PHASE_DIFF = "DISCRETE_PHASE_DIFF"
 
     @staticmethod
     def cell_cycle() -> str:
@@ -42,10 +44,17 @@ class NewColumns(str, Enum):
         return NewColumns.MANUAL_SPOT_COLOR.value
 
     @staticmethod
-    def discrete_phase() -> str:
+    def discrete_phase_max() -> str:
         """Return the name of the discrete phase column."""
-        return NewColumns.DISCRETE_PHASE.value
+        return NewColumns.DISCRETE_PHASE_MAX.value
 
+    def discrete_phase_bg() -> str:
+        """Return the name of the discrete phase column."""
+        return NewColumns.DISCRETE_PHASE_BG.value
+
+    def discrete_phase_diff() -> str:
+        """Return the name of the discrete phase column."""
+        return NewColumns.DISCRETE_PHASE_DIFF.value
 
 def compute_cell_cycle(
     df: pd.DataFrame, g1_channel: str, s_g2_channel: str
@@ -196,7 +205,7 @@ def generate_cycle_phases(
     )
 
 
-def estimate_cell_phase(
+def estimate_cell_phase_from_max_intensity(
     df: pd.DataFrame,
     g1_channel: str,
     s_g2_channel: str,
@@ -265,8 +274,74 @@ def estimate_cell_phase(
     phase_names = []
     for g1_on, s_g2_on in zip(g1_on_channel, s_g2_on_channel):
         phase_names.append(discrete_phase_logic(g1_on, s_g2_on))
-    df[NewColumns.discrete_phase()] = pd.Series(phase_names, dtype=str)  # add as str
+    df[NewColumns.discrete_phase_max()] = pd.Series(phase_names, dtype=str)  # add as str
 
+
+def estimate_cell_phase_from_background(
+    df: pd.DataFrame,
+    g1_channel: str,
+    s_g2_channel: str,
+    g1_background: float,
+    s_g2_background: float,
+    g1_factor: float,
+    s_g2_factor: float,
+) -> None:
+    """Add a column in place to the dataframe with the estimated phase of the cell
+    cycle, where the phase is determined by comparing the channel intensities to
+    the respective background intensities.
+
+    The provided factors are used to decide if a channel is switched on (ON).
+    If the intensity exceeds the background level times the factor, the channel
+    is ON. Hence, the factors should be greater than 0.
+
+
+    Parameters
+    ----------
+    df: pd.DataFrame
+        Dataframe with a CELL_CYCLE_PERC column
+    g1_channel : str
+        First channel indicating G1
+    s_g2_channel : str
+        Second channel indicating S/G2
+    g1_background: float
+        Single value representing background of channel
+    s_g2_background: float
+        Single value representing background of channel
+    g1_factor: float
+        Factor to consider G1 channel ON
+    s_g2_factor: float
+        Factor to consider S/G2 channel ON
+
+    Raises
+    ------
+    ValueError
+        If the dataframe does not contain the normalized channels.
+    ValueError
+        If the factors are not greater than 0.
+    """
+    # sanity check: check that channels are present
+    for channel in [g1_channel, s_g2_channel]:
+        if channel not in df.columns:
+            raise ValueError(
+                f"Column {channel} not found, provide correct input parameters."
+            )
+    # check thresholds
+    if not g1_factor > 0 and not s_g2_factor > 0:
+        raise ValueError("Provide factors greater than 0.")
+
+    # get intensities and subtract background
+    g1_channel_intensity = df[g1_channel]
+    s_g2_channel_intensity = df[s_g2_channel]
+
+    # threshold channels to decide if ON / OFF (data is in list per spot)
+    g1_on_channel = g1_channel_intensity > g1_factor * g1_background
+    s_g2_on_channel = s_g2_channel_intensity > s_g2_factor * s_g2_background
+
+    # store phases
+    phase_names = []
+    for g1_on, s_g2_on in zip(g1_on_channel, s_g2_on_channel):
+        phase_names.append(discrete_phase_logic(g1_on, s_g2_on))
+    df[NewColumns.discrete_phase_bg()] = pd.Series(phase_names, dtype=str)  # add as str
 
 def discrete_phase_logic(g1_on: bool, s_g2_on: bool) -> str:
     """Return the discrete phase based channel ON / OFF data."""
