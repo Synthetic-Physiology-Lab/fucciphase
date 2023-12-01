@@ -15,14 +15,11 @@ class NewColumns(str, Enum):
     ----------
     CELL_CYCLE_PERC : str
         Unique cell cycle percentage value
-    MANUAL_SPOT_COLOR : str
-        Color indexing
     PHASE : str
         Phase of the cell cycle
     """
 
     CELL_CYCLE_PERC = "CELL_CYCLE_PERC"
-    MANUAL_SPOT_COLOR = "MANUAL_SPOT_COLOR"
     PHASE = "PHASE"
     DISCRETE_PHASE_MAX = "DISCRETE_PHASE_MAX"
     DISCRETE_PHASE_BG = "DISCRETE_PHASE_BG"
@@ -37,11 +34,6 @@ class NewColumns(str, Enum):
     def phase() -> str:
         """Return the name of the phase column."""
         return NewColumns.PHASE.value
-
-    @staticmethod
-    def color() -> str:
-        """Return the name of the color column."""
-        return NewColumns.MANUAL_SPOT_COLOR.value
 
     @staticmethod
     def discrete_phase_max() -> str:
@@ -62,8 +54,8 @@ class NewColumns(str, Enum):
 def compute_cell_cycle(
     df: pd.DataFrame, g1_channel: str, s_g2_channel: str
 ) -> List[str]:
-    """Compute a unique cell cycle percentage value using two channels, as well as
-    a color indexing. The corresponding columns are added in place in the dataframe.
+    """Compute a unique cell cycle percentage value using two channels.
+    The corresponding columns are added in place in the dataframe.
 
     The unique intensity is computed as the normalised angle in polar space (g1_channel,
     channel 2). The two channels must have been normalised before using
@@ -107,16 +99,11 @@ def compute_cell_cycle(
     # compute normalised unified intensity
     unified_intensity = norm(np.arctan2(sin_ch2, cos_ch1))
 
-    # compute color (following java plugin) # TODO revisit
-    color = np.rint((256**2 + 256 + 1) * 255 * unified_intensity - 256**3)
-
     # update the dataframe
     df[NewColumns.cell_cycle()] = unified_intensity
-    df[NewColumns.color()] = pd.Series(color, dtype=int)  # make sure we add it as int
 
     return [
         NewColumns.cell_cycle(),
-        NewColumns.color(),
     ]
 
 

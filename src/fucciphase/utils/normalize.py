@@ -203,11 +203,11 @@ def normalize_channels(
         if channel not in df.columns:
             raise ValueError(f"Column {channel} not found")
 
-        # apply moving average to each track ID
-        unique_track_IDs = df["TRACK_ID"].unique()
-
         # compute the moving average for each track ID
         if use_moving_average:
+            # apply moving average to each track ID
+            unique_track_IDs = df["TRACK_ID"].unique()
+
             avg_channel = get_avg_channel_name(channel)
             for track_ID in unique_track_IDs:
                 # get the track
