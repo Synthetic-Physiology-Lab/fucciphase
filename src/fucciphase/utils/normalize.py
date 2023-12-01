@@ -241,7 +241,6 @@ def normalize_channels(
             if manual_min is not None
             else df[avg_channel][max_index_other_channel]
         )
-        print("Channel: ", channel, "Min: ", min_ch, "Max: ", max_ch)
         norm_ch = np.round(
             (df[avg_channel] - min_ch) / (max_ch - min_ch),
             2,  # number of decimals

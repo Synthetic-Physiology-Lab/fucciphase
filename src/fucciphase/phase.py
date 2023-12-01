@@ -48,13 +48,16 @@ class NewColumns(str, Enum):
         """Return the name of the discrete phase column."""
         return NewColumns.DISCRETE_PHASE_MAX.value
 
+    @staticmethod
     def discrete_phase_bg() -> str:
         """Return the name of the discrete phase column."""
         return NewColumns.DISCRETE_PHASE_BG.value
 
+    @staticmethod
     def discrete_phase_diff() -> str:
         """Return the name of the discrete phase column."""
         return NewColumns.DISCRETE_PHASE_DIFF.value
+
 
 def compute_cell_cycle(
     df: pd.DataFrame, g1_channel: str, s_g2_channel: str
@@ -274,7 +277,9 @@ def estimate_cell_phase_from_max_intensity(
     phase_names = []
     for g1_on, s_g2_on in zip(g1_on_channel, s_g2_on_channel):
         phase_names.append(discrete_phase_logic(g1_on, s_g2_on))
-    df[NewColumns.discrete_phase_max()] = pd.Series(phase_names, dtype=str)  # add as str
+    df[NewColumns.discrete_phase_max()] = pd.Series(
+        phase_names, dtype=str
+    )  # add as str
 
 
 def estimate_cell_phase_from_background(
@@ -342,6 +347,7 @@ def estimate_cell_phase_from_background(
     for g1_on, s_g2_on in zip(g1_on_channel, s_g2_on_channel):
         phase_names.append(discrete_phase_logic(g1_on, s_g2_on))
     df[NewColumns.discrete_phase_bg()] = pd.Series(phase_names, dtype=str)  # add as str
+
 
 def discrete_phase_logic(g1_on: bool, s_g2_on: bool) -> str:
     """Return the discrete phase based channel ON / OFF data."""
