@@ -37,6 +37,17 @@ def degradation_function(
 class FUCCISensor(ABC):
     """Base class for a FUCCI sensor."""
 
+    @abstractmethod
+    def __init__(
+        self,
+        channels: List[str],
+        phase_percentages: List[float],
+        center: List[float],
+        sigma: List[float],
+        thresholds: List[float],
+    ) -> None:
+        pass
+
     @property
     @abstractmethod
     def fluorophores(self) -> int:
@@ -50,6 +61,32 @@ class FUCCISensor(ABC):
         pass
 
     @property
+    def channels(self) -> List[str]:
+        """Names of channels."""
+        return self._channels
+
+    @channels.setter
+    def channels(self, value: List[str]) -> None:
+        if len(value) != len(self.phases):
+            raise ValueError("You need to provide one channel per phase.")
+        self._channels = value
+
+    @property
+    def thresholds(self) -> List[float]:
+        """Thresholds for assigning phases."""
+        return self._thresholds
+
+    @thresholds.setter
+    def thresholds(self, value: List[float]) -> None:
+        if len(value) != len(self.channels):
+            raise ValueError("Provide one threshold per channel.")
+        # check that the thresholds are between 0 and 1
+        if not all(0 < t < 1 for t in value):
+            raise ValueError("Thresholds must be between 0 and 1.")
+
+        self._thresholds = value
+
+    @property
     def phase_percentages(self) -> List[float]:
         """Percentage of individual phases."""
         return self._phase_percentages
@@ -58,6 +95,11 @@ class FUCCISensor(ABC):
     def phase_percentages(self, values: List[float]) -> None:
         if len(values) != len(self.phases):
             raise ValueError("Pass percentage for each phase.")
+
+        # check that the sum of phase borders is less than 1
+        if not np.isclose(sum(values), 1.0):
+            raise ValueError("Phase borders do not sum to 1.")
+
         self._phase_percentages = values
 
     @abstractmethod
@@ -102,8 +144,14 @@ class FUCCISASensor(FUCCISensor):
     """FUCCI(SA) sensor."""
 
     def __init__(
-        self, phase_percentages: List[float], center: List[float], sigma: List[float]
+        self,
+        channels: List[str],
+        phase_percentages: List[float],
+        center: List[float],
+        sigma: List[float],
+        thresholds: List[float],
     ) -> None:
+        self.channels = channels
         self.phase_percentages = phase_percentages
         self.set_accumulation_and_degradation_parameters(center, sigma)
 

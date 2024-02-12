@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import List
 
 import pandas as pd
 
@@ -53,14 +52,12 @@ class NewColumns(str, Enum):
 
 def generate_cycle_phases(
     df: pd.DataFrame,
-    g1_channel: str,
-    s_g2_channel: str,
-    phases: List[str],
-    phase_borders: List[float],
-    thresholds: List[float],
+    sensor: FUCCISensor,
 ) -> None:
     """Add a column in place to the dataframe with the phase of the cell cycle, where
     the phase is determined using a threshold on the cell cycle percentage.
+
+    TODO update
 
     The thresholds must be between 0 and 1.
     The phase borders must be between 0 and 1.
@@ -87,21 +84,11 @@ def generate_cycle_phases(
     ----------
     df : pd.DataFrame
         Dataframe with columns holding normalized intensities
-    g1_channel : str
-        First channel labelling the G1 part of the cell cycle
-    s_g2_channel : str
-        Second channel labelling the remaining part of the cell cycle
-    phases : List[str]
-        List of phases corresponding to the thresholds
-    phase_borders : List[float]
-        List of cell cycle percentages per phase, must be between 0 and 1
-    thresholds : List[float]
-        List of thresholds to determine phase, must be between 0 and 1
+    sensor: FUCCISensor
+        FUCCI sensor with phase specifics
 
     Raises
     ------
-    ValueError
-        If the number of phases and phase_borders do not match (one more phase expected)
     ValueError
         If the number of thresholds is not 2
     ValueError
@@ -110,39 +97,12 @@ def generate_cycle_phases(
         If the thresholds are not between 0 and 1, one excluded
     """
     # sanity check: check that the normalized channels are present
-    for channel in [g1_channel, s_g2_channel]:
+    for channel in sensor.channels:
         if get_norm_channel_name(channel) not in df.columns:
             raise ValueError(
                 f"Column {get_norm_channel_name(channel)} not found, call "
                 f"normalize_channel({channel}) on the dataframe."
             )
-
-    # check that the number of phases and thresholds match
-    if len(phases) != len(phase_borders) + 1:
-        raise ValueError(
-            f"There must be one more phase than thresholds (got {len(phases)} for "
-            f"{len(phase_borders)} phase borders)."
-        )
-
-    # check that the sum of phase borders is less than 1
-    if sum(phase_borders) > 1:
-        raise ValueError("Phase borders sum to a value greater than 1.")
-
-    # check that the thresholds are between 0 and 1
-    if not all(0 < t < 1 for t in phase_borders):
-        raise ValueError("Phase borders must be between 0 and 1.")
-
-    # check that all phases are unique
-    if len(phases) != len(set(phases)):
-        raise ValueError("Phases must be unique.")
-
-    # check that the thresholds are between 0 and 1
-    if not all(0 < t < 1 for t in thresholds):
-        raise ValueError("Thresholds must be between 0 and 1.")
-
-    # get normalized channel names
-    get_norm_channel_name(g1_channel)
-    get_norm_channel_name(s_g2_channel)
 
     # TODO add cell cycle logic
 

@@ -5,16 +5,13 @@ import pandas as pd
 
 from .io import read_trackmate_xml
 from .phase import generate_cycle_phases
+from .sensor import FUCCISensor
 from .utils import normalize_channels
 
 
 def process_dataframe(
     df: pd.DataFrame,
-    g1_channel: str,
-    s_g2_channel: str,
-    phases: List[str],
-    phase_borders: List[float],
-    thresholds: List[float],
+    sensor: FUCCISensor,
     use_moving_average: bool = True,
     window_size: int = 7,
     manual_min: Optional[List[float]] = None,
@@ -36,10 +33,8 @@ def process_dataframe(
     ----------
     df : pandas.DataFrame
         Dataframe
-    g1_channel : str
-        Smaller wavelength FUCCI channel
-    s_g2_channel : str
-        Longer wavelength FUCCI channel
+    sensor : FUCCISensor
+        FUCCI sensor with phase specifics
     use_moving_average : bool, optional
         Use moving average before normalization, by default True
     window_size : int, optional
@@ -48,18 +43,11 @@ def process_dataframe(
         Manually determined minimum for each channel, by default None
     manual_max : Optional[List[float]], optional
         Manually determined maximum for each channel, by default None
-    phases : Optional[List[str]], optional
-        List of the different phases, by default None
-    phase_borders : Optional[List[float]], optional
-        List of the percentages marking the end of each phase, should
-        one element less than the number of phases
-    thresholds : Optional[List[float]], optional
-        List of thresholds to be used for each channel to decide if it is ON or OFF
     """
     # normalize the channels
     normalize_channels(
         df,
-        [g1_channel, s_g2_channel],
+        sensor.channels,
         use_moving_average=use_moving_average,
         moving_average_window=window_size,
         manual_min=manual_min,
@@ -69,21 +57,13 @@ def process_dataframe(
     # compute the phases
     generate_cycle_phases(
         df,
-        g1_channel,
-        s_g2_channel,
-        phases=phases,
-        phase_borders=phase_borders,
-        thresholds=thresholds,
+        sensor=sensor,
     )
 
 
 def process_trackmate(
     xml_path: Union[str, Path],
-    g1_channel: str,
-    s_g2_channel: str,
-    phases: List[str],
-    phase_borders: List[float],
-    thresholds: List[float],
+    sensor: FUCCISensor,
     use_moving_average: bool = True,
     window_size: int = 5,
     manual_min: Optional[List[float]] = None,
@@ -99,8 +79,7 @@ def process_trackmate(
           and each channel
         - if `manual_min` and `manual_max` are None, normalize the channels globally.
           Otherwise, use them to normalize each channel.
-        - compute the cell cycle percentage using a trigonometric approach
-        - if `phases` and `thresholds` are not None, compute the phases of the cell
+        - compute the cell cycle percentage
         - save an updated XML copy with the new features
 
     # TODO: add details about the normalization, the trigonometric approach and phases
@@ -109,10 +88,8 @@ def process_trackmate(
     ----------
     xml_path : Union[str, Path]
         Path to the XML file
-    g1_channel : str
-        Smaller wavelength FUCCI channel
-    s_g2_channel : str
-        Longer wavelength FUCCI channel
+    sensor : FUCCISensor
+        FUCCI sensor with phase specifics
     use_moving_average : bool, optional
         Use moving average before normalization, by default True
     window_size : int, optional
@@ -121,13 +98,6 @@ def process_trackmate(
         Manually determined minimum for each channel, by default None
     manual_max : Optional[List[float]], optional
         Manually determined maximum for each channel, by default None
-    phases : Optional[List[str]], optional
-        List of the different phases, by default None
-    phase_borders : Optional[List[float]], optional
-        List of the percentages marking the end of each phase, should
-        one element less than the number of phases
-    thresholds : Optional[List[float]], optional
-        List of thresholds to be used for each channel to decide if it is ON or OFF
 
     Returns
     -------
@@ -140,15 +110,11 @@ def process_trackmate(
     # process the dataframe
     process_dataframe(
         df,
-        g1_channel=g1_channel,
-        s_g2_channel=s_g2_channel,
+        sensor,
         use_moving_average=use_moving_average,
         window_size=window_size,
         manual_min=manual_min,
         manual_max=manual_max,
-        phases=phases,
-        phase_borders=phase_borders,
-        thresholds=thresholds,
     )
 
     # update the XML
