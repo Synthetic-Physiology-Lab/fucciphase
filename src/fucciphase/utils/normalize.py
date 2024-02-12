@@ -117,6 +117,7 @@ def normalize_channels(
         # only two channels possible with normalization depending on other channel
         # can change in future implementations!
         raise ValueError("The current implementation only works with two channels.")
+    # TODO decide on use case for manual minimum or maximum
     if manual_min is not None:
         # check that it has the same number of entries as there are channels
         if len(manual_min) != len(channels):

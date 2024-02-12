@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-# TODO improve simulation, use sine waves
+# TODO improve simulation, use logistic functions
 
 
 def simulate_single_channel(
