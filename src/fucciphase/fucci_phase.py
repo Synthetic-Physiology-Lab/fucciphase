@@ -11,7 +11,9 @@ from .utils import normalize_channels
 
 def process_dataframe(
     df: pd.DataFrame,
+    channels: List[str],
     sensor: FUCCISensor,
+    thresholds: List[float],
     use_moving_average: bool = True,
     window_size: int = 7,
     manual_min: Optional[List[float]] = None,
@@ -33,8 +35,12 @@ def process_dataframe(
     ----------
     df : pandas.DataFrame
         Dataframe
+    channels: List[str]
+        Names of channels holding FUCCI information
     sensor : FUCCISensor
         FUCCI sensor with phase specifics
+    thresholds: List[float]
+        Thresholds to separate phases
     use_moving_average : bool, optional
         Use moving average before normalization, by default True
     window_size : int, optional
@@ -44,10 +50,12 @@ def process_dataframe(
     manual_max : Optional[List[float]], optional
         Manually determined maximum for each channel, by default None
     """
+    if len(channels) != sensor.fluorophores:
+        raise ValueError(f"Need to provide {sensor.fluorophores} channel names.")
     # normalize the channels
     normalize_channels(
         df,
-        sensor.channels,
+        channels,
         use_moving_average=use_moving_average,
         moving_average_window=window_size,
         manual_min=manual_min,
@@ -55,15 +63,14 @@ def process_dataframe(
     )
 
     # compute the phases
-    generate_cycle_phases(
-        df,
-        sensor=sensor,
-    )
+    generate_cycle_phases(df, sensor=sensor, channels=channels, thresholds=thresholds)
 
 
 def process_trackmate(
     xml_path: Union[str, Path],
+    channels: List[str],
     sensor: FUCCISensor,
+    thresholds: List[float],
     use_moving_average: bool = True,
     window_size: int = 5,
     manual_min: Optional[List[float]] = None,
@@ -88,8 +95,12 @@ def process_trackmate(
     ----------
     xml_path : Union[str, Path]
         Path to the XML file
+    channels: List[str]
+        Names of channels holding FUCCI information
     sensor : FUCCISensor
         FUCCI sensor with phase specifics
+    thresholds: List[float]
+        Thresholds to separate phases
     use_moving_average : bool, optional
         Use moving average before normalization, by default True
     window_size : int, optional
@@ -110,7 +121,9 @@ def process_trackmate(
     # process the dataframe
     process_dataframe(
         df,
+        channels,
         sensor,
+        thresholds,
         use_moving_average=use_moving_average,
         window_size=window_size,
         manual_min=manual_min,
