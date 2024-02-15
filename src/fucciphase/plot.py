@@ -15,6 +15,7 @@ def plot_raw_intensities(
     color2: Optional[str] = None,
     time_column: str = "FRAME",
     time_label: str = "Frame #",
+    **plot_kwargs: bool,
 ) -> None:
     """TODO description."""
     ch1_intensity = df[channel1]
@@ -33,8 +34,8 @@ def plot_raw_intensities(
     ax2.tick_params(axis="y", labelcolor=color2)
 
     # plot signal
-    ax1.plot(t, ch1_intensity, color=color1)
-    ax2.plot(t, ch2_intensity, color=color2)
+    ax1.plot(t, ch1_intensity, color=color1, **plot_kwargs)
+    ax2.plot(t, ch2_intensity, color=color2, **plot_kwargs)
     fig.tight_layout()
 
 
