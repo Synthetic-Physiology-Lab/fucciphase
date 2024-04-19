@@ -72,7 +72,7 @@ def process_trackmate(
     sensor: FUCCISensor,
     thresholds: List[float],
     use_moving_average: bool = True,
-    window_size: int = 5,
+    window_size: int = 7,
     manual_min: Optional[List[float]] = None,
     manual_max: Optional[List[float]] = None,
 ) -> pd.DataFrame:

@@ -116,8 +116,6 @@ def generate_cycle_phases(
     # check that all channels are present
     check_channels(sensor.fluorophores, channels)
 
-    # TODO add cell cycle logic
-
     # compute phases
     estimate_cell_phase_from_max_intensity(
         df,
@@ -146,7 +144,8 @@ def estimate_cell_cycle_percentage(
         percentages.append(percentage)
 
     # TODO add inplace to dataframe
-    df[NewColumns.cell_cycle()] = pd.Series(percentages, dtype=float)
+    # df[NewColumns.cell_cycle()] = pd.Series(percentages, dtype=float)
+    df[NewColumns.cell_cycle()] = percentages
 
 
 def estimate_cell_phase_from_max_intensity(
@@ -210,9 +209,8 @@ def estimate_cell_phase_from_max_intensity(
     phase_names = []
     for phase_markers in phase_markers_list_tilted:
         phase_names.append(sensor.get_phase(phase_markers))
-    df[NewColumns.discrete_phase_max()] = pd.Series(
-        phase_names, dtype=str
-    )  # add as str
+    # TODO check pd.Series issue
+    df[NewColumns.discrete_phase_max()] = phase_names
 
 
 def estimate_cell_phase_from_background(
@@ -260,16 +258,18 @@ def estimate_cell_phase_from_background(
         raise ValueError("Provide one background value per channel.")
 
     check_channels(sensor.fluorophores, channels)
-    check_thresholds(sensor.fluorophores, thresholds)
+    # TODO loosen check on boundary values (can be outside 0 to 1)
+    # check_thresholds(sensor.fluorophores, thresholds)
 
     phase_markers_list: List["pd.Series[bool]"] = []
     for channel, bg_value, threshold in zip(channels, background, thresholds):
         intensity = df[channel]
         # threshold channels to decide if ON / OFF (data is in list per spot)
         phase_markers_list.append(intensity > threshold * bg_value)
+    phase_markers_list_tilted = np.array(phase_markers_list).T
 
     # store phases
     phase_names = []
-    for phase_markers in phase_markers_list:
+    for phase_markers in phase_markers_list_tilted:
         phase_names.append(sensor.get_phase(phase_markers))
     df[NewColumns.discrete_phase_bg()] = pd.Series(phase_names, dtype=str)  # add as str
