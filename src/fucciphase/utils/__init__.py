@@ -8,11 +8,13 @@ __all__ = [
     "check_thresholds",
     "check_channels",
     "split_track",
+    "fit_percentages",
     "split_all_tracks",
 ]
 
 from .checks import check_channels, check_thresholds
 from .normalize import get_norm_channel_name, norm, normalize_channels
+from .phase_fit import fit_percentages
 from .simulator import simulate_single_track
 from .track_postprocessing import split_all_tracks, split_track
 from .trackmate import TrackMateXML
