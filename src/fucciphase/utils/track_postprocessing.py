@@ -1,3 +1,5 @@
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 from scipy import signal
@@ -99,3 +101,134 @@ def split_all_tracks(
         )
         # update all tracks
         track_df.loc[track_df["TRACK_ID"] == track_idx] = track
+
+
+def compute_motility_parameters(
+    track_df: pd.DataFrame,
+    centroid_x: str = "POSITION_X",
+    centroid_y: str = "POSITION_Y",
+    centroid_z: bool = False,
+) -> None:
+    """Add motility parameters to DataFrame."""
+    track_df["MSD"] = np.nan
+    track_df["DISPLACEMENTS"] = np.nan
+    indices = track_df["TRACK_ID"].unique()
+    for index in indices:
+        if index == -1:
+            continue
+        track = track_df[track_df["TRACK_ID"] == index]
+        centroids_x = track[centroid_x].to_numpy()
+        centroids_y = track[centroid_y].to_numpy()
+        centroids_z = None
+        if centroid_z is not False:
+            centroids_z = track[centroid_z].to_numpy()
+
+        displacements = compute_displacements(centroids_x, centroids_y, centroids_z)
+        velocities = compute_velocities(centroids_x, centroids_y, centroids_z)
+        MSDs = compute_MSD(centroids_x, centroids_y, centroids_z)
+        track_df.loc[track_df["TRACK_ID"] == index, "DISPLACEMENTS"] = displacements
+        track_df.loc[track_df["TRACK_ID"] == index, "VELOCITIES"] = velocities
+        track_df.loc[track_df["TRACK_ID"] == index, "MSD"] = MSDs
+
+
+def compute_displacements(
+    centroids_x: np.ndarray, centroids_y: np.ndarray, centroids_z: Optional[np.ndarray]
+) -> np.ndarray:
+    """Compute displacement w.r.t origin."""
+    N = len(centroids_x)
+    x0 = centroids_x[0]
+    y0 = centroids_y[0]
+    z0 = None
+    if centroids_z is not None:
+        z0 = centroids_z[0]
+    r0 = (x0, y0, z0)
+    distances = np.zeros(N)
+    for idx in range(N):
+        x = centroids_x[idx]
+        y = centroids_y[idx]
+        z = None
+        if centroids_z is not None:
+            z = centroids_z[idx]
+        r = (x, y, z)
+        distances[idx] = np.sqrt(get_squared_displacement(r0, r))
+    return distances
+
+
+def compute_velocities(
+    centroids_x: np.ndarray, centroids_y: np.ndarray, centroids_z: Optional[np.ndarray]
+) -> np.ndarray:
+    """Compute velocity."""
+    N = len(centroids_x)
+    x0 = centroids_x[0]
+    y0 = centroids_y[0]
+    z0 = None
+    if centroids_z is not None:
+        z0 = centroids_z[0]
+    r0 = (x0, y0, z0)
+    distances = np.zeros(N)
+    for idx in range(N):
+        x = centroids_x[idx]
+        y = centroids_y[idx]
+        z = None
+        if centroids_z is not None:
+            z = centroids_z[idx]
+        r = (x, y, z)
+        distances[idx] = np.sqrt(get_squared_displacement(r0, r))
+        # overwrite start vector
+        r0 = (x, y, z)
+    return distances
+
+
+def compute_MSD(
+    centroids_x: np.ndarray, centroids_y: np.ndarray, centroids_z: Optional[np.ndarray]
+) -> np.ndarray:
+    """Compute mean-squared distance.
+
+    Notes
+    -----
+    Please find more information in
+    Methods for cell and particle tracking.,
+    Meijering E, Dzyubachyk O, Smal I.,
+    Methods Enzymol. 2012;504:183-200.
+    https://doi.org/10.1016/B978-0-12-391857-4.00009-4
+    """
+    N = len(centroids_x)
+    MSDs = np.zeros(N)
+    for idx in range(N):
+        if idx == 0:
+            continue
+        MSD = 0.0
+        for i in range(N - idx):
+            x = centroids_x[i + idx]
+            y = centroids_y[i + idx]
+            z = None
+            if centroids_z is not None:
+                z = centroids_z[i + idx]
+            r = (x, y, z)
+
+            xi = centroids_x[i]
+            yi = centroids_y[i]
+            zi = None
+            if centroids_z is not None:
+                zi = centroids_z[i]
+            ri = (xi, yi, zi)
+            MSD += get_squared_displacement(ri, r)
+        MSD /= N - idx
+        MSDs[idx] = MSD
+    return MSDs
+
+
+def get_squared_displacement(r0: tuple, r: tuple) -> float:
+    """Return squared displacement between two points."""
+    if not len(r0) == 3:
+        raise ValueError("Provide three-component coordinates")
+    if not len(r) == 3:
+        raise ValueError("Provide three-component coordinates")
+    displacement = 0.0
+    for i in range(3):
+        x0 = r0[i]
+        x = r[i]
+        if x0 is None:
+            continue
+        displacement += (x0 - x) ** 2
+    return displacement
