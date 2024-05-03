@@ -2,6 +2,7 @@ from typing import Optional
 
 import pandas as pd
 from matplotlib import pyplot as plt
+from matplotlib.figure import Figure
 
 from .phase import NewColumns
 from .utils import get_norm_channel_name
@@ -18,6 +19,90 @@ def set_phase_colors(
     df["COLOR"] = df[phase_column].copy()
     for phase in phases:
         df.loc[df[phase_column] == phase, "COLOR"] = colordict[phase]
+
+
+def plot_feature(
+    df: pd.DataFrame,
+    time_column: str,
+    feature_name: str,
+    interpolate_time: bool = False,
+    track_name: str = "TRACK_ID",
+    ylim: Optional[tuple] = None,
+    yticks: Optional[list] = None,
+) -> Figure:
+    """Plot features of individual tracks in one plot."""
+    if feature_name not in df:
+        raise ValueError(f"(Feature {feature_name} not in provided DataFrame.")
+    if time_column not in df:
+        raise ValueError(f"(Time {time_column} not in provided DataFrame.")
+    tracks = df[track_name].unique()
+    tracks = tracks[tracks >= 0]
+
+    fig = plt.figure()
+    # Plot each graph, and manually set the y tick values
+    for track_idx in tracks:
+        time = df.loc[df[track_name] == track_idx, time_column].to_numpy()
+        feature = df.loc[df[track_name] == track_idx, feature_name].to_numpy()
+        plt.plot(time, feature)
+        if ylim is not None:
+            plt.ylim(ylim)
+        if yticks is not None:
+            plt.yticks(yticks)
+    # TODO interplolate and plot average
+    """
+    plt.plot(interpolated_time, np.nanmean(interpolated_feature, lw=5, color="black")
+    if ylim is not None:
+        plt.ylim(ylim)
+    if yticks is not None:
+        plt.yticks(yticks)
+    """
+    return fig
+
+
+def plot_feature_stacked(
+    df: pd.DataFrame,
+    time_column: str,
+    feature_name: str,
+    interpolate_time: bool = False,
+    track_name: str = "TRACK_ID",
+    ylim: Optional[tuple] = None,
+    yticks: Optional[list] = None,
+) -> Figure:
+    """Stack features of individual tracks."""
+    if feature_name not in df:
+        raise ValueError(f"(Feature {feature_name} not in provided DataFrame.")
+    if time_column not in df:
+        raise ValueError(f"(Time {time_column} not in provided DataFrame.")
+    if "COLOR" not in df:
+        raise ValueError("Run set_phase_colors first on DataFrame")
+    tracks = df[track_name].unique()
+    tracks = tracks[tracks >= 0]
+
+    fig, axs = plt.subplots(len(tracks), 1, sharex=True, figsize=(10, 5 * len(tracks)))
+    # Remove horizontal space between axes
+    fig.subplots_adjust(hspace=0)
+
+    # Plot each graph, and manually set the y tick values
+    for i, track_idx in enumerate(tracks):
+        time = df.loc[df[track_name] == track_idx, time_column].to_numpy()
+        feature = df.loc[df[track_name] == track_idx, feature_name].to_numpy()
+        colors = df.loc[df[track_name] == track_idx, "COLOR"].to_numpy()
+        axs[i].plot(time, feature)
+        axs[i].scatter(time, feature, c=colors, lw=4)
+        if ylim is not None:
+            axs[i].set_ylim(ylim)
+        if yticks is not None:
+            axs[i].set_yticks(yticks)
+
+    # TODO interplolate and plot average
+    """
+    axs[-1].plot(interpolated_time, np.nanmean(interpolated_feature,lw=5, color="black")
+    if ylim is not None:
+        axs[-1].set_ylim(ylim)
+    if yticks is not None:
+        axs[-1].set_yticks(yticks)
+    """
+    return fig
 
 
 def plot_raw_intensities(
