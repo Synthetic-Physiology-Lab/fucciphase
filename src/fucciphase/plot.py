@@ -7,6 +7,19 @@ from .phase import NewColumns
 from .utils import get_norm_channel_name
 
 
+def set_phase_colors(
+    df: pd.DataFrame, colordict: dict, phase_column: str = "DISCRETE_PHASE_MAX"
+) -> None:
+    """Label each phase by fixed color."""
+    phases = df[phase_column].unique()
+    if not all(phase in colordict for phase in phases):
+        raise ValueError(f"Provide a color for every phase in: {phases}")
+
+    df["COLOR"] = df[phase_column].copy()
+    for phase in phases:
+        df.loc[df[phase_column] == phase, "COLOR"] = colordict[phase]
+
+
 def plot_raw_intensities(
     df: pd.DataFrame,
     channel1: str,
