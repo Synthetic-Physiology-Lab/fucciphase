@@ -142,12 +142,13 @@ class TrackMateXML:
     def _add_track_ids(self, df: pd.DataFrame) -> None:
         # extract track IDs (if there are spots)
         if len(df) > 0:
-            track_ids = np.zeros_like(df[ID].values)
+            # some spots do not have tracks associated
+            track_ids = np.full_like(df[ID].values, -1)
             if self._model is not None:
                 for element in self._model:
                     if element.tag == "AllTracks":
                         for track in element:
-                            track_id = track.attrib["TRACK_ID"]
+                            track_id = int(track.attrib["TRACK_ID"])
 
                             for edge in track:
                                 spot_source = edge.attrib["SPOT_SOURCE_ID"]

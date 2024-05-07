@@ -29,6 +29,7 @@ classifiers = [
     # "Typing :: Typed",
 ]
 dependencies = [
+    "scipy",
     "numpy",
     "pandas",
     "openpyxl",   # needed to read csv

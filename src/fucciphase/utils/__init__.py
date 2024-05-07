@@ -4,10 +4,23 @@ __all__ = [
     "normalize_channels",
     "get_norm_channel_name",
     "norm",
-    "moving_average",
     "TrackMateXML",
+    "check_thresholds",
+    "check_channels",
+    "split_track",
+    "fit_percentages",
+    "split_all_tracks",
+    "compute_motility_parameters",
+    "postprocess_estimated_percentages",
 ]
 
-from .normalize import get_norm_channel_name, moving_average, norm, normalize_channels
+from .checks import check_channels, check_thresholds
+from .normalize import get_norm_channel_name, norm, normalize_channels
+from .phase_fit import fit_percentages, postprocess_estimated_percentages
 from .simulator import simulate_single_track
+from .track_postprocessing import (
+    compute_motility_parameters,
+    split_all_tracks,
+    split_track,
+)
 from .trackmate import TrackMateXML

@@ -4,7 +4,8 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from .utils import get_norm_channel_name, norm
+from .sensor import FUCCISensor
+from .utils import check_channels, check_thresholds, get_norm_channel_name
 
 
 class NewColumns(str, Enum):
@@ -15,15 +16,15 @@ class NewColumns(str, Enum):
     ----------
     CELL_CYCLE_PERC : str
         Unique cell cycle percentage value
-    MANUAL_SPOT_COLOR : str
-        Color indexing
     PHASE : str
         Phase of the cell cycle
     """
 
     CELL_CYCLE_PERC = "CELL_CYCLE_PERC"
-    MANUAL_SPOT_COLOR = "MANUAL_SPOT_COLOR"
     PHASE = "PHASE"
+    DISCRETE_PHASE_MAX = "DISCRETE_PHASE_MAX"
+    DISCRETE_PHASE_BG = "DISCRETE_PHASE_BG"
+    DISCRETE_PHASE_DIFF = "DISCRETE_PHASE_DIFF"
 
     @staticmethod
     def cell_cycle() -> str:
@@ -36,155 +37,239 @@ class NewColumns(str, Enum):
         return NewColumns.PHASE.value
 
     @staticmethod
-    def color() -> str:
-        """Return the name of the color column."""
-        return NewColumns.MANUAL_SPOT_COLOR.value
+    def discrete_phase_max() -> str:
+        """Return the name of the discrete phase column."""
+        return NewColumns.DISCRETE_PHASE_MAX.value
+
+    @staticmethod
+    def discrete_phase_bg() -> str:
+        """Return the name of the discrete phase column."""
+        return NewColumns.DISCRETE_PHASE_BG.value
+
+    @staticmethod
+    def discrete_phase_diff() -> str:
+        """Return the name of the discrete phase column."""
+        return NewColumns.DISCRETE_PHASE_DIFF.value
 
 
-def compute_cell_cycle(
-    df: pd.DataFrame, g1_channel: str, s_g2_channel: str
-) -> List[str]:
-    """Compute a unique cell cycle percentage value using two channels, as well as
-    a color indexing. The corresponding columns are added in place in the dataframe.
+def generate_cycle_phases(
+    df: pd.DataFrame, channels: List[str], sensor: FUCCISensor, thresholds: List[float]
+) -> None:
+    """Add a column in place to the dataframe with the phase of the cell cycle, where
+    the phase is determined using a threshold on the cell cycle percentage.
 
-    The unique intensity is computed as the normalised angle in polar space (g1_channel,
-    channel 2). The two channels must have been normalised before using
-    fucciphase.utils.normalize_channels().
+    TODO update
+
+    The thresholds must be between 0 and 1.
+    The phase borders must be between 0 and 1.
+    Each phase border is the expected percentage for the corresponding phase,
+    the last phase will receive the difference to 1 (i.e., 100% of the cell cycle).
+
+    Example:
+        phases = ["G1", "S/G1", "SG2M"]
+        phase_borders = [0.2, 0.2]
+        thresholds = [0.1, 0.1]
+
+    Here, SG2M spans the last 60% of the cell cycle.
+    The thresholds mean that all intensities greater than 0.1 times the
+    maximum intensity are considered ON.
+
+    The phase borders need to be determined experimentally.
+    Possible methods are FACS or analysis of the FUCCI intensities
+    of multiple cell cycles recorded by live-cell fluorescence microscopy.
+
+    The thresholds need to be chosen based on the expected noise of the background and
+    uncertainty in intensity computation.
 
     Parameters
     ----------
     df : pd.DataFrame
-        Dataframe
-    g1_channel : str
-        First channel
-    s_g2_channel : str
-        Second channel
+        Dataframe with columns holding normalized intensities
+    sensor: FUCCISensor
+        FUCCI sensor with phase specifics
+    channels: List[str]
+        Names of channels
+    thresholds: List[float]
+        Thresholds to separate phases
 
-    Returns
-    -------
-    List[str]
-        The names of the new columns in the dataframe
+
+    Raises
+    ------
+    ValueError
+        If the number of thresholds is not 2
+    ValueError
+        If the phases are not unique
+    ValueError
+        If the thresholds are not between 0 and 1, one excluded
+    """
+    # sanity check: check that the normalized channels are present
+    norm_channel_names = []
+    for channel in channels:
+        norm_channel_name = get_norm_channel_name(channel)
+        if norm_channel_name not in df.columns:
+            raise ValueError(
+                f"Column {get_norm_channel_name(channel)} not found, call "
+                f"normalize_channel({channel}) on the dataframe."
+            )
+        norm_channel_names.append(norm_channel_name)
+
+    # check that all channels are present
+    check_channels(sensor.fluorophores, channels)
+
+    # compute phases
+    estimate_cell_phase_from_max_intensity(
+        df,
+        norm_channel_names,
+        sensor,
+        background=[0] * sensor.fluorophores,
+        thresholds=thresholds,
+    )  # TODO check if background is correct
+
+    # name of phase_column
+    phase_column = NewColumns.discrete_phase_max()
+    # compute percentages
+    estimate_cell_cycle_percentage(df, norm_channel_names, sensor, phase_column)
+
+
+def estimate_cell_cycle_percentage(
+    df: pd.DataFrame, channels: List[str], sensor: FUCCISensor, phase_column: str
+) -> None:
+    """TODO description."""
+    percentages = []
+    # iterate through data frame
+    for _, row in df.iterrows():
+        intensities = [row[channel] for channel in channels]
+        phase = row[phase_column]
+        percentage = sensor.get_estimated_cycle_percentage(phase, intensities)
+        percentages.append(percentage)
+
+    # TODO add inplace to dataframe
+    # df[NewColumns.cell_cycle()] = pd.Series(percentages, dtype=float)
+    df[NewColumns.cell_cycle()] = percentages
+
+
+def estimate_cell_phase_from_max_intensity(
+    df: pd.DataFrame,
+    channels: List[str],
+    sensor: FUCCISensor,
+    background: List[float],
+    thresholds: List[float],
+) -> None:
+    """Add a column in place to the dataframe with the estimated phase of the cell
+    cycle, where the phase is determined by thresholding the channel intensities.
+
+    The provided thresholds are used to decide if a channel is switched on (ON).
+    For that, the background is subtracted from the mean intensity.
+    The obtained values are normalized w.r.t. the maximum mean intensity in the
+    respective channel available in the DataFrame.
+    Hence, the threshold values should be between 0 and 1.
+    This method will not work reliably if not enough cells from different phases
+    are contained in the DataFrame.
+
+    Parameters
+    ----------
+    df: pd.DataFrame
+        Dataframe with a CELL_CYCLE_PERC column
+    channels: List[str]
+        Names of channels
+    sensor: FUCCISensor
+        FUCCI sensor with specific phase analysis information
+    background: List[float]
+        Single value per channel representing background
+    thresholds: List[float]
+        Thresholds to separate phases
 
     Raises
     ------
     ValueError
         If the dataframe does not contain the normalized channels.
     """
-    # sanity check: check that the normalized channels are present
-    for channel in [g1_channel, s_g2_channel]:
-        if get_norm_channel_name(channel) not in df.columns:
+    # sanity check: check that channels are present
+    for channel in channels:
+        if channel not in df.columns:
             raise ValueError(
-                f"Column {get_norm_channel_name(channel)} not found, call "
-                f"normalize_channel({channel}) on the dataframe."
+                f"Column {channel} not found, provide correct input parameters."
             )
 
-    # get normalized channel names
-    g1_channel_norm = get_norm_channel_name(g1_channel)
-    s_g2_channel_norm = get_norm_channel_name(s_g2_channel)
+    if len(channels) != len(background):
+        raise ValueError("Provide one background value per channel.")
 
-    # define cosine and sine
-    cos_ch1 = df[g1_channel_norm]
-    sin_ch2 = df[s_g2_channel_norm]
+    check_channels(sensor.fluorophores, channels)
+    check_thresholds(sensor.fluorophores, thresholds)
 
-    # compute normalised unified intensity
-    unified_intensity = norm(np.arctan2(sin_ch2, cos_ch1))
+    phase_markers_list: List["pd.Series[bool]"] = []
+    for channel, bg_value, threshold in zip(channels, background, thresholds):
+        # get intensities and subtract background
+        intensity = df[channel] - bg_value
+        # threshold channels to decide if ON / OFF (data is in list per spot)
+        phase_markers_list.append(intensity > threshold * intensity.max())
+    phase_markers_list_tilted = np.array(phase_markers_list).T
 
-    # compute color (following java plugin) # TODO revisit
-    color = np.rint((256**2 + 256 + 1) * 255 * unified_intensity - 256**3)
-
-    # update the dataframe
-    df[NewColumns.cell_cycle()] = unified_intensity
-    df[NewColumns.color()] = pd.Series(color, dtype=int)  # make sure we add it as int
-
-    return [
-        NewColumns.cell_cycle(),
-        NewColumns.color(),
-    ]
+    # store phases
+    phase_names = []
+    for phase_markers in phase_markers_list_tilted:
+        phase_names.append(sensor.get_phase(phase_markers))
+    # TODO check pd.Series issue
+    df[NewColumns.discrete_phase_max()] = phase_names
 
 
-def generate_cycle_phases(
-    df: pd.DataFrame, phases: List[str], thresholds: List[float]
+def estimate_cell_phase_from_background(
+    df: pd.DataFrame,
+    channels: List[str],
+    sensor: FUCCISensor,
+    background: List[float],
+    thresholds: List[float],
 ) -> None:
-    """Add a column in place to the dataframe with the phase of the cell cycle, where
-    the phase is determined using a threshold on the cell cycle percentage.
+    """Add a column in place to the dataframe with the estimated phase of the cell
+    cycle, where the phase is determined by comparing the channel intensities to
+    the respective background intensities.
 
-    The dataframe must have been previously processed using the compute_cell_cycle()
-    function.
+    The provided factors are used to decide if a channel is switched on (ON).
+    If the intensity exceeds the background level times the factor, the channel
+    is ON. Hence, the factors should be greater than 0.
 
-    The thresholds must be between 0 and 1, 1 excluded, and must be unique. Each
-    threshold is the upper bound for the corresponding phase, the last phase being the
-    one attributed to values larger than all thresholds.
-
-    Example:
-        phases = ["EG1", "G1", "T", "G2M"]
-        threshold = [0.04, 0.4, 0.56]
-
-    TODO: indications on how to determine the thresholds experimentally.
 
     Parameters
     ----------
-    df : pd.DataFrame
+    df: pd.DataFrame
         Dataframe with a CELL_CYCLE_PERC column
-    phases : List[str]
-        List of phases corresponding to the thresholds
-    thresholds : List[float]
-        List of cell cycle percentage thresholds, must be between 0 and 1.
+    channels: List[str]
+        Names of channels
+    sensor: FUCCISensor
+        FUCCI sensor with specific phase analysis information
+    background: List[float]
+        Single value per channel representing background
+    thresholds: List[float]
+        Thresholds to separate phases
 
     Raises
     ------
     ValueError
-        If the CELL_CYCLE_PERC column is missing
-    ValueError
-        If the number of phases and thresholds do not match (one more phase expected)
-    ValueError
-        If the thresholds are not unique
-    ValueError
-        If the phases are not unique
-    ValueError
-        If the thresholds are not between 0 and 1, one excluded
+        If the dataframe does not contain the normalized channels.
     """
-    # check that the cell cycle column is present
-    if NewColumns.cell_cycle() not in df.columns:
-        raise ValueError(
-            f"Column {NewColumns.cell_cycle()} not found, call "
-            f"compute_cell_cycle() on the dataframe."
-        )
+    # sanity check: check that channels are present
+    for channel in channels:
+        if channel not in df.columns:
+            raise ValueError(
+                f"Column {channel} not found, provide correct input parameters."
+            )
 
-    # check that the number of phases and thresholds match
-    if len(phases) != len(thresholds) + 1:
-        raise ValueError(
-            f"There must be one more phase than thresholds (got {len(phases)} for "
-            f"{len(thresholds)} thresholds)."
-        )
+    if len(channels) != len(background):
+        raise ValueError("Provide one background value per channel.")
 
-    # check that all thresholds are unique
-    if len(thresholds) != len(set(thresholds)):
-        raise ValueError("Thresholds must be unique.")
+    check_channels(sensor.fluorophores, channels)
+    # TODO loosen check on boundary values (can be outside 0 to 1)
+    # check_thresholds(sensor.fluorophores, thresholds)
 
-    # check that all phases are unique
-    if len(phases) != len(set(phases)):
-        raise ValueError("Phases must be unique.")
+    phase_markers_list: List["pd.Series[bool]"] = []
+    for channel, bg_value, threshold in zip(channels, background, thresholds):
+        intensity = df[channel]
+        # threshold channels to decide if ON / OFF (data is in list per spot)
+        phase_markers_list.append(intensity > threshold * bg_value)
+    phase_markers_list_tilted = np.array(phase_markers_list).T
 
-    # check that the thresholds are between 0 and 1
-    if not all(0 < t < 1 for t in thresholds):
-        raise ValueError("Thresholds must be between 0 and 1.")
-
-    # sort the thresholds and phases by increasing threshold
-    # in case they are given in the wrong order
-    # sort according to the thresholds:
-    sorted_phases = [x for _, x in sorted(zip(thresholds, phases[:-1]))]
-    sorted_phases.append(phases[-1])  # add the last element back
-
-    sorted_thresholds = sorted(thresholds)
-
-    # add 1 since the thresholds will be used as bin edges
-    sorted_thresholds = [0, *list(sorted_thresholds), 1.1]
-
-    # get the cell cycle column
-    cell_cycle = df[NewColumns.cell_cycle()]
-
-    # compute a new column with the phases, each phase attributed using the
-    # thresholds on the cell cycle value
-    df[NewColumns.phase()] = pd.cut(
-        cell_cycle, bins=sorted_thresholds, labels=sorted_phases, right=False
-    )
+    # store phases
+    phase_names = []
+    for phase_markers in phase_markers_list_tilted:
+        phase_names.append(sensor.get_phase(phase_markers))
+    df[NewColumns.discrete_phase_bg()] = pd.Series(phase_names, dtype=str)  # add as str
