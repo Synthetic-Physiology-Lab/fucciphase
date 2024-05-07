@@ -1,5 +1,6 @@
 from typing import Optional
 
+import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
@@ -59,6 +60,7 @@ def plot_feature(
     return fig
 
 
+# flake8: noqa: C901
 def plot_feature_stacked(
     df: pd.DataFrame,
     time_column: str,
@@ -67,6 +69,7 @@ def plot_feature_stacked(
     track_name: str = "TRACK_ID",
     ylim: Optional[tuple] = None,
     yticks: Optional[list] = None,
+    interpolation_steps: int = 1000,
 ) -> Figure:
     """Stack features of individual tracks."""
     if feature_name not in df:
@@ -78,9 +81,19 @@ def plot_feature_stacked(
     tracks = df[track_name].unique()
     tracks = tracks[tracks >= 0]
 
-    fig, axs = plt.subplots(len(tracks), 1, sharex=True, figsize=(10, 5 * len(tracks)))
+    if not interpolate_time:
+        fig, axs = plt.subplots(
+            len(tracks), 1, sharex=True, figsize=(10, 5 * len(tracks))
+        )
+    else:
+        fig, axs = plt.subplots(
+            len(tracks) + 1, 1, sharex=True, figsize=(10, 5 * len(tracks))
+        )
     # Remove horizontal space between axes
     fig.subplots_adjust(hspace=0)
+
+    max_frame = 0
+    min_frame = np.inf
 
     # Plot each graph, and manually set the y tick values
     for i, track_idx in enumerate(tracks):
@@ -93,15 +106,31 @@ def plot_feature_stacked(
             axs[i].set_ylim(ylim)
         if yticks is not None:
             axs[i].set_yticks(yticks)
+        if time.max() > max_frame:
+            max_frame = time.max()
+        if time.min() < min_frame:
+            min_frame = time.min()
 
-    # TODO interplolate and plot average
-    """
-    axs[-1].plot(interpolated_time, np.nanmean(interpolated_feature,lw=5, color="black")
-    if ylim is not None:
-        axs[-1].set_ylim(ylim)
-    if yticks is not None:
-        axs[-1].set_yticks(yticks)
-    """
+    if interpolate_time:
+        interpolated_time = np.linspace(min_frame, max_frame, num=interpolation_steps)
+        interpolated_feature = np.zeros(shape=(len(interpolated_time), len(tracks)))
+        for i, track_idx in enumerate(tracks):
+            time = df.loc[df[track_name] == track_idx, time_column].to_numpy()
+            feature = df.loc[df[track_name] == track_idx, feature_name].to_numpy()
+            interpolated_feature[:, i] = np.interp(
+                interpolated_time, time, feature, left=np.nan, right=np.nan
+            )
+        axs[-1].plot(
+            interpolated_time,
+            np.nanmean(interpolated_feature, axis=1),
+            lw=5,
+            color="black",
+        )
+        if ylim is not None:
+            axs[-1].set_ylim(ylim)
+        if yticks is not None:
+            axs[-1].set_yticks(yticks)
+
     return fig
 
 
