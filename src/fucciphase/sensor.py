@@ -112,6 +112,13 @@ class FUCCISensor(ABC):
         self._center_values = center
         self._sigma_values = sigma
 
+    @abstractmethod
+    def get_expected_intensities(
+        self, percentage: Union[float, np.ndarray]
+    ) -> List[Union[float, np.ndarray]]:
+        """Return value of calibrated curves."""
+        pass
+
 
 class FUCCISASensor(FUCCISensor):
     """FUCCI(SA) sensor."""
@@ -241,3 +248,21 @@ class FUCCISASensor(FUCCISensor):
             return self._find_g1s_percentage(intensities[0])
         else:
             return self._find_sg2m_percentage(intensities[1])
+
+    def get_expected_intensities(
+        self, percentage: Union[float, np.ndarray]
+    ) -> List[Union[float, np.ndarray]]:
+        """Return value of calibrated curves."""
+        g1_acc = accumulation_function(
+            percentage, self._center_values[0], self._sigma_values[0]
+        )
+        g1_deg = degradation_function(
+            percentage, self._center_values[1], self._sigma_values[1]
+        )
+        s_g2_m_acc = accumulation_function(
+            percentage, self._center_values[2], self._sigma_values[2]
+        )
+        s_g2_m_deg = degradation_function(
+            percentage, self._center_values[3], self._sigma_values[3]
+        )
+        return [g1_acc + g1_deg - 1.0, s_g2_m_acc + s_g2_m_deg - 1.0]
