@@ -13,6 +13,7 @@ TODO description
 ## Installation
 
 The best way to run fucciphase is to install it in a virtual conda environment.
+Make sure that git installed and can be called from the command line.
 
 (SOON) To install from pip:
 
