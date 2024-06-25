@@ -1,31 +1,16 @@
-import lmfit
 import numpy as np
 import pandas as pd
+from monotonic_derivative import ensure_monotonic_derivative
 
 
 def fit_percentages(frames: np.ndarray, percentages: np.ndarray) -> np.ndarray:
-    """Fit estimated percentages to straight line."""
-    model = lmfit.models.LinearModel()
-    parameters = model.guess(frames, percentages)
-    parameters["slope"].min = 0
-    parameters["intercept"].min = 0
-    try:
-        fit = model.fit(
-            percentages,
-            parameters,
-            x=frames,
-            method="least_squares",
-            fit_kws={"loss": "soft_l1"},
-        )
-        best_fit: np.ndarray = fit.best_fit
-        slope = fit.params["slope"]
-        if np.isclose(slope, 0):
-            best_fit = np.full(percentages.shape, np.nan)
-    except ValueError:
-        best_fit = np.full(percentages.shape, np.nan)
-    # percentage cannot be larger than 100%
-    if np.max(best_fit) > 100.01:
-        best_fit[:] = np.nan
+    """Fit estimated percentages to function with non-negative derivative."""
+    best_fit: np.ndarray = ensure_monotonic_derivative(
+        x=frames,
+        y=percentages,
+        degree=1,
+        force_negative_derivative=False,
+    )
     return best_fit
 
 
