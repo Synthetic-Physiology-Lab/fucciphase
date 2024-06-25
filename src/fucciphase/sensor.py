@@ -266,3 +266,13 @@ class FUCCISASensor(FUCCISensor):
             percentage, self._center_values[3], self._sigma_values[3]
         )
         return [g1_acc + g1_deg - 1.0, s_g2_m_acc + s_g2_m_deg - 1.0]
+
+
+def FUCCISADefaultSensor() -> FUCCISASensor:
+    """Return sensor with default values.
+
+    Should only be used if the cell cycle percentage is not of interest.
+    """
+    return FUCCISASensor(
+        phase_percentages=[25, 25, 50], center=[0, 0, 0, 0], sigma=[0, 0, 0, 0]
+    )
