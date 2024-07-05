@@ -1,7 +1,9 @@
 from typing import Optional
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib import colormaps
 from scipy import signal
 
 
@@ -232,3 +234,46 @@ def get_squared_displacement(r0: tuple, r: tuple) -> float:
             continue
         displacement += (x0 - x) ** 2
     return displacement
+
+
+def plot_trackscheme(
+    df: pd.DataFrame,
+    track_name: str = "TRACK_ID",
+    time_id: str = "POSITION_T",
+    cycle_percentage_id: str = "CELL_CYCLE_PERC_POST",
+    figsize: tuple = (10, 30),
+) -> None:
+    """Plot tracks similar to TrackMate trackscheme.
+
+    Parameters
+    ----------
+    df: pd.DataFrame
+       DataFrame holding tracks
+    track_name: str
+        Name of column with track IDs
+    time_id : str
+        Name of column with time steps
+    cycle_percentage_id: str
+        Name of column with cell cycle percentage info
+    figsize: tuple
+        Size of matplotlib figure
+
+    Notes
+    -----
+    A percentage column, which must contain values between 0 and 100
+    is used to color the individual dots.
+    """
+    cmap_name = "cool"
+    cmap = colormaps.get(cmap_name)
+    plt.figure(figsize=figsize)
+    for track_id in df[track_name]:
+        track = df.loc[df[track_id] == track_id, time_id]
+        color = df.loc[df[track_id] == track_id, cycle_percentage_id]
+        colormapper = [cmap(c / 100.0) for c in color]
+        sc = plt.scatter([round(track_id)] * len(track), track, color=colormapper)
+    plt.xticks(np.arange(1, df[track_id].max(), step=1))
+    sc.set_cmap(cmap_name)
+
+    cbar = plt.colorbar(ticks=[0, 0.5, 1])
+    cbar.ax.set_yticklabels([0, 50, 100])  # vertically oriented colorbar
+    return
