@@ -12,6 +12,7 @@ __all__ = [
     "split_all_tracks",
     "compute_motility_parameters",
     "postprocess_estimated_percentages",
+    "plot_trackscheme",
 ]
 
 from .checks import check_channels, check_thresholds
@@ -20,6 +21,7 @@ from .phase_fit import fit_percentages, postprocess_estimated_percentages
 from .simulator import simulate_single_track
 from .track_postprocessing import (
     compute_motility_parameters,
+    plot_trackscheme,
     split_all_tracks,
     split_track,
 )
