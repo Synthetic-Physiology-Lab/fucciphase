@@ -267,11 +267,11 @@ def plot_trackscheme(
     cmap = colormaps.get(cmap_name)
     plt.figure(figsize=figsize)
     for track_id in df[track_name]:
-        track = df.loc[df[track_id] == track_id, time_id]
-        color = df.loc[df[track_id] == track_id, cycle_percentage_id]
+        track = df.loc[df[track_name] == track_id, time_id]
+        color = df.loc[df[track_name] == track_id, cycle_percentage_id]
         colormapper = [cmap(c / 100.0) for c in color]
         sc = plt.scatter([round(track_id)] * len(track), track, color=colormapper)
-    plt.xticks(np.arange(1, df[track_id].max(), step=1))
+    plt.xticks(np.arange(1, df[track_name].max(), step=1))
     sc.set_cmap(cmap_name)
 
     cbar = plt.colorbar(ticks=[0, 0.5, 1])
