@@ -70,6 +70,7 @@ def plot_feature_stacked(
     ylim: Optional[tuple] = None,
     yticks: Optional[list] = None,
     interpolation_steps: int = 1000,
+    figsize: Optional[tuple] = None,
 ) -> Figure:
     """Stack features of individual tracks."""
     if feature_name not in df:
@@ -81,14 +82,12 @@ def plot_feature_stacked(
     tracks = df[track_name].unique()
     tracks = tracks[tracks >= 0]
 
+    if figsize is None:
+        figsize = (10, 2 * len(tracks))
     if not interpolate_time:
-        fig, axs = plt.subplots(
-            len(tracks), 1, sharex=True, figsize=(10, 5 * len(tracks))
-        )
+        fig, axs = plt.subplots(len(tracks), 1, sharex=True, figsize=figsize)
     else:
-        fig, axs = plt.subplots(
-            len(tracks) + 1, 1, sharex=True, figsize=(10, 5 * len(tracks))
-        )
+        fig, axs = plt.subplots(len(tracks) + 1, 1, sharex=True, figsize=figsize)
     # Remove horizontal space between axes
     fig.subplots_adjust(hspace=0)
 
