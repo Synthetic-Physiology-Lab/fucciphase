@@ -18,6 +18,7 @@ def add_trackmate_data_to_viewer(
     image_data: List[np.ndarray],
     colormaps: List[str],
     labels: Optional[np.ndarray],
+    cycle_percentage_id: Optional[str] = "CELL_CYCLE_PERC_POST",
     dim: int = 2,
 ) -> None:
     """Overlay tracking result and video.
@@ -44,7 +45,8 @@ def add_trackmate_data_to_viewer(
     # extract points
     points = napari_val_df[["POSITION_T", "POSITION_Y", "POSITION_X"]].to_numpy()
     # extract percentages at points
-    percentage_values = napari_val_df["CELL_CYCLE_PERC_POST"].to_numpy()
+    # TODO insert checks
+    percentage_values = napari_val_df[cycle_percentage_id].to_numpy()
     if labels is not None:
         new_labels = np.zeros(shape=labels.shape, dtype=labels.dtype)
         # add labels to each frame
