@@ -57,7 +57,7 @@ def add_trackmate_data_to_viewer(
             for idx, label_id in enumerate(label_ids):
                 # add 1 because TRACK_ID 0 would be background
                 new_labels[i][np.isclose(labels[i], label_id)] = track_ids.iloc[idx] + 1
-        labels_layer = viewer.add_labels(labels, scale=scale)
+        labels_layer = viewer.add_labels(new_labels, scale=scale)
         labels_layer.contour = 10
 
     for image, colormap in zip(image_data, colormaps):
