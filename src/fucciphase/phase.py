@@ -1,8 +1,11 @@
 from enum import Enum
 from typing import List
 
+import dtaidistance.preprocessing
 import numpy as np
 import pandas as pd
+from dtaidistance.subsequence.dtw import subsequence_alignment
+from scipy import interpolate, stats
 
 from .sensor import FUCCISensor
 from .utils import check_channels, check_thresholds, get_norm_channel_name
@@ -20,6 +23,7 @@ class NewColumns(str, Enum):
         Phase of the cell cycle
     """
 
+    CELL_CYCLE_PERC_DTW = "CELL_CYCLE_PERC_DTW"
     CELL_CYCLE_PERC = "CELL_CYCLE_PERC"
     PHASE = "PHASE"
     DISCRETE_PHASE_MAX = "DISCRETE_PHASE_MAX"
@@ -35,6 +39,11 @@ class NewColumns(str, Enum):
     def phase() -> str:
         """Return the name of the phase column."""
         return NewColumns.PHASE.value
+
+    @staticmethod
+    def cell_cycle_dtw() -> str:
+        """Return the name of the cell cycle percentage column."""
+        return NewColumns.CELL_CYCLE_PERC_DTW.value
 
     @staticmethod
     def discrete_phase_max() -> str:
@@ -273,3 +282,100 @@ def estimate_cell_phase_from_background(
     for phase_markers in phase_markers_list_tilted:
         phase_names.append(sensor.get_phase(phase_markers))
     df[NewColumns.discrete_phase_bg()] = pd.Series(phase_names, dtype=str)  # add as str
+
+
+def estimate_percentage_by_subsequence_alignment(
+    df: pd.DataFrame,
+    dt: float,
+    channels: List[str],
+    reference_data: pd.DataFrame,
+    smooth: float = 0.1,
+    penalty: float = 0.05,
+    track_id_name: str = "TRACK_ID",
+) -> None:
+    """Use subsequence alignment to estimate percentage.
+
+    Parameters
+    ----------
+    df: pd.DataFrame
+        DataFrame with tracks
+    dt: float
+        Timestep between frames
+    channels: List[str]
+        List of channels to be matched with reference data
+    reference_data: pd.DataFrame
+        Containing reference intensities over time
+    smooth: float
+        Smoothing factor, see dtaidistance documentation
+    penalty: float
+        Penalty for DTW algorithm, enforces diagonal warping path
+    track_id_name: str
+        Name of column with track IDs
+    """
+    if "time" not in reference_data:
+        raise ValueError("Need to provide time column in reference_data.")
+    if "percentage" not in reference_data:
+        raise ValueError("Need to provide percentage column in reference_data.")
+
+    if not set(channels).issubset(reference_data.columns):
+        raise ValueError("Provide channel names in reference_data.")
+
+    # interpolate reference curve
+    time_scale = reference_data["time"].to_numpy()
+    interpolation_functions = {}
+    for channel in channels:
+        interpolation_functions[channel] = interpolate.interp1d(
+            time_scale, reference_data[channel].to_numpy()
+        )
+    f_percentage = interpolate.interp1d(
+        time_scale, reference_data["percentage"].to_numpy()
+    )
+
+    num_time = int(time_scale[-1] / dt)
+    new_time_scale = np.linspace(0, dt * num_time, num=num_time + 1)
+    assert np.isclose(dt, new_time_scale[1] - new_time_scale[0])
+
+    # reference curve in time scale of provided track
+    percentage_ref = f_percentage(new_time_scale)
+
+    series_diff = []
+    for channel in channels:
+        series = interpolation_functions[channel](new_time_scale)
+        series = stats.zscore(series)
+        series_diff.append(
+            dtaidistance.preprocessing.differencing(series, smooth=smooth)
+        )
+    series = np.array(series_diff)
+    series = np.swapaxes(series, 0, 1)
+
+    df[NewColumns.cell_cycle_dtw()] = np.nan
+
+    track_ids = df[track_id_name].unique()
+    for track_id in track_ids:
+        track_df = df.loc[df[track_id_name] == track_id]
+
+        queries = track_df[channels].to_numpy()
+
+        queries_diff = []
+        for idx in range(len(channels)):
+            queries[:, idx] = stats.zscore(queries[:, idx])
+            queries_diff.append(
+                dtaidistance.preprocessing.differencing(queries[:, idx], smooth=smooth)
+            )
+
+        query = np.array(queries_diff)
+        query = np.swapaxes(query, 0, 1)
+
+        sa = subsequence_alignment(query, series, penalty=penalty)
+        best_match = sa.best_match()
+        new_percentage = np.zeros(query.shape[0] + 1)
+        for p in best_match.path:
+            new_percentage[p[0]] = percentage_ref[p[1]]
+        if p[1] + 1 < len(percentage_ref):
+            last_percentage = p[1] + 1
+        else:
+            last_percentage = p[1]
+        new_percentage[-1] = percentage_ref[last_percentage]
+        df.loc[
+            df[track_id_name] == track_id, NewColumns.cell_cycle_dtw()
+        ] = new_percentage[:]
