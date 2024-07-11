@@ -274,6 +274,6 @@ def plot_trackscheme(
     plt.xticks(np.arange(1, df[track_name].max(), step=1))
     sc.set_cmap(cmap_name)
 
-    cbar = plt.colorbar(ticks=[0, 0.5, 1])
-    cbar.ax.set_yticklabels([0, 50, 100])  # vertically oriented colorbar
+    cbar = plt.colorbar(ticks=[0, 0.5, 1], location="top")
+    cbar.ax.set_xticklabels([0, 50, 100])
     return
