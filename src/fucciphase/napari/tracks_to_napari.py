@@ -20,6 +20,7 @@ def add_trackmate_data_to_viewer(
     labels: Optional[np.ndarray],
     cycle_percentage_id: Optional[str] = "CELL_CYCLE_PERC_POST",
     dim: int = 2,
+    textkwargs: Optional[dict] = None,
 ) -> None:
     """Overlay tracking result and video.
 
@@ -35,7 +36,11 @@ def add_trackmate_data_to_viewer(
         List of colormaps for each image channel
     labels: Optional[np.ndarray]
         Segmentation masks
+    textkwargs: dict
+        Dictionary to pass options to text in napari
     """
+    if textkwargs is None:
+        textkwargs = {}
     if not HAS_NAPARI:
         raise ImportError("Please install napari")
     if dim != 2:
@@ -66,7 +71,7 @@ def add_trackmate_data_to_viewer(
     viewer.add_points(
         points,
         features={"percentage": np.round(percentage_values, 1)},
-        text={"string": "{percentage}%", "color": "white"},
+        text={"string": "{percentage}%", "color": "white", **textkwargs},
         size=0.01,
     )
     viewer.scale_bar.visible = True
