@@ -34,6 +34,7 @@ dependencies = [
     "pandas",
     "openpyxl",   # needed to read csv
     "matplotlib",
+    "dtaidistance",
     "monotonic-derivative"
 ] # add your package dependencies here
 
