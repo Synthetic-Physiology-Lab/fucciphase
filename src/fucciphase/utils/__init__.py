@@ -10,6 +10,7 @@ __all__ = [
     "split_track",
     "fit_percentages",
     "split_all_tracks",
+    "split_trackmate_tracks",
     "compute_motility_parameters",
     "postprocess_estimated_percentages",
     "plot_trackscheme",
@@ -24,5 +25,6 @@ from .track_postprocessing import (
     plot_trackscheme,
     split_all_tracks,
     split_track,
+    split_trackmate_tracks,
 )
 from .trackmate import TrackMateXML

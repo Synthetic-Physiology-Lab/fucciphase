@@ -277,3 +277,43 @@ def plot_trackscheme(
     cbar = plt.colorbar(ticks=[0, 0.5, 1], location="top")
     cbar.ax.set_xticklabels([0, 50, 100])
     return
+
+
+def split_trackmate_tracks(df: pd.DataFrame) -> None:
+    """Split TrackMate tracks into subtracks.
+
+    Parameters
+    ----------
+    df: pd.DataFrame
+        DataFrame obtained from TrackMate XML, updated in place
+
+    Notes
+    -----
+    TrackMate permits track splitting but then assigns
+    the same Track ID for all subtracks.
+    A way around this is to use a TrackMate action:
+    https://forum.image.sc/t/how-to-identify-subtracks-in-tracking-csv/71474
+
+    Use this action on your data first and then use this function
+    to obtain a new DataFrame that has unique Track IDs.
+    The updated Track IDs are stored in a new column called
+    `UNIQUE_TRACK_ID`.
+    """
+    # pattern to identify subtracks
+    regex = r"Track_[0-9]+\.[a-z]"
+    subtracks = df.loc[df["name"].str.contains(regex), "name"].unique()
+    subtracks = sorted(subtracks)
+
+    mapping_of_subtracks = {}
+    max_track = df["TRACK_ID"].max() + 1
+
+    for subtrack in subtracks:
+        mapping_of_subtracks[subtrack] = max_track
+        max_track += 1
+
+    subtrack_series = df.loc[df["name"].str.contains(regex), "name"]
+    new_track_ids = subtrack_series.transform(lambda x: mapping_of_subtracks[x])
+
+    df["UNIQUE_TRACK_ID"] = df["TRACK_ID"].copy()
+    df["UNIQUE_TRACK_ID"].update(new_track_ids)
+    return
