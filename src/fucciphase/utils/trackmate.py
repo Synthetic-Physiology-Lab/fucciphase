@@ -200,7 +200,10 @@ class TrackMateXML:
         self._add_track_ids(df)
 
         # convert features to their declared types
-        return df.astype(self.features)
+        df.astype(self.features)
+        # update all other types
+        df = df.convert_dtypes()
+        return df
 
     def update_features(self, df: pd.DataFrame) -> None:
         """Update the xml tree with new features, where features are columns of the
