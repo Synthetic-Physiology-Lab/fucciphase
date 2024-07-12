@@ -6,7 +6,7 @@ import pandas as pd
 from .io import read_trackmate_xml
 from .phase import generate_cycle_phases
 from .sensor import FUCCISensor
-from .utils import normalize_channels
+from .utils import normalize_channels, split_trackmate_tracks
 
 
 def process_dataframe(
@@ -75,6 +75,7 @@ def process_trackmate(
     window_size: int = 7,
     manual_min: Optional[List[float]] = None,
     manual_max: Optional[List[float]] = None,
+    generate_unique_tracks: bool = False,
 ) -> pd.DataFrame:
     """Process a trackmate XML file, compute cell cycle percentage from two FUCCI cycle
     reporter channels, save an updated copy of the XML and return the results in a
@@ -89,14 +90,15 @@ def process_trackmate(
         - compute the cell cycle percentage
         - save an updated XML copy with the new features
 
-    # TODO: add details about the normalization, the trigonometric approach and phases
-
     Parameters
     ----------
     xml_path : Union[str, Path]
         Path to the XML file
     channels: List[str]
         Names of channels holding FUCCI information
+    generate_unique_tracks: bool
+        Assign unique track IDs to splitted tracks.
+        Requires usage of action in TrackMate.
     sensor : FUCCISensor
         FUCCI sensor with phase specifics
     thresholds: List[float]
@@ -118,6 +120,8 @@ def process_trackmate(
     # read the XML
     df, tmxml = read_trackmate_xml(xml_path)
 
+    if generate_unique_tracks:
+        split_trackmate_tracks(df)
     # process the dataframe
     process_dataframe(
         df,
