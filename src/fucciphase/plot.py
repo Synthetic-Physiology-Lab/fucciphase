@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -71,8 +71,17 @@ def plot_feature_stacked(
     yticks: Optional[list] = None,
     interpolation_steps: int = 1000,
     figsize: Optional[tuple] = None,
+    selected_tracks: Optional[List[int]] = None,
 ) -> Figure:
-    """Stack features of individual tracks."""
+    """Stack features of individual tracks.
+
+
+    Notes
+    -----
+    If `selected_tracks` are chosen, the averaging
+    is still performed on all tracks.
+    Few selected tracks are stacked to enhance visibility.
+    """
     if feature_name not in df:
         raise ValueError(f"(Feature {feature_name} not in provided DataFrame.")
     if time_column not in df:
@@ -81,13 +90,21 @@ def plot_feature_stacked(
         raise ValueError("Run set_phase_colors first on DataFrame")
     tracks = df[track_name].unique()
     tracks = tracks[tracks >= 0]
-
-    if figsize is None:
-        figsize = (10, 2 * len(tracks))
-    if not interpolate_time:
-        fig, axs = plt.subplots(len(tracks), 1, sharex=True, figsize=figsize)
+    if selected_tracks is None:
+        selected_tracks = tracks
     else:
-        fig, axs = plt.subplots(len(tracks) + 1, 1, sharex=True, figsize=figsize)
+        if not set(selected_tracks).issubset(tracks):
+            raise ValueError(
+                "Selected tracks contain tracks " "that are not in track list."
+            )
+    if figsize is None:
+        figsize = (10, 2 * len(selected_tracks))
+    if not interpolate_time:
+        fig, axs = plt.subplots(len(selected_tracks), 1, sharex=True, figsize=figsize)
+    else:
+        fig, axs = plt.subplots(
+            len(selected_tracks) + 1, 1, sharex=True, figsize=figsize
+        )
     # Remove horizontal space between axes
     fig.subplots_adjust(hspace=0)
 
@@ -95,7 +112,7 @@ def plot_feature_stacked(
     min_frame = np.inf
 
     # Plot each graph, and manually set the y tick values
-    for i, track_idx in enumerate(tracks):
+    for i, track_idx in enumerate(selected_tracks):
         time = df.loc[df[track_name] == track_idx, time_column].to_numpy()
         feature = df.loc[df[track_name] == track_idx, feature_name].to_numpy()
         colors = df.loc[df[track_name] == track_idx, "COLOR"].to_numpy()
