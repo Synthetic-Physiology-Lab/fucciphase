@@ -3,6 +3,7 @@ from typing import Optional
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from LineageTree import lineageTree
 from matplotlib import colormaps
 from scipy import signal
 
@@ -317,3 +318,81 @@ def split_trackmate_tracks(df: pd.DataFrame) -> None:
     df["UNIQUE_TRACK_ID"] = df["TRACK_ID"].copy()
     df["UNIQUE_TRACK_ID"].update(new_track_ids)
     return
+
+
+# flake8: noqa: C901
+def export_lineage_tree_to_svg(
+    df: pd.DataFrame,
+    trackmate_file: str,
+    node_color_column: Optional[str] = None,
+    stroke_width: Optional[float] = None,
+) -> None:
+    """Write a lineage tree colored by FUCCI phases.
+
+    Parameters
+    ----------
+    df: pd.DataFrame
+        DataFrame processed by fucciphase
+    trackmate_file: str
+        The original trackmate file
+    node_color_column: Optional[str]
+        Name of column to color nodes
+    stroke_width: Optional[float]
+        Width of edges connecting nodes
+
+    Nodes
+    -----
+
+    TODO This function currently only supports
+    the standard FUCCISA sensor.
+    """
+    # initialise lineage tree
+    lt = lineageTree(trackmate_file, file_type="TrackMate")
+    cmap_name = "cool"
+    cmap = colormaps.get(cmap_name)
+
+    node_color = None
+    if node_color_column is not None:
+        if "PERC" in node_color_column:
+
+            def node_color(id: int) -> tuple:
+                color = df.loc[df["ID"].astype(int) == id, "CELL_CYCLE_PERC_DTW"].values
+                if len(color) == 0:
+                    raise ValueError("ID not in track")
+                rgba_value = cmap(color[0] / 100.0)
+                return (255 * rgba_value[0], 255 * rgba_value[1], 255 * rgba_value[2])
+
+        elif "PHASE" in node_color_column:
+
+            def node_color(id: int) -> tuple:
+                color = df.loc[df["ID"].astype(int) == id, "DISCRETE_PHASE_MAX"].values
+                if len(color) == 0:
+                    raise ValueError("ID not in track")
+                color = color[0]
+                if color == "G1":
+                    color = 0.0
+                elif color == "G1/S":
+                    color = 0.4
+                else:
+                    color = 1.0
+                rgba_value = cmap(color)
+                return (255 * rgba_value[0], 255 * rgba_value[1], 255 * rgba_value[2])
+
+        else:
+            raise ValueError(
+                "So far only discrete phases or percentages "
+                "for 2-channel FUCCI sensors are supported."
+            )
+
+    stroke_width_function = None
+    if stroke_width is not None:
+
+        def stroke_width_function(id: int) -> float:
+            return stroke_width
+
+    lt.write_to_svg(
+        "lineage_tree.svg",
+        node_color=node_color,
+        node_color_map=cmap_name,
+        stroke_width=stroke_width_function,
+    )
