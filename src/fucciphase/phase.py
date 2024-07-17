@@ -300,7 +300,7 @@ def estimate_percentage_by_subsequence_alignment(
     df: pd.DataFrame
         DataFrame with tracks
     dt: float
-        Timestep between frames
+        Timestep between frames in hours
     channels: List[str]
         List of channels to be matched with reference data
     reference_data: pd.DataFrame
