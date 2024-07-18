@@ -349,10 +349,22 @@ def export_lineage_tree_to_svg(
     TODO This function currently only supports
     the standard FUCCISA sensor.
     """
+    print(
+        "Warning: make sure that you updated the spot names " "using TrackMate actions!"
+    )
     # initialise lineage tree
     lt = lineageTree(trackmate_file, file_type="TrackMate")
     cmap_name = "cool"
     cmap = colormaps.get(cmap_name)
+
+    # filter spots that are not part of a track
+    for track in lt.all_tracks:
+        spot_0 = track[0]
+        track_name = df.loc[df["ID"].astype(int) == spot_0, "name"].values
+        if not len(track_name) == 1:
+            raise RuntimeError("Illegal track found")
+        if "Track" not in track_name[0]:
+            lt.remove_track(track)
 
     node_color = None
     if node_color_column is not None:
