@@ -27,7 +27,7 @@ def plot_feature(
     time_column: str,
     feature_name: str,
     interpolate_time: bool = False,
-    track_name: str = "TRACK_ID",
+    track_id_name: str = "TRACK_ID",
     ylim: Optional[tuple] = None,
     yticks: Optional[list] = None,
 ) -> Figure:
@@ -36,14 +36,14 @@ def plot_feature(
         raise ValueError(f"(Feature {feature_name} not in provided DataFrame.")
     if time_column not in df:
         raise ValueError(f"(Time {time_column} not in provided DataFrame.")
-    tracks = df[track_name].unique()
+    tracks = df[track_id_name].unique()
     tracks = tracks[tracks >= 0]
 
     fig = plt.figure()
     # Plot each graph, and manually set the y tick values
     for track_idx in tracks:
-        time = df.loc[df[track_name] == track_idx, time_column].to_numpy()
-        feature = df.loc[df[track_name] == track_idx, feature_name].to_numpy()
+        time = df.loc[df[track_id_name] == track_idx, time_column].to_numpy()
+        feature = df.loc[df[track_id_name] == track_idx, feature_name].to_numpy()
         plt.plot(time, feature)
         if ylim is not None:
             plt.ylim(ylim)
@@ -66,7 +66,7 @@ def plot_feature_stacked(
     time_column: str,
     feature_name: str,
     interpolate_time: bool = False,
-    track_name: str = "TRACK_ID",
+    track_id_name: str = "TRACK_ID",
     ylim: Optional[tuple] = None,
     yticks: Optional[list] = None,
     interpolation_steps: int = 1000,
@@ -88,7 +88,7 @@ def plot_feature_stacked(
         raise ValueError(f"(Time {time_column} not in provided DataFrame.")
     if "COLOR" not in df:
         raise ValueError("Run set_phase_colors first on DataFrame")
-    tracks = df[track_name].unique()
+    tracks = df[track_id_name].unique()
     tracks = tracks[tracks >= 0]
     if selected_tracks is None:
         selected_tracks = tracks
@@ -113,9 +113,9 @@ def plot_feature_stacked(
 
     # Plot each graph, and manually set the y tick values
     for i, track_idx in enumerate(selected_tracks):
-        time = df.loc[df[track_name] == track_idx, time_column].to_numpy()
-        feature = df.loc[df[track_name] == track_idx, feature_name].to_numpy()
-        colors = df.loc[df[track_name] == track_idx, "COLOR"].to_numpy()
+        time = df.loc[df[track_id_name] == track_idx, time_column].to_numpy()
+        feature = df.loc[df[track_id_name] == track_idx, feature_name].to_numpy()
+        colors = df.loc[df[track_id_name] == track_idx, "COLOR"].to_numpy()
         axs[i].plot(time, feature)
         axs[i].scatter(time, feature, c=colors, lw=4)
         if ylim is not None:
@@ -131,8 +131,8 @@ def plot_feature_stacked(
         interpolated_time = np.linspace(min_frame, max_frame, num=interpolation_steps)
         interpolated_feature = np.zeros(shape=(len(interpolated_time), len(tracks)))
         for i, track_idx in enumerate(tracks):
-            time = df.loc[df[track_name] == track_idx, time_column].to_numpy()
-            feature = df.loc[df[track_name] == track_idx, feature_name].to_numpy()
+            time = df.loc[df[track_id_name] == track_idx, time_column].to_numpy()
+            feature = df.loc[df[track_id_name] == track_idx, feature_name].to_numpy()
             interpolated_feature[:, i] = np.interp(
                 interpolated_time, time, feature, left=np.nan, right=np.nan
             )
