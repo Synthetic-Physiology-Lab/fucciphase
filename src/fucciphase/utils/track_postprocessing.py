@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -329,7 +329,7 @@ def export_lineage_tree_to_svg(
     trackmate_file: str,
     node_color_column: Optional[str] = None,
     stroke_width: Optional[float] = None,
-) -> None:
+) -> List[str]:
     """Write a lineage tree colored by FUCCI phases.
 
     Parameters
@@ -343,6 +343,11 @@ def export_lineage_tree_to_svg(
     stroke_width: Optional[float]
         Width of edges connecting nodes
 
+
+    Returns
+    -------
+    final_track_names: List[str]
+        Names of tracks (from left to right)
     Nodes
     -----
 
@@ -411,3 +416,8 @@ def export_lineage_tree_to_svg(
         node_color_map=cmap_name,
         stroke_width=stroke_width_function,
     )
+    final_track_names = []
+    for root in lt.roots:
+        track_name = df.loc[df["ID"].astype(int) == root, "name"].values
+        final_track_names.append(track_name[0])
+    return final_track_names
