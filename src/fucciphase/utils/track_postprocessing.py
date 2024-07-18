@@ -111,6 +111,7 @@ def compute_motility_parameters(
     centroid_x: str = "POSITION_X",
     centroid_y: str = "POSITION_Y",
     centroid_z: bool = False,
+    track_id_name: str = "TRACK_ID",
 ) -> None:
     """Add motility parameters to DataFrame."""
     track_df["MSD"] = np.nan
@@ -119,7 +120,7 @@ def compute_motility_parameters(
     for index in indices:
         if index == -1:
             continue
-        track = track_df[track_df["TRACK_ID"] == index]
+        track = track_df[track_df[track_id_name] == index]
         centroids_x = track[centroid_x].to_numpy()
         centroids_y = track[centroid_y].to_numpy()
         centroids_z = None
@@ -129,9 +130,9 @@ def compute_motility_parameters(
         displacements = compute_displacements(centroids_x, centroids_y, centroids_z)
         velocities = compute_velocities(centroids_x, centroids_y, centroids_z)
         MSDs = compute_MSD(centroids_x, centroids_y, centroids_z)
-        track_df.loc[track_df["TRACK_ID"] == index, "DISPLACEMENTS"] = displacements
-        track_df.loc[track_df["TRACK_ID"] == index, "VELOCITIES"] = velocities
-        track_df.loc[track_df["TRACK_ID"] == index, "MSD"] = MSDs
+        track_df.loc[track_df[track_id_name] == index, "DISPLACEMENTS"] = displacements
+        track_df.loc[track_df[track_id_name] == index, "VELOCITIES"] = velocities
+        track_df.loc[track_df[track_id_name] == index, "MSD"] = MSDs
 
 
 def compute_displacements(
@@ -301,7 +302,7 @@ def split_trackmate_tracks(df: pd.DataFrame) -> None:
     `UNIQUE_TRACK_ID`.
     """
     # pattern to identify subtracks
-    regex = r"Track_[0-9]+\.[a-z]"
+    regex = r"Track_[0-9]+\.[a-z]+"
     subtracks = df.loc[df["name"].str.contains(regex), "name"].unique()
     subtracks = sorted(subtracks)
 
