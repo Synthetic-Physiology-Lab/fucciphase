@@ -30,6 +30,8 @@ def split_track(
     background_fluctuation_percentage: float
         Fluctuation of background level, used to detect low magenta level
 
+    TODO rewrite
+
     """
     if "TRACK_ID" not in track.columns:
         raise ValueError("TRACK_ID column is missing.")
@@ -116,7 +118,7 @@ def compute_motility_parameters(
     """Add motility parameters to DataFrame."""
     track_df["MSD"] = np.nan
     track_df["DISPLACEMENTS"] = np.nan
-    indices = track_df["TRACK_ID"].unique()
+    indices = track_df[track_id_name].unique()
     for index in indices:
         if index == -1:
             continue
