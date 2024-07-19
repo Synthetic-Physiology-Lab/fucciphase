@@ -284,6 +284,7 @@ def estimate_cell_phase_from_background(
     df[NewColumns.discrete_phase_bg()] = pd.Series(phase_names, dtype=str)  # add as str
 
 
+# flake8: noqa: C901
 def estimate_percentage_by_subsequence_alignment(
     df: pd.DataFrame,
     dt: float,
@@ -292,6 +293,7 @@ def estimate_percentage_by_subsequence_alignment(
     smooth: float = 0.1,
     penalty: float = 0.05,
     track_id_name: str = "TRACK_ID",
+    minimum_track_length: int = 10,
 ) -> None:
     """Use subsequence alignment to estimate percentage.
 
@@ -311,6 +313,8 @@ def estimate_percentage_by_subsequence_alignment(
         Penalty for DTW algorithm, enforces diagonal warping path
     track_id_name: str
         Name of column with track IDs
+    minimum_track_length: int
+        Only estimate phase for tracks longer than this
     """
     if "time" not in reference_data:
         raise ValueError("Need to provide time column in reference_data.")
@@ -353,7 +357,16 @@ def estimate_percentage_by_subsequence_alignment(
     track_ids = df[track_id_name].unique()
     for track_id in track_ids:
         track_df = df.loc[df[track_id_name] == track_id]
+        # the algorithm does not work for short tracks
+        if len(track_df) < minimum_track_length:
+            # insert NaN
+            new_percentage = np.full(len(track_df), np.nan)
+            df.loc[
+                df[track_id_name] == track_id, NewColumns.cell_cycle_dtw()
+            ] = new_percentage[:]
+            continue
 
+        # find percentages if track is long enough
         queries = track_df[channels].to_numpy()
 
         queries_diff = []
