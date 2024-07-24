@@ -11,7 +11,8 @@ def fit_percentages(frames: np.ndarray, percentages: np.ndarray) -> np.ndarray:
         degree=1,
         force_negative_derivative=False,
     )
-    return best_fit
+    # clip to range (0, 100)
+    return np.clip(best_fit, 0.0, 100.0)
 
 
 def postprocess_estimated_percentages(
