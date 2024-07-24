@@ -143,7 +143,19 @@ def generate_cycle_phases(
 def estimate_cell_cycle_percentage(
     df: pd.DataFrame, channels: List[str], sensor: FUCCISensor, phase_column: str
 ) -> None:
-    """TODO description."""
+    """Estimate cell cycle percentage from intensity pairs.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe with columns holding normalized intensities
+    sensor: FUCCISensor
+        FUCCI sensor with phase specifics
+    channels: List[str]
+        Names of channels
+    phase_column: str
+        Name of phase column
+    """
     percentages = []
     # iterate through data frame
     for _, row in df.iterrows():
