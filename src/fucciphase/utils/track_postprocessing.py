@@ -14,6 +14,7 @@ def split_track(
     sg2m_channel: str,
     distance: int = 3,
     background_fluctuation_percentage: float = 0.2,
+    track_id_name: str = "TRACK_ID",
 ) -> int:
     """Detect mitosis events and split a single track.
 
@@ -29,12 +30,14 @@ def split_track(
         Minimum distance between peaks
     background_fluctuation_percentage: float
         Fluctuation of background level, used to detect low magenta level
+    track_id_name: str
+        Name of column with track IDs
 
     TODO rewrite
 
     """
-    if "TRACK_ID" not in track.columns:
-        raise ValueError("TRACK_ID column is missing.")
+    if track_id_name not in track.columns:
+        raise ValueError(f"{track_id_name} column is missing.")
     magenta = track[sg2m_channel]
     # get minima of magenta
     peaks, _ = signal.find_peaks(1.0 / magenta, distance=distance)
@@ -58,7 +61,7 @@ def split_track(
         next_peak = len(track)
         if len(peaks_to_use) > idx + 1:
             next_peak = peaks_to_use[idx + 1]
-        track.loc[track.index[peak:next_peak], "TRACK_ID"] = highest_track_idx + 1
+        track.loc[track.index[peak:next_peak], track_id_name] = highest_track_idx + 1
         highest_track_idx += 1
 
     return highest_track_idx
@@ -70,6 +73,7 @@ def split_all_tracks(
     distance: int = 3,
     minimum_track_length: int = 20,
     background_fluctuation_percentage: float = 0.2,
+    track_id_name: str = "TRACK_ID",
 ) -> None:
     """Go through all tracks and split them after mitosis.
 
@@ -85,15 +89,17 @@ def split_all_tracks(
         minimum length required to check if track should be split
     background_fluctuation_percentage: float
         Fluctuation of background level, used to detect low magenta level
+    track_id_name: str
+        Name of column with track IDs
 
     """
-    if "TRACK_ID" not in track_df.columns:
-        raise ValueError("TRACK_ID column is missing.")
-    highest_track_idx = track_df["TRACK_ID"].max()
+    if track_id_name not in track_df.columns:
+        raise ValueError(f"{track_id_name} column is missing.")
+    highest_track_idx = track_df[track_id_name].max()
     highest_track_idx_counter = highest_track_idx
     # go through all tracks and split if needed
     for track_idx in range(highest_track_idx):
-        track = track_df.loc[track_df["TRACK_ID"] == track_idx]
+        track = track_df.loc[track_df[track_id_name] == track_idx]
         if len(track) < minimum_track_length:
             continue
         # split single track
@@ -105,7 +111,7 @@ def split_all_tracks(
             background_fluctuation_percentage,
         )
         # update all tracks
-        track_df.loc[track_df["TRACK_ID"] == track_idx] = track
+        track_df.loc[track_df[track_id_name] == track_idx] = track
 
 
 def compute_motility_parameters(
@@ -115,7 +121,22 @@ def compute_motility_parameters(
     centroid_z: bool = False,
     track_id_name: str = "TRACK_ID",
 ) -> None:
-    """Add motility parameters to DataFrame."""
+    """Add motility parameters to DataFrame.
+
+    Parameters
+    ----------
+    track_df: pd.DataFrame
+        DataFrame with tracking data
+    centroid_x: str
+        Name of column with x-coordinate of centroid
+    centroid_y: str
+        Name of column with y-coordinate of centroid
+    centroid_z: str
+        Name of column with z-coordinate of centroid
+    track_id_name: str
+        Name of column with track IDs
+
+    """
     track_df["MSD"] = np.nan
     track_df["DISPLACEMENTS"] = np.nan
     indices = track_df[track_id_name].unique()
@@ -242,7 +263,7 @@ def get_squared_displacement(r0: tuple, r: tuple) -> float:
 
 def plot_trackscheme(
     df: pd.DataFrame,
-    track_name: str = "TRACK_ID",
+    track_id_name: str = "TRACK_ID",
     time_id: str = "POSITION_T",
     cycle_percentage_id: str = "CELL_CYCLE_PERC_POST",
     figsize: tuple = (10, 30),
@@ -253,7 +274,7 @@ def plot_trackscheme(
     ----------
     df: pd.DataFrame
        DataFrame holding tracks
-    track_name: str
+    track_id_name: str
         Name of column with track IDs
     time_id : str
         Name of column with time steps
@@ -270,12 +291,12 @@ def plot_trackscheme(
     cmap_name = "cool"
     cmap = colormaps.get(cmap_name)
     plt.figure(figsize=figsize)
-    for track_id in df[track_name]:
-        track = df.loc[df[track_name] == track_id, time_id]
-        color = df.loc[df[track_name] == track_id, cycle_percentage_id]
+    for track_id in df[track_id_name]:
+        track = df.loc[df[track_id_name] == track_id, time_id]
+        color = df.loc[df[track_id_name] == track_id, cycle_percentage_id]
         colormapper = [cmap(c / 100.0) for c in color]
         sc = plt.scatter([round(track_id)] * len(track), track, color=colormapper)
-    plt.xticks(np.arange(1, df[track_name].max(), step=1))
+    plt.xticks(np.arange(1, df[track_id_name].max(), step=1))
     sc.set_cmap(cmap_name)
 
     cbar = plt.colorbar(ticks=[0, 0.5, 1], location="top")
