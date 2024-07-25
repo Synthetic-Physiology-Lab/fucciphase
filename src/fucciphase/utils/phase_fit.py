@@ -30,6 +30,10 @@ def postprocess_estimated_percentages(
         track = df[df[track_id_name] == index]
         frames = track["FRAME"]
         percentages = track[percentage_column]
+        if np.all(np.isnan(percentages)):
+            print("WARNING: No percentages to postprocess")
+            return
+
         restored_percentages = fit_percentages(frames, percentages)
         df.loc[
             df[track_id_name] == index, postprocessed_percentage_column
