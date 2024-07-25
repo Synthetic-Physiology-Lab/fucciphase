@@ -294,7 +294,12 @@ def plot_trackscheme(
     for track_id in df[track_id_name]:
         track = df.loc[df[track_id_name] == track_id, time_id]
         color = df.loc[df[track_id_name] == track_id, cycle_percentage_id]
-        colormapper = [cmap(c / 100.0) for c in color]
+        colormapper = []
+        for c in color:
+            if np.isnan(c):
+                colormapper.append("black")
+            else:
+                colormapper.append(cmap(c / 100.0))
         sc = plt.scatter([round(track_id)] * len(track), track, color=colormapper)
     plt.xticks(np.arange(1, df[track_id_name].max(), step=1))
     sc.set_cmap(cmap_name)
@@ -400,7 +405,10 @@ def export_lineage_tree_to_svg(
                 color = df.loc[df["ID"].astype(int) == id, "CELL_CYCLE_PERC_DTW"].values
                 if len(color) == 0:
                     raise ValueError("ID not in track")
-                rgba_value = cmap(color[0] / 100.0)
+                if np.isnan(color[0]):
+                    rgba_value = (0, 0, 0)
+                else:
+                    rgba_value = cmap(color[0] / 100.0)
                 return (255 * rgba_value[0], 255 * rgba_value[1], 255 * rgba_value[2])
 
         elif "PHASE" in node_color_column:
