@@ -68,6 +68,7 @@ def normalize_channels(
     moving_average_window: int = 7,
     manual_min: Optional[List[float]] = None,
     manual_max: Optional[List[float]] = None,
+    track_id_name: str = "TRACK_ID",
 ) -> List[str]:
     """Normalize channels, add in place the resulting columns to the
     dataframe, and return the new columns' name.
@@ -100,6 +101,8 @@ def normalize_channels(
         If provided, the minimum value to use for normalization.
     manual_max : Optional[List[float]]
         If provided, the maximum value to use for normalization.
+    track_id_name: str
+        Name of column with track IDs
 
     Returns
     -------
@@ -140,12 +143,12 @@ def normalize_channels(
         # compute the moving average for each track ID
         if use_moving_average:
             # apply moving average to each track ID
-            unique_track_IDs = df["TRACK_ID"].unique()
+            unique_track_IDs = df[track_id_name].unique()
 
             avg_channel = get_avg_channel_name(channel)
             for track_ID in unique_track_IDs:
                 # get the track
-                track: pd.DataFrame = df[df["TRACK_ID"] == track_ID]
+                track: pd.DataFrame = df[df[track_id_name] == track_ID]
 
                 # sort the channel by frame
                 track = track.sort_values(by="FRAME")

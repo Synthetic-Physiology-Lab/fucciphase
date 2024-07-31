@@ -34,7 +34,10 @@ dependencies = [
     "pandas",
     "openpyxl",   # needed to read csv
     "matplotlib",
-    "monotonic-derivative"
+    "dtaidistance",
+    "monotonic-derivative",
+    "svgwrite",
+    "LineageTree"
 ] # add your package dependencies here
 
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies

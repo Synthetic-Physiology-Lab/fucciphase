@@ -112,6 +112,13 @@ class FUCCISensor(ABC):
         self._center_values = center
         self._sigma_values = sigma
 
+    @abstractmethod
+    def get_expected_intensities(
+        self, percentage: Union[float, np.ndarray]
+    ) -> List[Union[float, np.ndarray]]:
+        """Return value of calibrated curves."""
+        pass
+
 
 class FUCCISASensor(FUCCISensor):
     """FUCCI(SA) sensor."""
@@ -154,7 +161,19 @@ class FUCCISASensor(FUCCISensor):
             return "G1/S"
 
     def _find_g1_percentage(self, intensity: float) -> float:
-        """Find percentage in G1 phase."""
+        """Find percentage in G1 phase.
+
+        Parameters
+        ----------
+        intensity: float
+            Intensity of cyan / green channel
+
+        Notes
+        -----
+        Checks the accumulation function of the first colour.
+        First colour means the colour indicating G1 phase.
+
+        """
         g1_perc = self.phase_percentages[0]
         # intensity below expected minimal intensity
         if intensity < accumulation_function(
@@ -175,7 +194,18 @@ class FUCCISASensor(FUCCISensor):
         )
 
     def _find_g1s_percentage(self, intensity: float) -> float:
-        """Find percentage in G1/S phase."""
+        """Find percentage in G1/S phase.
+
+        Parameters
+        ----------
+        intensity: float
+            Intensity of cyan / green channel
+
+        Notes
+        -----
+        Checks the degradation function of the first colour.
+        First colour means the colour indicating G1 phase.
+        """
         g1_perc = self.phase_percentages[0]
         g1s_perc = self.phase_percentages[1]
         if intensity > degradation_function(
@@ -196,30 +226,58 @@ class FUCCISASensor(FUCCISensor):
         )
 
     def _find_sg2m_percentage(self, intensity: float) -> float:
-        """Find percentage in S/G2/M phase."""
+        """Find percentage in S/G2/M phase.
+
+        Parameters
+        ----------
+        intensity: float
+            Intensity of second colour (magenta / red)
+
+        Notes
+        -----
+        Checks the accumulation function of the second colour.
+        Second colour means the colour indicating S/G2/M phase.
+        """
         g1_perc = self.phase_percentages[0]
         g1s_perc = self.phase_percentages[1]
-        # if intensity is very small, it is M phase
-        if intensity < 0.5 * accumulation_function(
-            g1_perc + g1s_perc, self._center_values[2], self._sigma_values[2]
-        ):
-            return 100.0
-        elif intensity < accumulation_function(
+
+        # check if intensity is below smallest expected intensity
+        if intensity < accumulation_function(
             g1_perc + g1s_perc, self._center_values[2], self._sigma_values[2]
         ):
             return g1_perc + g1s_perc
-        elif intensity > accumulation_function(
-            100, self._center_values[2], self._sigma_values[2]
+        # if intensity is very small, it is M phase
+        if intensity < 0.3 * accumulation_function(
+            100.0, self._center_values[2], self._sigma_values[2]
         ):
             return 100.0
-        return float(
-            optimize.bisect(
-                accumulation_function,
-                g1_perc + g1s_perc,
-                100.0,
-                args=(self._center_values[2], self._sigma_values[2], intensity),
-            )
+        # return middle of interval if values are close
+        g1s_level = accumulation_function(
+            g1_perc + g1s_perc, self._center_values[2], self._sigma_values[2]
         )
+        final_level = accumulation_function(
+            100.0, self._center_values[2], self._sigma_values[2]
+        )
+
+        if np.isclose(g1s_level, final_level):
+            return g1s_perc + 0.5 * (100.0 - g1s_perc - g1_perc)
+        try:
+            if np.greater_equal(intensity, final_level):
+                intensity = intensity - 2.0 * (intensity - final_level)  # type: ignore[assignment]
+            return float(
+                optimize.bisect(
+                    accumulation_function,
+                    g1_perc + g1s_perc,
+                    100.0,
+                    args=(self._center_values[2], self._sigma_values[2], intensity),
+                )
+            )
+        except ValueError:
+            print(
+                "WARNING: could not infer percentage in SG2M phase,"
+                " using average phase"
+            )
+            return g1s_perc + 0.5 * (100.0 - g1s_perc - g1_perc)
 
     def get_estimated_cycle_percentage(
         self, phase: str, intensities: List[float]
@@ -241,3 +299,31 @@ class FUCCISASensor(FUCCISensor):
             return self._find_g1s_percentage(intensities[0])
         else:
             return self._find_sg2m_percentage(intensities[1])
+
+    def get_expected_intensities(
+        self, percentage: Union[float, np.ndarray]
+    ) -> List[Union[float, np.ndarray]]:
+        """Return value of calibrated curves."""
+        g1_acc = accumulation_function(
+            percentage, self._center_values[0], self._sigma_values[0]
+        )
+        g1_deg = degradation_function(
+            percentage, self._center_values[1], self._sigma_values[1]
+        )
+        s_g2_m_acc = accumulation_function(
+            percentage, self._center_values[2], self._sigma_values[2]
+        )
+        s_g2_m_deg = degradation_function(
+            percentage, self._center_values[3], self._sigma_values[3]
+        )
+        return [g1_acc + g1_deg - 1.0, s_g2_m_acc + s_g2_m_deg - 1.0]
+
+
+def FUCCISADefaultSensor() -> FUCCISASensor:
+    """Return sensor with default values.
+
+    Should only be used if the cell cycle percentage is not of interest.
+    """
+    return FUCCISASensor(
+        phase_percentages=[25, 25, 50], center=[0, 0, 0, 0], sigma=[0, 0, 0, 0]
+    )

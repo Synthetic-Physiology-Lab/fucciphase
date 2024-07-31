@@ -1,5 +1,6 @@
-from typing import Optional
+from typing import List, Optional
 
+import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
@@ -26,7 +27,7 @@ def plot_feature(
     time_column: str,
     feature_name: str,
     interpolate_time: bool = False,
-    track_name: str = "TRACK_ID",
+    track_id_name: str = "TRACK_ID",
     ylim: Optional[tuple] = None,
     yticks: Optional[list] = None,
 ) -> Figure:
@@ -35,14 +36,14 @@ def plot_feature(
         raise ValueError(f"(Feature {feature_name} not in provided DataFrame.")
     if time_column not in df:
         raise ValueError(f"(Time {time_column} not in provided DataFrame.")
-    tracks = df[track_name].unique()
+    tracks = df[track_id_name].unique()
     tracks = tracks[tracks >= 0]
 
     fig = plt.figure()
     # Plot each graph, and manually set the y tick values
     for track_idx in tracks:
-        time = df.loc[df[track_name] == track_idx, time_column].to_numpy()
-        feature = df.loc[df[track_name] == track_idx, feature_name].to_numpy()
+        time = df.loc[df[track_id_name] == track_idx, time_column].to_numpy()
+        feature = df.loc[df[track_id_name] == track_idx, feature_name].to_numpy()
         plt.plot(time, feature)
         if ylim is not None:
             plt.ylim(ylim)
@@ -59,49 +60,93 @@ def plot_feature(
     return fig
 
 
+# flake8: noqa: C901
 def plot_feature_stacked(
     df: pd.DataFrame,
     time_column: str,
     feature_name: str,
     interpolate_time: bool = False,
-    track_name: str = "TRACK_ID",
+    track_id_name: str = "TRACK_ID",
     ylim: Optional[tuple] = None,
     yticks: Optional[list] = None,
+    interpolation_steps: int = 1000,
+    figsize: Optional[tuple] = None,
+    selected_tracks: Optional[List[int]] = None,
 ) -> Figure:
-    """Stack features of individual tracks."""
+    """Stack features of individual tracks.
+
+
+    Notes
+    -----
+    If `selected_tracks` are chosen, the averaging
+    is still performed on all tracks.
+    Few selected tracks are stacked to enhance visibility.
+    """
     if feature_name not in df:
         raise ValueError(f"(Feature {feature_name} not in provided DataFrame.")
     if time_column not in df:
         raise ValueError(f"(Time {time_column} not in provided DataFrame.")
     if "COLOR" not in df:
         raise ValueError("Run set_phase_colors first on DataFrame")
-    tracks = df[track_name].unique()
+    tracks = df[track_id_name].unique()
     tracks = tracks[tracks >= 0]
-
-    fig, axs = plt.subplots(len(tracks), 1, sharex=True, figsize=(10, 5 * len(tracks)))
+    if selected_tracks is None:
+        selected_tracks = tracks
+    else:
+        if not set(selected_tracks).issubset(tracks):
+            raise ValueError(
+                "Selected tracks contain tracks " "that are not in track list."
+            )
+    if figsize is None:
+        figsize = (10, 2 * len(selected_tracks))
+    if not interpolate_time:
+        fig, axs = plt.subplots(len(selected_tracks), 1, sharex=True, figsize=figsize)
+    else:
+        fig, axs = plt.subplots(
+            len(selected_tracks) + 1, 1, sharex=True, figsize=figsize
+        )
     # Remove horizontal space between axes
     fig.subplots_adjust(hspace=0)
 
+    max_frame = 0
+    min_frame = np.inf
+
     # Plot each graph, and manually set the y tick values
-    for i, track_idx in enumerate(tracks):
-        time = df.loc[df[track_name] == track_idx, time_column].to_numpy()
-        feature = df.loc[df[track_name] == track_idx, feature_name].to_numpy()
-        colors = df.loc[df[track_name] == track_idx, "COLOR"].to_numpy()
+    for i, track_idx in enumerate(selected_tracks):
+        time = df.loc[df[track_id_name] == track_idx, time_column].to_numpy()
+        feature = df.loc[df[track_id_name] == track_idx, feature_name].to_numpy()
+        colors = df.loc[df[track_id_name] == track_idx, "COLOR"].to_numpy()
         axs[i].plot(time, feature)
         axs[i].scatter(time, feature, c=colors, lw=4)
         if ylim is not None:
             axs[i].set_ylim(ylim)
         if yticks is not None:
             axs[i].set_yticks(yticks)
+        if time.max() > max_frame:
+            max_frame = time.max()
+        if time.min() < min_frame:
+            min_frame = time.min()
 
-    # TODO interplolate and plot average
-    """
-    axs[-1].plot(interpolated_time, np.nanmean(interpolated_feature,lw=5, color="black")
-    if ylim is not None:
-        axs[-1].set_ylim(ylim)
-    if yticks is not None:
-        axs[-1].set_yticks(yticks)
-    """
+    if interpolate_time:
+        interpolated_time = np.linspace(min_frame, max_frame, num=interpolation_steps)
+        interpolated_feature = np.zeros(shape=(len(interpolated_time), len(tracks)))
+        for i, track_idx in enumerate(tracks):
+            time = df.loc[df[track_id_name] == track_idx, time_column].to_numpy()
+            feature = df.loc[df[track_id_name] == track_idx, feature_name].to_numpy()
+            interpolated_feature[:, i] = np.interp(
+                interpolated_time, time, feature, left=np.nan, right=np.nan
+            )
+        axs[-1].plot(
+            interpolated_time,
+            np.nanmean(interpolated_feature, axis=1),
+            lw=5,
+            color="black",
+        )
+        if ylim is not None:
+            axs[-1].set_ylim(ylim)
+        if yticks is not None:
+            axs[-1].set_yticks(yticks)
+
     return fig
 
 
@@ -109,8 +154,8 @@ def plot_raw_intensities(
     df: pd.DataFrame,
     channel1: str,
     channel2: str,
-    color1: Optional[str] = None,
-    color2: Optional[str] = None,
+    color1: str = "cyan",
+    color2: str = "magenta",
     time_column: str = "FRAME",
     time_label: str = "Frame #",
     **plot_kwargs: bool,
@@ -141,8 +186,8 @@ def plot_normalized_intensities(
     df: pd.DataFrame,
     channel1: str,
     channel2: str,
-    color1: Optional[str] = None,
-    color2: Optional[str] = None,
+    color1: str = "cyan",
+    color2: str = "magenta",
     time_column: str = "FRAME",
     time_label: str = "Frame #",
     **plot_kwargs: bool,

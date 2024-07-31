@@ -199,6 +199,8 @@ class TrackMateXML:
         # add tracks IDs
         self._add_track_ids(df)
 
+        # fix type of TRACK_ID
+        self.features["TRACK_ID"] = int
         # convert features to their declared types
         return df.astype(self.features)
 
