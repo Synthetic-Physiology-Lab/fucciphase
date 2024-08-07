@@ -17,6 +17,7 @@ repos:
     rev: v0.0.292
     hooks:
       - id: ruff
+        types_or: [python, pyi, jupyter]
         args: [--fix]
 
   - repo: https://github.com/psf/black
@@ -32,14 +33,6 @@ repos:
         additional_dependencies:
           - numpy
           - pandas
-
-  # jupyter linting and formatting
-  - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.7.0
-    hooks:
-      - id: nbqa-ruff
-        args: [--fix]
-      - id: nbqa-black
 
   # strip out jupyter notebooks
   - repo: https://github.com/kynan/nbstripout

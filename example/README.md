@@ -10,3 +10,9 @@
    The intensity profiles are fit to logistic growth curves
    and the time constants of the accumulation and degradation
    are determined.
+
+## Reproducibility
+
+For documentation purposes, we share the notebooks
+that have been used to produce the results in the
+preprint. TODO add reference
