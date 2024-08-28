@@ -46,7 +46,6 @@ dependencies = [
 test = ["pytest", "pytest-cov"]
 
 dev = [
-    "black",
     "ipython",
     "mypy",
     "pdbpp",      # https://github.com/pdbpp/pdbpp
