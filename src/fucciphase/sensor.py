@@ -319,7 +319,7 @@ class FUCCISASensor(FUCCISensor):
         return [g1_acc + g1_deg - 1.0, s_g2_m_acc + s_g2_m_deg - 1.0]
 
 
-def FUCCISADefaultSensor() -> FUCCISASensor:
+def get_fuccisa_default_sensor() -> FUCCISASensor:
     """Return sensor with default values.
 
     Should only be used if the cell cycle percentage is not of interest.
