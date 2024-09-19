@@ -1,14 +1,13 @@
 # fucciphase
 
-[![License](https://img.shields.io/pypi/l/fucciphase.svg?color=green)](https://github.com/nobias-fht/fucciphase/raw/main/LICENSE)
+[![License](https://img.shields.io/pypi/l/fucciphase.svg?color=green)](https://github.com/Synthetic-Physiology-Lab/fucciphase/raw/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/fucciphase.svg?color=green)](https://pypi.org/project/fucciphase)
 [![Python Version](https://img.shields.io/pypi/pyversions/fucciphase.svg?color=green)](https://python.org)
-[![CI](https://github.com/nobias-fht/fucciphase/actions/workflows/ci.yml/badge.svg)](https://github.com/nobias-fht/fucciphase/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/nobias-fht/fucciphase/branch/main/graph/badge.svg)](https://codecov.io/gh/nobias-fht/fucciphase)
+[![CI](https://github.com/Synthetic-Physiology-Lab/fucciphase/actions/workflows/ci.yml/badge.svg)](https://github.com/Synthetic-Physiology-Lab/fucciphase/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Synthetic-Physiology-Lab/fucciphase/branch/main/graph/badge.svg)](https://codecov.io/gh/Synthetic-Physiology-Lab/fucciphase)
 
 FUCCI cell cycle analysis plugin.
-
-TODO description
+Obtain cell cycle information from FUCCI fluorescence intensities.
 
 ## Installation
 
@@ -35,7 +34,6 @@ To use the notebooks, also install jupyter:
 pip install jupyter
 ```
 
-
 ## Usage
 
 Fucci phase currently supports loading a 
@@ -51,6 +49,12 @@ channel2 = "MEAN_INTENSITY_CH4"
 df = process_trackmate(trackmate_xml, channel1, channel2)
 print(df["CELL_CYCLE_PERC"])
 ```
+
+The TrackMate XML is converted to a [Pandas](https://pandas.pydata.org/) DataFrame.
+Thus, the general data (e.g., stored in a CSV or XLSX file) that can be parsed into
+a DataFrame is supported.
+
+Have a look at the examples to get more information!
 
 ## Development
 To develop fucciphase, clone the repository, install fucciphase in your environment
