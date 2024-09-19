@@ -2,13 +2,13 @@ from typing import List
 
 
 def check_channels(n_fluorophores: int, channels: List[str]) -> None:
-    """TODO description."""
+    """Check number of channels."""
     if len(channels) != n_fluorophores:
         raise ValueError(f"Need to provide {n_fluorophores} channel names.")
 
 
 def check_thresholds(n_fluorophores: int, thresholds: List[float]) -> None:
-    """TODO description."""
+    """Check correct format and range of thresholds."""
     if len(thresholds) != n_fluorophores:
         raise ValueError("Provide one threshold per channel.")
     # check that the thresholds are between 0 and 1

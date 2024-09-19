@@ -33,8 +33,6 @@ def split_track(
     track_id_name: str
         Name of column with track IDs
 
-    TODO rewrite
-
     """
     if track_id_name not in track.columns:
         raise ValueError(f"{track_id_name} column is missing.")
@@ -374,10 +372,10 @@ def export_lineage_tree_to_svg(
     -------
     final_track_names: List[str]
         Names of tracks (from left to right)
-    Nodes
-    -----
 
-    TODO This function currently only supports
+    Notes
+    -----
+    This function currently only supports
     the standard FUCCISA sensor.
     """
     print(

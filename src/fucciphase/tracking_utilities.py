@@ -25,14 +25,17 @@ def prepare_penalty_df(
     See more details here:
     https://laptrack.readthedocs.io/en/stable/examples/custom_metric.html
 
-    TODO add TrackMate reference
-
+    The penalty formulation is similar to TrackMate,
+    see
+    https://imagej.net/plugins/trackmate/trackers/lap-trackers#calculating-linking-costs
     The penalty is computed as:
-    P = 1+ sum(feature_penalties)
-    Each feature penbalty is:
+    P = 1 + sum(feature_penalties)
+    Each feature penalty is:
     p = 3 * weight * abs(f1 - f2) / (f1 + f2)
 
     """
+    raise NotImplementedError("This function is not yet stably implemented.")
+
     penalty_records = []
     frames = df[frame_name].unique()
     for i, frame in enumerate(frames):

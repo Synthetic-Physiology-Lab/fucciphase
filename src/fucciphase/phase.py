@@ -64,31 +64,27 @@ class NewColumns(str, Enum):
 def generate_cycle_phases(
     df: pd.DataFrame, channels: List[str], sensor: FUCCISensor, thresholds: List[float]
 ) -> None:
-    """Add a column in place to the dataframe with the phase of the cell cycle, where
-    the phase is determined using a threshold on the cell cycle percentage.
+    """Add a column in place to the dataframe with the phase of the cell cycle.
 
-    TODO update
+    The phase is determined using a threshold on the channel intensities
+    assuming a FUCCI sensor.
 
-    The thresholds must be between 0 and 1.
-    The phase borders must be between 0 and 1.
-    Each phase border is the expected percentage for the corresponding phase,
-    the last phase will receive the difference to 1 (i.e., 100% of the cell cycle).
+    The thresholds per channel must be between 0 and 1.
 
     Example:
-        phases = ["G1", "S/G1", "SG2M"]
-        phase_borders = [0.2, 0.2]
+        channels = ["CH1", "CH2"]
         thresholds = [0.1, 0.1]
 
-    Here, SG2M spans the last 60% of the cell cycle.
-    The thresholds mean that all intensities greater than 0.1 times the
-    maximum intensity are considered ON.
-
-    The phase borders need to be determined experimentally.
-    Possible methods are FACS or analysis of the FUCCI intensities
-    of multiple cell cycles recorded by live-cell fluorescence microscopy.
+    The sensor needs to be calibrated for each cell line.
+    For that, record the FUCCI intensities of multiple cell cycles
+    by live-cell fluorescence microscopy.
+    See the examples for more details.
 
     The thresholds need to be chosen based on the expected noise of the background and
     uncertainty in intensity computation.
+    They give the ratio to the maximum intensity.
+    E.g., a threshold of 0.1 means that all intensities below 0.1 times the maximum
+    intensity are considered background signal.
 
     Parameters
     ----------
@@ -132,7 +128,7 @@ def generate_cycle_phases(
         sensor,
         background=[0] * sensor.fluorophores,
         thresholds=thresholds,
-    )  # TODO check if background is correct
+    )
 
     # name of phase_column
     phase_column = NewColumns.discrete_phase_max()
@@ -218,7 +214,7 @@ def estimate_cell_phase_from_max_intensity(
     check_channels(sensor.fluorophores, channels)
     check_thresholds(sensor.fluorophores, thresholds)
 
-    phase_markers_list: List["pd.Series[bool]"] = []
+    phase_markers_list: List[pd.Series[bool]] = []
     for channel, bg_value, threshold in zip(channels, background, thresholds):
         # get intensities and subtract background
         intensity = df[channel] - bg_value
@@ -279,10 +275,8 @@ def estimate_cell_phase_from_background(
         raise ValueError("Provide one background value per channel.")
 
     check_channels(sensor.fluorophores, channels)
-    # TODO loosen check on boundary values (can be outside 0 to 1)
-    # check_thresholds(sensor.fluorophores, thresholds)
 
-    phase_markers_list: List["pd.Series[bool]"] = []
+    phase_markers_list: List[pd.Series[bool]] = []
     for channel, bg_value, threshold in zip(channels, background, thresholds):
         intensity = df[channel]
         # threshold channels to decide if ON / OFF (data is in list per spot)
@@ -373,9 +367,9 @@ def estimate_percentage_by_subsequence_alignment(
         if len(track_df) < minimum_track_length:
             # insert NaN
             new_percentage = np.full(len(track_df), np.nan)
-            df.loc[
-                df[track_id_name] == track_id, NewColumns.cell_cycle_dtw()
-            ] = new_percentage[:]
+            df.loc[df[track_id_name] == track_id, NewColumns.cell_cycle_dtw()] = (
+                new_percentage[:]
+            )
             continue
 
         # find percentages if track is long enough
@@ -401,6 +395,6 @@ def estimate_percentage_by_subsequence_alignment(
         else:
             last_percentage = p[1]
         new_percentage[-1] = percentage_ref[last_percentage]
-        df.loc[
-            df[track_id_name] == track_id, NewColumns.cell_cycle_dtw()
-        ] = new_percentage[:]
+        df.loc[df[track_id_name] == track_id, NewColumns.cell_cycle_dtw()] = (
+            new_percentage[:]
+        )

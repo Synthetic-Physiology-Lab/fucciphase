@@ -49,14 +49,6 @@ def plot_feature(
             plt.ylim(ylim)
         if yticks is not None:
             plt.yticks(yticks)
-    # TODO interplolate and plot average
-    """
-    plt.plot(interpolated_time, np.nanmean(interpolated_feature, lw=5, color="black")
-    if ylim is not None:
-        plt.ylim(ylim)
-    if yticks is not None:
-        plt.yticks(yticks)
-    """
     return fig
 
 
@@ -160,7 +152,7 @@ def plot_raw_intensities(
     time_label: str = "Frame #",
     **plot_kwargs: bool,
 ) -> None:
-    """TODO description."""
+    """Plot intensities of two-channel sensor."""
     ch1_intensity = df[channel1]
     ch2_intensity = df[channel2]
 
@@ -192,7 +184,7 @@ def plot_normalized_intensities(
     time_label: str = "Frame #",
     **plot_kwargs: bool,
 ) -> None:
-    """TODO description."""
+    """Plot normalised intensities of two-channel sensor."""
     ch1_intensity = df[get_norm_channel_name(channel1)]
     ch2_intensity = df[get_norm_channel_name(channel2)]
 
