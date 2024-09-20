@@ -70,7 +70,7 @@ class FUCCISensor(ABC):
             raise ValueError("Pass percentage for each phase.")
 
         # check that the sum of phase borders is less than 100
-        if not np.isclose(sum(values), 100.0):
+        if not np.isclose(sum(values), 100.0, atol=0.2):
             raise ValueError("Phase percentages do not sum to 100.")
 
         self._phase_percentages = values
