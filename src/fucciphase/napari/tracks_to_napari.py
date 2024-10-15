@@ -21,6 +21,11 @@ def add_trackmate_data_to_viewer(
     cycle_percentage_id: Optional[str] = "CELL_CYCLE_PERC_POST",
     dim: int = 2,
     textkwargs: Optional[dict] = None,
+    label_id_name: Optional[str] = "MAX_INTENSITY_CH3",
+    track_id_name: Optional[str] = "TRACK_ID",
+    time_id_name: Optional[str] = "POSITION_T",
+    pos_x_id_name: Optional[str] = "POSITION_X",
+    pos_y_id_name: Optional[str] = "POSITION_Y",
 ) -> None:
     """Overlay tracking result and video.
 
@@ -46,19 +51,19 @@ def add_trackmate_data_to_viewer(
     if dim != 2:
         raise NotImplementedError("Workflow currently only implemented for 2D frames.")
     # make sure it is sorted
-    napari_val_df = df.sort_values("POSITION_T")
+    napari_val_df = df.sort_values(time_id_name)
     # extract points
-    points = napari_val_df[["POSITION_T", "POSITION_Y", "POSITION_X"]].to_numpy()
+    points = napari_val_df[[time_id_name, pos_y_id_name, pos_x_id_name]].to_numpy()
     # extract percentages at points
     # TODO insert checks
     percentage_values = napari_val_df[cycle_percentage_id].to_numpy()
     if labels is not None:
         new_labels = np.zeros(shape=labels.shape, dtype=labels.dtype)
         # add labels to each frame
-        for i in range(round(df["POSITION_T"].max()) + 1):
-            subdf = df[np.isclose(df["POSITION_T"], i)]
-            label_ids = subdf["MEAN_INTENSITY_CH3"]
-            track_ids = subdf["TRACK_ID"]
+        for i in range(round(df[time_id_name].max()) + 1):
+            subdf = df[np.isclose(df[time_id_name], i)]
+            label_ids = subdf[label_id_name]
+            track_ids = subdf[track_id_name]
             for idx, label_id in enumerate(label_ids):
                 # add 1 because TRACK_ID 0 would be background
                 new_labels[i][np.isclose(labels[i], label_id)] = track_ids.iloc[idx] + 1
