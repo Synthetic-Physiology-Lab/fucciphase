@@ -37,7 +37,7 @@ dependencies = [
     "dtaidistance",
     "monotonic-derivative",
     "svgwrite",
-    "LineageTree"
+    "LineageTree<1.5.0"
 ] # add your package dependencies here
 
 # https://peps.python.org/pep-0621/#dependencies-optional-dependencies
