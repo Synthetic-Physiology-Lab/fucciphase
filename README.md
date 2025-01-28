@@ -41,13 +41,19 @@ Fucci phase currently supports loading a
 
 ```python
 from fucciphase import process_trackmate
+from fucciphase.sensor import get_fuccisa_default_sensor
 
 trackmate_xml = "path/to/trackmate.xml"
 channel1 = "MEAN_INTENSITY_CH3"
 channel2 = "MEAN_INTENSITY_CH4"
 
-df = process_trackmate(trackmate_xml, channel1, channel2)
-print(df["CELL_CYCLE_PERC"])
+sensor = get_fuccisa_default_sensor()
+
+df = process_trackmate(trackmate_xml,
+                       channels=[channel1, channel2],
+		       sensor=sensor,
+                       thresholds=[0.1, 0.1])
+print(df)
 ```
 
 The TrackMate XML is converted to a [Pandas](https://pandas.pydata.org/) DataFrame.
