@@ -12,7 +12,7 @@ Obtain cell cycle information from FUCCI fluorescence intensities.
 ## Installation
 
 The best way to run fucciphase is to install it in a virtual conda environment.
-Make sure that git installed and can be called from the command line.
+Make sure that git is installed and can be called from the command line.
 
 (SOON) To install from pip:
 
@@ -23,7 +23,7 @@ pip install fucciphase
 If you wish to install it from source:
     
 ```bash
-git clone https://github.com/nobias-fht/fucciphase
+git clone https://github.com/Synthetic-Physiology-Lab/fucciphase
 cd fucciphase
 pip install -e .
 ```
@@ -51,17 +51,18 @@ print(df["CELL_CYCLE_PERC"])
 ```
 
 The TrackMate XML is converted to a [Pandas](https://pandas.pydata.org/) DataFrame.
-Thus, the general data (e.g., stored in a CSV or XLSX file) that can be parsed into
+Thus, in general data (e.g., stored in a CSV or XLSX file) that can be parsed into
 a DataFrame is supported.
 
-Have a look at the examples to get more information!
+Have a look at the examples in the `example` folder to get more information!
 
 ## Development
+
 To develop fucciphase, clone the repository, install fucciphase in your environment
 and install the pre-commit hooks:
 
 ```bash
-git clone https://github.com/nobias-fht/fucciphase
+git clone https://github.com/Synthetic-Physiology-Lab/fucciphase
 cd fucciphase
 pip install -e ".[test, dev]"
 pre-commit install
@@ -74,4 +75,7 @@ pip install -e ".[test, dev, doc]"
 
 ## Cite us
 
-(SOON)
+Di Sante, M., Pezzotti, M., Zimmermann, J., Enrico, A., Deschamps, J., Balmas, E.,
+Becca, S., Reali, A., Bertero, A., Jug, F. and Pasqualini, F., 2024.
+CALIPERS: Cell cycle-aware live imaging for phenotyping experiments and regeneration studies.
+bioRxiv, https://doi.org/10.1101/2024.12.19.629259 
