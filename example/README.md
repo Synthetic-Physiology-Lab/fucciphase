@@ -1,5 +1,8 @@
 # Examples
 
+1. `example_simulated.ipynb`:
+   We show exemplarily, how simulated sensor data gets processed.
+
 1. `getting_started.ipynb`:
    First notebook to get into the fucciphase workflow.
    Requires a calibrated sensor.
@@ -20,7 +23,7 @@
 
 For documentation purposes, we share the notebooks
 that have been used to produce the results in the
-preprint. TODO add reference
+preprint.
 
 1. `extract_calibration_data.ipynb`:
    Example of obtaining a reference curve from a TrackMate file.
