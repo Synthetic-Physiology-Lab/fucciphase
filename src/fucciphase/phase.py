@@ -29,6 +29,7 @@ class NewColumns(str, Enum):
     DISCRETE_PHASE_MAX = "DISCRETE_PHASE_MAX"
     DISCRETE_PHASE_BG = "DISCRETE_PHASE_BG"
     DISCRETE_PHASE_DIFF = "DISCRETE_PHASE_DIFF"
+    DTW_DISTANCE = "DTW_DIST"
 
     @staticmethod
     def cell_cycle() -> str:
@@ -59,6 +60,11 @@ class NewColumns(str, Enum):
     def discrete_phase_diff() -> str:
         """Return the name of the discrete phase column."""
         return NewColumns.DISCRETE_PHASE_DIFF.value
+
+    @staticmethod
+    def dtw_distance() -> str:
+        """Return the name of the DTW distance."""
+        return NewColumns.DTW_DISTANCE.value
 
 
 def generate_cycle_phases(
@@ -300,6 +306,7 @@ def estimate_percentage_by_subsequence_alignment(
     penalty: float = 0.05,
     track_id_name: str = "TRACK_ID",
     minimum_track_length: int = 10,
+    use_zscore_norm: bool = True,
 ) -> None:
     """Use subsequence alignment to estimate percentage.
 
@@ -321,6 +328,10 @@ def estimate_percentage_by_subsequence_alignment(
         Name of column with track IDs
     minimum_track_length: int
         Only estimate phase for tracks longer than this
+    use_zscore_norm: bool
+        Use z-score normalization before differencing curves
+        Probably not needed if intensities of reference and measured
+        curve are similar
     """
     if "time" not in reference_data:
         raise ValueError("Need to provide time column in reference_data.")
@@ -351,10 +362,21 @@ def estimate_percentage_by_subsequence_alignment(
     series_diff = []
     for channel in channels:
         series = interpolation_functions[channel](new_time_scale)
-        series = stats.zscore(series)
-        series_diff.append(
-            dtaidistance.preprocessing.differencing(series, smooth=smooth)
-        )
+        if use_zscore_norm:
+            series = stats.zscore(series)
+        # if all values are the same, we zero to not numerical issues
+        if np.all(np.isnan(series)):
+            series = 0.0
+
+        try:
+            diff_ch = dtaidistance.preprocessing.differencing(series, smooth=smooth)
+        except ValueError:
+            print(
+                "WARNING: The smoothing failed, continue without smoothing"
+                f" for channel {channel}"
+            )
+            diff_ch = dtaidistance.preprocessing.differencing(series)
+        series_diff.append(diff_ch)
     series = np.array(series_diff)
     series = np.swapaxes(series, 0, 1)
 
@@ -377,10 +399,15 @@ def estimate_percentage_by_subsequence_alignment(
 
         queries_diff = []
         for idx in range(len(channels)):
-            queries[:, idx] = stats.zscore(queries[:, idx])
-            queries_diff.append(
-                dtaidistance.preprocessing.differencing(queries[:, idx], smooth=smooth)
+            if use_zscore_norm:
+                queries[:, idx] = stats.zscore(queries[:, idx])
+            # if all values are the same, we zero to not numerical issues
+            if np.all(np.isnan(queries[:, idx])):
+                queries[:, idx] = 0.0
+            diff_ch = dtaidistance.preprocessing.differencing(
+                queries[:, idx], smooth=smooth
             )
+            queries_diff.append(diff_ch)
 
         query = np.array(queries_diff)
         query = np.swapaxes(query, 0, 1)
@@ -395,6 +422,11 @@ def estimate_percentage_by_subsequence_alignment(
         else:
             last_percentage = p[1]
         new_percentage[-1] = percentage_ref[last_percentage]
+        # save estimated cell cycle percentages
         df.loc[df[track_id_name] == track_id, NewColumns.cell_cycle_dtw()] = (
             new_percentage[:]
+        )
+        # save DTW distance
+        df.loc[df[track_id_name] == track_id, NewColumns.dtw_distance()] = (
+            best_match.value
         )

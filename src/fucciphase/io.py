@@ -26,6 +26,8 @@ def read_trackmate_xml(xml_path: Union[Path, str]) -> Tuple[pd.DataFrame, TrackM
 
     # convert the spots to a dataframe
     df = trackmate.to_pandas()
+    # sort by frame number to have increasing time
+    df.sort_values(by="FRAME")
 
     return df, trackmate
 
