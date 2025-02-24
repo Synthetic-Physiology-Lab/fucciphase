@@ -4,6 +4,7 @@ from typing import List
 import dtaidistance.preprocessing
 import numpy as np
 import pandas as pd
+from dtaidistance.dtw import warping_amount
 from dtaidistance.subsequence.dtw import subsequence_alignment
 from scipy import interpolate, stats
 
@@ -30,6 +31,8 @@ class NewColumns(str, Enum):
     DISCRETE_PHASE_BG = "DISCRETE_PHASE_BG"
     DISCRETE_PHASE_DIFF = "DISCRETE_PHASE_DIFF"
     DTW_DISTANCE = "DTW_DIST"
+    DTW_WARPING = "DTW_WARP"
+    REL_DTW_WARPING = "DTW_WARP_REL"
 
     @staticmethod
     def cell_cycle() -> str:
@@ -65,6 +68,16 @@ class NewColumns(str, Enum):
     def dtw_distance() -> str:
         """Return the name of the DTW distance."""
         return NewColumns.DTW_DISTANCE.value
+
+    @staticmethod
+    def dtw_warping_amount() -> str:
+        "Return the name of the DTW warping amount." ""
+        return NewColumns.DTW_WARPING.value
+
+    @staticmethod
+    def rel_dtw_warping_amount() -> str:
+        "Return the name of the relative DTW warping amount." ""
+        return NewColumns.REL_DTW_WARPING.value
 
 
 def generate_cycle_phases(
@@ -307,6 +320,7 @@ def estimate_percentage_by_subsequence_alignment(
     track_id_name: str = "TRACK_ID",
     minimum_track_length: int = 10,
     use_zscore_norm: bool = True,
+    use_derivative: bool = True,
 ) -> None:
     """Use subsequence alignment to estimate percentage.
 
@@ -332,6 +346,9 @@ def estimate_percentage_by_subsequence_alignment(
         Use z-score normalization before differencing curves
         Probably not needed if intensities of reference and measured
         curve are similar
+    use_derivative: bool
+        Take derivative to perform alignment independent of intensity
+        baseline (in default mode also after normalization)
     """
     if "time" not in reference_data:
         raise ValueError("Need to provide time column in reference_data.")
@@ -368,14 +385,17 @@ def estimate_percentage_by_subsequence_alignment(
         if np.all(np.isnan(series)):
             series = 0.0
 
-        try:
-            diff_ch = dtaidistance.preprocessing.differencing(series, smooth=smooth)
-        except ValueError:
-            print(
-                "WARNING: The smoothing failed, continue without smoothing"
-                f" for channel {channel}"
-            )
+        if use_derivative:
+            try:
+                diff_ch = dtaidistance.preprocessing.differencing(series, smooth=smooth)
+            except ValueError:
+                print(
+                    "WARNING: The smoothing failed, continue without smoothing"
+                    f" for channel {channel}"
+                )
             diff_ch = dtaidistance.preprocessing.differencing(series)
+        else:
+            diff_ch = series
         series_diff.append(diff_ch)
     series = np.array(series_diff)
     series = np.swapaxes(series, 0, 1)
@@ -404,9 +424,12 @@ def estimate_percentage_by_subsequence_alignment(
             # if all values are the same, we zero to not numerical issues
             if np.all(np.isnan(queries[:, idx])):
                 queries[:, idx] = 0.0
-            diff_ch = dtaidistance.preprocessing.differencing(
-                queries[:, idx], smooth=smooth
-            )
+            if use_derivative:
+                diff_ch = dtaidistance.preprocessing.differencing(
+                    queries[:, idx], smooth=smooth
+                )
+            else:
+                diff_ch = queries[:, idx]
             queries_diff.append(diff_ch)
 
         query = np.array(queries_diff)
@@ -414,7 +437,10 @@ def estimate_percentage_by_subsequence_alignment(
 
         sa = subsequence_alignment(query, series, penalty=penalty)
         best_match = sa.best_match()
-        new_percentage = np.zeros(query.shape[0] + 1)
+        if use_derivative:
+            new_percentage = np.zeros(query.shape[0] + 1)
+        else:
+            new_percentage = np.zeros(query.shape[0])
         for p in best_match.path:
             new_percentage[p[0]] = percentage_ref[p[1]]
         if p[1] + 1 < len(percentage_ref):
@@ -429,4 +455,14 @@ def estimate_percentage_by_subsequence_alignment(
         # save DTW distance
         df.loc[df[track_id_name] == track_id, NewColumns.dtw_distance()] = (
             best_match.value
+        )
+
+        # save DTW warping amount
+        df.loc[df[track_id_name] == track_id, NewColumns.dtw_warping_amount()] = (
+            warping_amount(best_match.path)
+        )
+
+        # save DTW warping amount
+        df.loc[df[track_id_name] == track_id, NewColumns.rel_dtw_warping_amount()] = (
+            warping_amount(best_match.path) / len(track_df)
         )
