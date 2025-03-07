@@ -9,7 +9,12 @@ from dtaidistance.subsequence.dtw import subsequence_alignment
 from scipy import interpolate, stats
 
 from .sensor import FUCCISensor
-from .utils import check_channels, check_thresholds, get_norm_channel_name
+from .utils import (
+    check_channels,
+    check_thresholds,
+    get_norm_channel_name,
+    get_time_distortion_coefficient,
+)
 
 
 class NewColumns(str, Enum):
@@ -30,7 +35,9 @@ class NewColumns(str, Enum):
     DISCRETE_PHASE_MAX = "DISCRETE_PHASE_MAX"
     DISCRETE_PHASE_BG = "DISCRETE_PHASE_BG"
     DISCRETE_PHASE_DIFF = "DISCRETE_PHASE_DIFF"
-    DTW_DISTANCE = "DTW_DIST"
+    DTW_DISTORTION = "DTW_DISTORTION"
+    DTW_DISTORTION_REL = "DTW_DISTORTION_REL"
+    DTW_DISTANCE = "DTW_DISTANCE"
     DTW_WARPING = "DTW_WARP"
     REL_DTW_WARPING = "DTW_WARP_REL"
 
@@ -63,6 +70,16 @@ class NewColumns(str, Enum):
     def discrete_phase_diff() -> str:
         """Return the name of the discrete phase column."""
         return NewColumns.DISCRETE_PHASE_DIFF.value
+
+    @staticmethod
+    def dtw_distortion() -> str:
+        """Return the name of the DTW distortion."""
+        return NewColumns.DTW_DISTORTION.value
+
+    @staticmethod
+    def dtw_distortion_norm() -> str:
+        """Return the name of the DTW distortion."""
+        return NewColumns.DTW_DISTORTION_REL.value
 
     @staticmethod
     def dtw_distance() -> str:
@@ -455,6 +472,15 @@ def estimate_percentage_by_subsequence_alignment(
         # save DTW distance
         df.loc[df[track_id_name] == track_id, NewColumns.dtw_distance()] = (
             best_match.value
+        )
+
+        _, distortion_score, _, _ = get_time_distortion_coefficient(best_match.path)
+        # save DTW distortion
+        df.loc[df[track_id_name] == track_id, NewColumns.dtw_distortion()] = (
+            distortion_score
+        )
+        df.loc[df[track_id_name] == track_id, NewColumns.dtw_distortion_norm()] = (
+            distortion_score / len(track_df)
         )
 
         # save DTW warping amount
