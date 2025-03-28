@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 import pytest
-from fucciphase.utils import moving_average, norm, normalize_channels
+
+from fucciphase.utils import norm, normalize_channels
 
 
 def test_norm():
@@ -51,10 +52,12 @@ def test_normalize(trackmate_df: pd.DataFrame, use_ma):
         channel1_norm_expected = (trackmate_df[channel1] - min_channel1) / (
             trackmate_df[channel1].max() - min_channel1
         )
+        channel1_norm_expected = np.clip(channel1_norm_expected, 0, 100)
         channel1_norm_expected = np.round(channel1_norm_expected, decimals=2)
         channel2_norm_expected = (trackmate_df[channel2] - min_channel2) / (
             trackmate_df[channel2].max() - min_channel2
         )
+        channel2_norm_expected = np.clip(channel2_norm_expected, 0, 100)
         channel2_norm_expected = np.round(channel2_norm_expected, decimals=2)
         assert trackmate_df[channel1_norm].min() == channel1_norm_expected.min()
         assert trackmate_df[channel1_norm].max() == channel1_norm_expected.max()
@@ -106,24 +109,3 @@ def test_normalize_manual_minmax(trackmate_df: pd.DataFrame):
 
     # check that the values are the same
     assert df.equals(trackmate_df)
-
-
-@pytest.mark.parametrize(
-    "window, expected",
-    [
-        (3, [0.5, 1, 2, 3, 4, 5, 6, 7, 8, 8.5]),
-        (5, [1, 1.5, 2, 3, 4, 5, 6, 7, 7.5, 8]),
-        (7, [1.5, 2, 2.5, 3, 4, 5, 6, 6.5, 7, 7.5]),
-    ],
-)
-def test_moving_average(window, expected):
-    """Test that the moving average function works as expected."""
-    v = np.arange(0, 10)
-
-    # expected value as a np array
-    expected = np.array(expected)
-
-    # run moving average
-    result = moving_average(v, window)
-    assert result.shape == expected.shape
-    assert (result == expected).all()

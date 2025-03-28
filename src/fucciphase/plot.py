@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from matplotlib.figure import Figure
+from scipy import interpolate
 
 from .phase import NewColumns
 from .utils import get_norm_channel_name
@@ -49,14 +50,6 @@ def plot_feature(
             plt.ylim(ylim)
         if yticks is not None:
             plt.yticks(yticks)
-    # TODO interplolate and plot average
-    """
-    plt.plot(interpolated_time, np.nanmean(interpolated_feature, lw=5, color="black")
-    if ylim is not None:
-        plt.ylim(ylim)
-    if yticks is not None:
-        plt.yticks(yticks)
-    """
     return fig
 
 
@@ -160,7 +153,7 @@ def plot_raw_intensities(
     time_label: str = "Frame #",
     **plot_kwargs: bool,
 ) -> None:
-    """TODO description."""
+    """Plot intensities of two-channel sensor."""
     ch1_intensity = df[channel1]
     ch2_intensity = df[channel2]
 
@@ -192,7 +185,7 @@ def plot_normalized_intensities(
     time_label: str = "Frame #",
     **plot_kwargs: bool,
 ) -> None:
-    """TODO description."""
+    """Plot normalised intensities of two-channel sensor."""
     ch1_intensity = df[get_norm_channel_name(channel1)]
     ch2_intensity = df[get_norm_channel_name(channel2)]
 
@@ -247,3 +240,78 @@ def plot_phase(df: pd.DataFrame, channel1: str, channel2: str) -> None:
     plt.plot(t, channel1_norm, label=channel1)
     plt.plot(t, channel2_norm, label=channel2)
     plt.plot(t, unique_intensity, label="unique intensity")
+
+
+def plot_dtw_query_vs_reference(
+    reference_df: pd.DataFrame,
+    df: pd.DataFrame,
+    channels: List[str],
+    ref_percentage_column: str = "percentage",
+    est_percentage_column: str = "CELL_CYCLE_PERC_DTW",
+    ground_truth: Optional[pd.DataFrame] = None,
+) -> None:
+    """Plot query and alignment to reference curve.
+
+    Parameters
+    ----------
+    reference_df: pd.DataFrame
+        DataFrame with reference curve data
+    df: pd.DataFrame
+        DataFrame used for query
+    channels: List[str]
+        Name of the channels
+    ref_percentage_column: str
+        Name of column with percentages of reference curve
+    est_percentage_column: str
+        Name of column with estimated percentages
+    ground_truth: pd.DataFrame
+        DataFrame with ground truth data, needs to be named as reference_df
+    """
+    for channel in channels:
+        if channel not in reference_df.columns:
+            raise ValueError(f"Channel {channel} not in reference DataFrame")
+        if channel not in df.columns:
+            raise ValueError(f"Channel {channel} not in query DataFrame")
+    if est_percentage_column not in df.columns:
+        raise ValueError(
+            "Percentage column not found in query DataFrame"
+            f", available options {df.columns}"
+        )
+    if ref_percentage_column not in reference_df.columns:
+        raise ValueError(
+            "Percentage column not found in reference DataFrame"
+            f", available options {reference_df.columns}"
+        )
+    fig, ax = plt.subplots(1, len(channels))
+    reference_df["percentage"]
+    for idx, channel in enumerate(channels):
+        ax[idx].plot(df[est_percentage_column], df[channel], label="Query")
+        ax[idx].plot(
+            reference_df[ref_percentage_column],
+            reference_df[channel],
+            label="Reference",
+        )
+        f_cyan = interpolate.interp1d(
+            reference_df[ref_percentage_column], reference_df[channel]
+        )
+        ax[idx].plot(
+            df[est_percentage_column],
+            f_cyan(df[est_percentage_column]),
+            lw=6,
+            alpha=0.5,
+            color="red",
+            label="Match",
+        )
+        if ground_truth is not None:
+            ax[idx].plot(
+                ground_truth[ref_percentage_column],
+                ground_truth[channel],
+                label="Ground truth",
+                lw=3,
+            )
+
+        ax[idx].set_ylabel(f"{channel.capitalize()} intensity / arb. u.")
+        ax[idx].set_xlabel("Cell cycle percentage")
+        if idx == 0:
+            ax[idx].legend()
+        plt.tight_layout()

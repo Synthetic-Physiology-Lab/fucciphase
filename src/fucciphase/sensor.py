@@ -70,7 +70,7 @@ class FUCCISensor(ABC):
             raise ValueError("Pass percentage for each phase.")
 
         # check that the sum of phase borders is less than 100
-        if not np.isclose(sum(values), 100.0):
+        if not np.isclose(sum(values), 100.0, atol=0.2):
             raise ValueError("Phase percentages do not sum to 100.")
 
         self._phase_percentages = values
@@ -319,7 +319,7 @@ class FUCCISASensor(FUCCISensor):
         return [g1_acc + g1_deg - 1.0, s_g2_m_acc + s_g2_m_deg - 1.0]
 
 
-def FUCCISADefaultSensor() -> FUCCISASensor:
+def get_fuccisa_default_sensor() -> FUCCISASensor:
     """Return sensor with default values.
 
     Should only be used if the cell cycle percentage is not of interest.

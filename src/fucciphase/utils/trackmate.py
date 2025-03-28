@@ -1,6 +1,7 @@
+import re
 import xml.etree.ElementTree as et
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -12,6 +13,7 @@ SPOT_FEATURES = "SpotFeatures"
 ALL_SPOTS = "AllSpots"
 N_SPOTS = "nspots"
 ID = "ID"
+SUBTRACK_REGEX = r"Track_[0-9]+\.[a-z]+"
 
 
 # TODO test on very large trackmate files, since this is potentially a bottleneck here
@@ -257,3 +259,37 @@ class TrackMateXML:
         """
         with open(xml_path, "wb") as f:
             self._tree.write(f)
+
+    def get_full_tracks(
+        df: pd.DataFrame,
+        channels: List[str],
+        track_id_name: str = "UNIQUE_TRACK_ID",
+        spot_name: str = "name",
+        frame_name: str = "FRAME",
+        min_length: int = 40,
+    ) -> Tuple[List[pd.DataFrame], List[pd.DataFrame]]:
+        """Locate all tracks that may describe a full cycle.
+        Tracks need to be auto-named by TrackMate.
+        For example, Track_1a, Track_1aa, Track_1b etc.
+        This can be done in TrackMate by executing an action after the tracking.
+        In addition, tracks longer than a certain minimum length can be selected.
+        """
+        regex = "Track_[0-9]+.[a-z]+"
+        candidate_tracks: List[pd.DataFrame] = []
+        save_tracks: List[pd.DataFrame] = []
+        track_ids = df[track_id_name].unique()
+        for track_id in track_ids:
+            track = df[df[track_id_name] == track_id]
+            name = track[spot_name].iloc[0]
+            last_frame = track[frame_name].max()
+            # is the track a subtrack
+            match = re.match(regex, name)
+            # is there a subtrack
+            next_match = any(df[spot_name].str.match(name + "[a-z]+").unique())
+            if match is not None and last_frame < df[frame_name].max():
+                if next_match:
+                    save_tracks.append(track[[frame_name, *channels]])
+                else:
+                    if len(track) > min_length:
+                        candidate_tracks.append(track[[frame_name, *channels]])
+        return save_tracks, candidate_tracks

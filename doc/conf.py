@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "fucciphase"
-project_copyright = "2023, Joran Deschamps"
+project_copyright = "2023, Joran Deschamps, Julius Zimmermann (contributor)"
 author = "Joran Deschamps"
 
 # -- General configuration ---------------------------------------------------

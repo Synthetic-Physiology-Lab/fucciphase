@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -116,11 +116,7 @@ def normalize_channels(
     """
     if not isinstance(channels, list):
         channels = [channels]
-    if len(channels) != 2:
-        # only two channels possible with normalization depending on other channel
-        # can change in future implementations!
-        raise ValueError("The current implementation only works with two channels.")
-    # TODO decide on use case for manual minimum or maximum
+
     if manual_min is not None:
         # check that it has the same number of entries as there are channels
         if len(manual_min) != len(channels):
@@ -147,22 +143,11 @@ def normalize_channels(
 
             avg_channel = get_avg_channel_name(channel)
             for track_ID in unique_track_IDs:
-                # get the track
-                track: pd.DataFrame = df[df[track_id_name] == track_ID]
-
-                # sort the channel by frame
-                track = track.sort_values(by="FRAME")
-
-                # compute the moving average
-                ma = signal.savgol_filter(
-                    track[channel],
-                    window_length=moving_average_window,
-                    polyorder=3,
-                    mode="nearest",
+                index, ma = smooth_track(
+                    df, track_ID, channel, track_id_name, moving_average_window
                 )
-
                 # update the dataframe by adding a new column
-                df.loc[track.index, avg_channel] = ma
+                df.loc[index, avg_channel] = ma
 
     # normalize channels
     for channel in channels:
@@ -180,3 +165,38 @@ def normalize_channels(
         new_columns.append(new_column)
 
     return new_columns
+
+
+def smooth_track(
+    df: pd.DataFrame,
+    track_ID: int,
+    channel: str,
+    track_id_name: str,
+    moving_average_window: int = 7,
+) -> Tuple[pd.Index, np.ndarray]:
+    """Smooth intensity in one channel for a single track.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Dataframe
+    track_ID: int
+        Index of track
+    channel : st
+        Name of the channel to smooth
+    track_id_name: str
+        Name of column with track IDs
+    moving_average_window : int
+        Size of the window used for the moving average, default 7.
+    """
+    # get the track
+    track: pd.DataFrame = df[df[track_id_name] == track_ID]
+
+    # compute the moving average
+    ma = signal.savgol_filter(
+        track[channel],
+        window_length=moving_average_window,
+        polyorder=3,
+        mode="nearest",
+    )
+    return track.index, ma

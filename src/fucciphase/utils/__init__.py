@@ -1,4 +1,5 @@
 """Convenience functions for fucciphase."""
+
 __all__ = [
     "simulate_single_track",
     "normalize_channels",
@@ -15,9 +16,11 @@ __all__ = [
     "postprocess_estimated_percentages",
     "plot_trackscheme",
     "export_lineage_tree_to_svg",
+    "get_time_distortion_coefficient",
 ]
 
 from .checks import check_channels, check_thresholds
+from .dtw import get_time_distortion_coefficient
 from .normalize import get_norm_channel_name, norm, normalize_channels
 from .phase_fit import fit_percentages, postprocess_estimated_percentages
 from .simulator import simulate_single_track
