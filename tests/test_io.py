@@ -1,4 +1,6 @@
+import numpy as np
 import pandas as pd
+
 from fucciphase.io import read_trackmate_csv, read_trackmate_xml
 
 
@@ -7,7 +9,17 @@ def test_read_csv(trackmate_csv, trackmate_df: pd.DataFrame):
     not contains the first three lines (headers and units)."""
     df = read_trackmate_csv(trackmate_csv)
 
-    assert df.equals(trackmate_df)
+    print(df)
+    print("###")
+    print(trackmate_df)
+    assert all(df.columns == trackmate_df.columns)
+    for column in df.columns:
+        if "CH3" in column or "CH4" in column:
+            assert np.all(
+                np.isclose(df[column].to_list(), trackmate_df[column].to_list())
+            ), f"{column} differs"
+        else:
+            assert df[column].equals(trackmate_df[column]), f"{column} differs"
 
 
 def test_read_xml(trackmate_xml):

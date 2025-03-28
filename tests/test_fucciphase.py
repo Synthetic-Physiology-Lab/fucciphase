@@ -1,10 +1,17 @@
 from fucciphase import process_dataframe, process_trackmate
 from fucciphase.io import read_trackmate_xml
-from fucciphase.phase import NewColumns, compute_cell_cycle, generate_cycle_phases
+from fucciphase.phase import NewColumns, generate_cycle_phases
+from fucciphase.sensor import FUCCISASensor
 from fucciphase.utils import normalize_channels, simulate_single_track
 
+sensor_dict = {
+    "phase_percentages": [30.0, 37.0, 33.0],
+    "center": [20, 55, 70, 99],
+    "sigma": [7.2, 4.3, 13.0, 0.3],
+}
 
-def test_smoke_pipeline_simulated():
+
+def test_smoke_pipeline_simulated() -> None:
     """Test that the pipeline can run on simulated data."""
     # simulate a single track
     df = simulate_single_track()
@@ -15,27 +22,23 @@ def test_smoke_pipeline_simulated():
     channel2 = "MEAN_INTENSITY_CH4"
     normalize_channels(df, [channel1, channel2], use_moving_average=True)
 
-    # compute the cell cycle percentage
-    compute_cell_cycle(df, channel1, channel2)
-    assert NewColumns.cell_cycle() in df.columns
-    assert NewColumns.color() in df.columns
+    sensor = FUCCISASensor(**sensor_dict)
 
     # compute the phases
     generate_cycle_phases(
         df,
-        phases=["G1", "T", "S", "G2M"],  # one more phase than thresholds
-        thresholds=[0.04, 0.44, 0.56],
+        [channel1, channel2],
+        sensor,
+        thresholds=[0.1, 0.1],
     )
 
     # compare with high level API
     assert NewColumns.cell_cycle() not in df2.columns
-    assert NewColumns.color() not in df2.columns
     process_dataframe(
         df2,
-        channel1,
-        channel2,
-        phases=["G1", "T", "S", "G2M"],
-        thresholds=[0.04, 0.44, 0.56],
+        [channel1, channel2],
+        sensor,
+        thresholds=[0.1, 0.1],
     )
     assert df.equals(df2)
 
@@ -50,14 +53,14 @@ def test_smoke_pipeline_trackmate(tmp_path, trackmate_xml):
     channel2 = "MEAN_INTENSITY_CH2"
     normalize_channels(df, [channel1, channel2], use_moving_average=True)
 
-    # compute the cell cycle percentage
-    compute_cell_cycle(df, channel1, channel2)
+    sensor = FUCCISASensor(**sensor_dict)
 
     # compute the phases
     generate_cycle_phases(
         df,
-        phases=["G1", "T", "S", "G2M"],  # one more phase than thresholds
-        thresholds=[0.04, 0.44, 0.56],
+        [channel1, channel2],
+        sensor,
+        thresholds=[0.1, 0.1],
     )
 
     # update the XML
@@ -70,14 +73,12 @@ def test_smoke_pipeline_trackmate(tmp_path, trackmate_xml):
     # load it back and check that the new columns are there
     df2, _ = read_trackmate_xml(path)
     assert NewColumns.cell_cycle() in df2.columns
-    assert NewColumns.color() in df2.columns
 
     # process it with high level API
     df3 = process_trackmate(
         trackmate_xml,
-        channel1,
-        channel2,
-        phases=["G1", "T", "S", "G2M"],
-        thresholds=[0.04, 0.44, 0.56],
+        [channel1, channel2],
+        sensor,
+        thresholds=[0.1, 0.1],
     )
     assert df.equals(df3)
