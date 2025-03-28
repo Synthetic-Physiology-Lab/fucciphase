@@ -26,6 +26,7 @@ def add_trackmate_data_to_viewer(
     time_id_name: Optional[str] = "POSITION_T",
     pos_x_id_name: Optional[str] = "POSITION_X",
     pos_y_id_name: Optional[str] = "POSITION_Y",
+    crop_fov: Optional[List[float]] = None,
 ) -> None:
     """Overlay tracking result and video.
 
@@ -43,6 +44,8 @@ def add_trackmate_data_to_viewer(
         Segmentation masks
     textkwargs: dict
         Dictionary to pass options to text in napari
+    crop_fov: List[List[float], List[float]]
+        Crop the masks and points
     """
     if textkwargs is None:
         textkwargs = {}
@@ -72,7 +75,8 @@ def add_trackmate_data_to_viewer(
 
     for image, colormap in zip(image_data, colormaps):
         viewer.add_image(image, blending="additive", colormap=colormap, scale=scale)
-
+    # TODO implement cropping, filter points in / outside range
+    # crop_fov =
     viewer.add_points(
         points,
         features={"percentage": np.round(percentage_values, 1)},
