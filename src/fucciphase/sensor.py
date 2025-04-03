@@ -444,7 +444,7 @@ class PIPFUCCISensor(FUCCISensor):
         raise NotImplementedError("Intensity estimate not yet implemented!")
 
 
-def get_pip_default_sensor() -> PIPFUCCISensor:
+def get_pipfucci_default_sensor() -> PIPFUCCISensor:
     """Return sensor with default values.
 
     Should only be used if the cell cycle percentage is not of interest.
