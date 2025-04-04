@@ -327,3 +327,129 @@ def get_fuccisa_default_sensor() -> FUCCISASensor:
     return FUCCISASensor(
         phase_percentages=[25, 25, 50], center=[0, 0, 0, 0], sigma=[0, 0, 0, 0]
     )
+
+
+class PIPFUCCISensor(FUCCISensor):
+    """PIP-FUCCI sensor."""
+
+    def __init__(
+        self, phase_percentages: List[float], center: List[float], sigma: List[float]
+    ) -> None:
+        self.phase_percentages = phase_percentages
+        self.set_accumulation_and_degradation_parameters(center, sigma)
+
+    @property
+    def fluorophores(self) -> int:
+        """Number of fluorophores."""
+        return 2
+
+    @property
+    def phases(self) -> List[str]:
+        """Function to hard-code the supported phases of a sensor."""
+        return ["G1", "S", "G2/M"]
+
+    def get_phase(self, phase_markers: Union[List[bool], "pd.Series[bool]"]) -> str:
+        """Return the discrete phase based channel ON / OFF data for the
+        FUCCI(SA) sensor.
+        """
+        if not len(phase_markers) == 2:
+            raise ValueError(
+                "The markers for G1 and S/G2/M channel have" "to be provided!"
+            )
+        g1_on = phase_markers[0]
+        s_on = phase_markers[1]
+        # low intensity at the very beginning of cycle
+        if not g1_on and not s_on:
+            return "S"
+        elif g1_on and not s_on:
+            return "G1"
+        elif not g1_on and s_on:
+            return "S"
+        else:
+            return "G2/M"
+
+    def _find_g1_percentage(self, intensity: float) -> float:
+        """Find percentage in G1 phase.
+
+        Parameters
+        ----------
+        intensity: float
+            Intensity of cyan / green channel
+
+        Notes
+        -----
+        Checks the accumulation function of the first colour.
+        First colour means the colour indicating G1 phase.
+
+        """
+        raise NotImplementedError("Percentage estimate not yet implemented!")
+
+    def _find_s_percentage(self, intensity: float) -> float:
+        """Find percentage in S phase.
+
+        Parameters
+        ----------
+        intensity: float
+            Intensity of cyan / green channel
+
+        Notes
+        -----
+        Checks the degradation function of the first colour.
+        First colour means the colour indicating G1 phase.
+        """
+        raise NotImplementedError("Percentage estimate not yet implemented!")
+
+    def _find_g2m_percentage(self, intensity: float) -> float:
+        """Find percentage in G2/M phase.
+
+        Parameters
+        ----------
+        intensity: float
+            Intensity of second colour (magenta / red)
+
+        Notes
+        -----
+        Checks the accumulation function of the second colour.
+        Second colour means the colour indicating S/G2/M phase.
+        """
+        raise NotImplementedError("Percentage estimate not yet implemented!")
+
+    def get_estimated_cycle_percentage(
+        self, phase: str, intensities: List[float]
+    ) -> float:
+        """Estimate a cell cycle percentage based on intensities.
+
+        Parameters
+        ----------
+        phase: str
+            Name of phase
+        intensities: List[float]
+            List of channel intensities for all fluorophores
+        """
+        raise NotImplementedError("Percentage estimate not yet implemented!")
+        if phase not in self.phases:
+            raise ValueError(f"Phase {phase} is not defined for this sensor.")
+        # TODO fill the following structure with life!
+        if phase == "G1":
+            return self._find_g1_percentage(intensities[0])
+        if phase == "S":
+            return self._find_s_percentage(intensities[0])
+        else:
+            return self._find_g2m_percentage(intensities[1])
+
+    def get_expected_intensities(
+        self, percentage: Union[float, np.ndarray]
+    ) -> List[Union[float, np.ndarray]]:
+        """Return value of calibrated curves."""
+        raise NotImplementedError("Intensity estimate not yet implemented!")
+
+
+def get_pipfucci_default_sensor() -> PIPFUCCISensor:
+    """Return sensor with default values.
+
+    Should only be used if the cell cycle percentage is not of interest.
+    """
+    # TODO update values
+    return PIPFUCCISensor(
+        phase_percentages=[25, 25, 50], center=[0, 0, 0, 0], sigma=[0, 0, 0, 0]
+    )
