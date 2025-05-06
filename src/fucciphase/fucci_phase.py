@@ -20,6 +20,8 @@ def process_dataframe(
     manual_max: Optional[List[float]] = None,
     generate_unique_tracks: bool = False,
     track_id_name: str = "TRACK_ID",
+    label_id_name: str = "name",
+    estimate_percentage: bool = True,
 ) -> None:
     """Process a pd.DataFrame by computing the cell cycle percentage from two FUCCI
     cycle reporter channels in place.
@@ -51,6 +53,10 @@ def process_dataframe(
         Manually determined minimum for each channel, by default None
     manual_max : Optional[List[float]], optional
         Manually determined maximum for each channel, by default None
+    estimate_percentage: bool
+        Estimate cell cycle percentage
+    label_id_name: str
+        Give an indentifier for the spot name (needed for unique track ID generation)
     generate_unique_tracks: bool
         Assign unique track IDs to splitted tracks.
         Requires usage of action in TrackMate.
@@ -62,7 +68,7 @@ def process_dataframe(
 
     if generate_unique_tracks:
         if "TRACK_ID" in df.columns:
-            split_trackmate_tracks(df)
+            split_trackmate_tracks(df, label_id_name=label_id_name)
             # perform all operation on unique tracks
             track_id_name = "UNIQUE_TRACK_ID"
         else:
@@ -81,7 +87,13 @@ def process_dataframe(
     )
 
     # compute the phases
-    generate_cycle_phases(df, sensor=sensor, channels=channels, thresholds=thresholds)
+    generate_cycle_phases(
+        df,
+        sensor=sensor,
+        channels=channels,
+        thresholds=thresholds,
+        estimate_percentage=estimate_percentage,
+    )
 
 
 def process_trackmate(

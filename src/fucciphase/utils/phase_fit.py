@@ -33,8 +33,15 @@ def postprocess_estimated_percentages(
         if np.all(np.isnan(percentages)):
             print("WARNING: No percentages to postprocess")
             return
-
-        restored_percentages = fit_percentages(frames, percentages)
-        df.loc[
-            df[track_id_name] == index, postprocessed_percentage_column
-        ] = restored_percentages
+        try:
+            restored_percentages = fit_percentages(frames, percentages)
+        except ValueError:
+            print(f"Error in track {index}")
+            print(
+                "Make sure that the spots belong to a unique track,"
+                " i.e., not more than one spot per frame per track."
+            )
+            print(track)
+        df.loc[df[track_id_name] == index, postprocessed_percentage_column] = (
+            restored_percentages
+        )
