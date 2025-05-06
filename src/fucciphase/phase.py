@@ -88,17 +88,21 @@ class NewColumns(str, Enum):
 
     @staticmethod
     def dtw_warping_amount() -> str:
-        "Return the name of the DTW warping amount." ""
+        """Return the name of the DTW warping amount."""
         return NewColumns.DTW_WARPING.value
 
     @staticmethod
     def rel_dtw_warping_amount() -> str:
-        "Return the name of the relative DTW warping amount." ""
+        """Return the name of the relative DTW warping amount."""
         return NewColumns.REL_DTW_WARPING.value
 
 
 def generate_cycle_phases(
-    df: pd.DataFrame, channels: List[str], sensor: FUCCISensor, thresholds: List[float]
+    df: pd.DataFrame,
+    channels: List[str],
+    sensor: FUCCISensor,
+    thresholds: List[float],
+    estimate_percentage: bool = False,
 ) -> None:
     """Add a column in place to the dataframe with the phase of the cell cycle.
 
@@ -132,6 +136,8 @@ def generate_cycle_phases(
         Names of channels
     thresholds: List[float]
         Thresholds to separate phases
+    estimate_percentage: bool
+        Estimate cell cycle percentages
 
 
     Raises
@@ -169,7 +175,8 @@ def generate_cycle_phases(
     # name of phase_column
     phase_column = NewColumns.discrete_phase_max()
     # compute percentages
-    estimate_cell_cycle_percentage(df, norm_channel_names, sensor, phase_column)
+    if estimate_percentage:
+        estimate_cell_cycle_percentage(df, norm_channel_names, sensor, phase_column)
 
 
 def estimate_cell_cycle_percentage(

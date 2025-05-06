@@ -307,13 +307,19 @@ def plot_trackscheme(
     return
 
 
-def split_trackmate_tracks(df: pd.DataFrame) -> None:
+def split_trackmate_tracks(
+    df: pd.DataFrame, track_id_name: str = "TRACK_ID", label_id_name: str = "name"
+) -> None:
     """Split TrackMate tracks into subtracks.
 
     Parameters
     ----------
     df: pd.DataFrame
         DataFrame obtained from TrackMate XML, updated in place
+    label_id_name: str
+        Name of spots to split track IDs into unique tracks
+    track_id_name: str
+        Name of track ID column
 
     Notes
     -----
@@ -329,20 +335,20 @@ def split_trackmate_tracks(df: pd.DataFrame) -> None:
     """
     # pattern to identify subtracks
     regex = r"Track_[0-9]+\.[a-z]+"
-    subtracks = df.loc[df["name"].str.contains(regex), "name"].unique()
+    subtracks = df.loc[df[label_id_name].str.contains(regex), label_id_name].unique()
     subtracks = sorted(subtracks)
 
     mapping_of_subtracks = {}
-    max_track = df["TRACK_ID"].max() + 1
+    max_track = df[track_id_name].max() + 1
 
     for subtrack in subtracks:
         mapping_of_subtracks[subtrack] = max_track
         max_track += 1
 
-    subtrack_series = df.loc[df["name"].str.contains(regex), "name"]
+    subtrack_series = df.loc[df[label_id_name].str.contains(regex), label_id_name]
     new_track_ids = subtrack_series.transform(lambda x: mapping_of_subtracks[x])
 
-    df["UNIQUE_TRACK_ID"] = df["TRACK_ID"].copy()
+    df["UNIQUE_TRACK_ID"] = df[track_id_name].copy()
     df["UNIQUE_TRACK_ID"].update(new_track_ids)
     return
 

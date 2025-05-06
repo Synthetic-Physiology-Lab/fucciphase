@@ -32,7 +32,6 @@ def get_time_distortion_coefficient(
             # end beta count, add lambdas
             if beta > 0:
                 beta += 1
-                print(beta)
                 lmbd[idx - beta - 1 : idx - 1] = 1.0 - 1.0 / beta
                 beta = 0
         # compression check
