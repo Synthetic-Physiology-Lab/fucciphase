@@ -1,3 +1,4 @@
+from itertools import cycle
 from typing import List, Optional
 
 import numpy as np
@@ -350,6 +351,8 @@ def plot_cell_trajectory(
     phase_column: Optional[str] = None,
     percentage_column: Optional[str] = None,
     coloring_mode: str = "phase",
+    line_cycle: Optional[list] = None,
+    **kwargs: int,
 ) -> None:
     """Plot cell migration trajectories with phase or percentage-based coloring.
 
@@ -371,6 +374,11 @@ def plot_cell_trajectory(
         Column name containing percentage values for coloring, default is None.
     coloring_mode : str, optional
         Color tracks by cell cycle phase (`phase`) or by percentage (`percentage`)
+    line_cycle: list
+        Cycle through the list, can help with visualization
+    kwargs: dict, optional
+        Kwargs are directly passed to the LineCollection, use it to adjust
+        the linestyle for example
 
     Notes
     -----
@@ -390,6 +398,12 @@ def plot_cell_trajectory(
             "No percentage column value provided " "but percentage coloring required."
         )
 
+    if "ls" in kwargs or "linestyles" in kwargs:
+        raise ValueError("Set the linestyles via line_cycle argument.")
+    # default: all curves solid
+    if line_cycle is None:
+        line_cycle = ["solid"]
+    linecycler = cycle(line_cycle)
     # data structures
     line_collections = []
 
@@ -429,7 +443,12 @@ def plot_cell_trajectory(
             )
 
         line_collections.append(
-            LineCollection(lines.reshape(-1, 2, 2), colors=phase_colors)
+            LineCollection(
+                lines.reshape(-1, 2, 2),
+                colors=phase_colors,
+                ls=next(linecycler),
+                **kwargs,
+            )
         )
     fig, ax = plt.subplots()
     for line_collection in line_collections:
@@ -437,4 +456,3 @@ def plot_cell_trajectory(
     ax.margins(0.05)
     plt.xlabel(r"X in $\mu$m")
     plt.ylabel(r"Y in $\mu$m")
-    plt.show()
