@@ -1,8 +1,11 @@
+from itertools import cycle
 from typing import List, Optional
 
 import numpy as np
 import pandas as pd
+from matplotlib import colormaps
 from matplotlib import pyplot as plt
+from matplotlib.collections import LineCollection
 from matplotlib.figure import Figure
 from scipy import interpolate
 
@@ -315,3 +318,141 @@ def plot_dtw_query_vs_reference(
         if idx == 0:
             ax[idx].legend()
         plt.tight_layout()
+
+
+def get_phase_color(phase: str) -> tuple:
+    """Get color for a certain phase."""
+    if phase == "G1":
+        return (0.09019607843137255, 0.7450980392156863, 0.8117647058823529, 1.0)
+    elif phase == "S/G2/M":
+        return (0.75, 0.0, 0.75, 1.0)
+    else:
+        return (0.5019607843137255, 0.5019607843137255, 0.5019607843137255, 1.0)
+
+
+def get_percentage_color(percentage: float) -> tuple:
+    """Get color corresponding to percentage."""
+    cmap_name = "cool"
+    cmap = colormaps.get(cmap_name)
+    if np.isnan(percentage):
+        print("WARNING: NaN value detected, plot will be transparent")
+        rgba_value = (0, 0, 0, 0)
+    else:
+        rgba_value = cmap(percentage / 100.0)
+    return (rgba_value[0], rgba_value[1], rgba_value[2], 1.0)
+
+
+def plot_cell_trajectory(
+    track_df: pd.DataFrame,
+    track_id_name: str,
+    min_track_length: int = 30,
+    centroid0_name: str = "centroid-0",
+    centroid1_name: str = "centroid-1",
+    phase_column: Optional[str] = None,
+    percentage_column: Optional[str] = None,
+    coloring_mode: str = "phase",
+    line_cycle: Optional[list] = None,
+    **kwargs: int,
+) -> None:
+    """Plot cell migration trajectories with phase or percentage-based coloring.
+
+    Parameters
+    ----------
+    track_df : pandas.DataFrame
+        DataFrame containing cell tracking data.
+    track_id_name : str
+        Column name containing unique track identifiers.
+    min_track_length : int, optional
+        Minimum number of timepoints required to include a track, default is 30.
+    centroid0_name : str, optional
+        Column name for x-coordinate of cell centroid, default is "centroid-0".
+    centroid1_name : str, optional
+        Column name for y-coordinate of cell centroid, default is "centroid-1".
+    phase_column : str, optional
+        Column name containing cell cycle phase information, default is None.
+    percentage_column : str, optional
+        Column name containing percentage values for coloring, default is None.
+    coloring_mode : str, optional
+        Color tracks by cell cycle phase (`phase`) or by percentage (`percentage`)
+    line_cycle: list
+        Cycle through the list, can help with visualization
+    kwargs: dict, optional
+        Kwargs are directly passed to the LineCollection, use it to adjust
+        the linestyle for example
+
+    Notes
+    -----
+    Phase or percentage columns need to be provided for the respective coloring.
+    If not, an error will be raised.
+
+    """
+    # inital checks
+    possible_coloring = ["phase", "percentage"]
+    if coloring_mode not in possible_coloring:
+        raise ValueError(f"coloring_mode needs to be one {possible_coloring}")
+
+    if phase_column is None and coloring_mode == "phase":
+        raise ValueError("No phase column value provided but phase coloring required.")
+    if percentage_column is None and coloring_mode == "percentage":
+        raise ValueError(
+            "No percentage column value provided " "but percentage coloring required."
+        )
+
+    if "ls" in kwargs or "linestyles" in kwargs:
+        raise ValueError("Set the linestyles via line_cycle argument.")
+    # default: all curves solid
+    if line_cycle is None:
+        line_cycle = ["solid"]
+    linecycler = cycle(line_cycle)
+    # data structures
+    line_collections = []
+
+    # populate data structures
+    indices = track_df[track_id_name].unique()
+    xmin = np.inf
+    xmax = -np.inf
+    ymin = np.inf
+    ymax = -np.inf
+    for index in indices:
+        if len(track_df.loc[track_df[track_id_name] == index]) < min_track_length:
+            continue
+        centroids = track_df.loc[
+            track_df[track_id_name] == index, [centroid0_name, centroid1_name]
+        ].to_numpy()
+        # set start location to (0, 0)
+        centroids[:, 0] -= centroids[0, 0]
+        centroids[:, 1] -= centroids[0, 1]
+        xmin = min(xmin, centroids[:, 0].min())
+        xmax = max(xmax, centroids[:, 0].max())
+        ymin = min(ymin, centroids[:, 1].min())
+        ymax = max(ymax, centroids[:, 1].max())
+        lines = np.c_[
+            centroids[:-1, 0], centroids[:-1, 1], centroids[1:, 0], centroids[1:, 1]
+        ]
+        if phase_column is not None:
+            phase_colors = (
+                track_df.loc[track_df[track_id_name] == index, phase_column]
+                .map(get_phase_color)
+                .to_list()
+            )
+        if percentage_column is not None:
+            phase_colors = (
+                track_df.loc[track_df[track_id_name] == index, percentage_column]
+                .map(get_percentage_color)
+                .to_list()
+            )
+
+        line_collections.append(
+            LineCollection(
+                lines.reshape(-1, 2, 2),
+                colors=phase_colors,
+                ls=next(linecycler),
+                **kwargs,
+            )
+        )
+    fig, ax = plt.subplots()
+    for line_collection in line_collections:
+        ax.add_collection(line_collection)
+    ax.margins(0.05)
+    plt.xlabel(r"X in $\mu$m")
+    plt.ylabel(r"Y in $\mu$m")
