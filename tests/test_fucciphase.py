@@ -39,6 +39,7 @@ def test_smoke_pipeline_simulated() -> None:
         [channel1, channel2],
         sensor,
         thresholds=[0.1, 0.1],
+        estimate_percentage=False,
     )
     assert df.equals(df2)
 
@@ -72,7 +73,8 @@ def test_smoke_pipeline_trackmate(tmp_path, trackmate_xml):
 
     # load it back and check that the new columns are there
     df2, _ = read_trackmate_xml(path)
-    assert NewColumns.cell_cycle() in df2.columns
+    # check for phase only
+    assert NewColumns.discrete_phase_max() in df2.columns
 
     # process it with high level API
     df3 = process_trackmate(
@@ -80,5 +82,6 @@ def test_smoke_pipeline_trackmate(tmp_path, trackmate_xml):
         [channel1, channel2],
         sensor,
         thresholds=[0.1, 0.1],
+        estimate_percentage=False,
     )
     assert df.equals(df3)
