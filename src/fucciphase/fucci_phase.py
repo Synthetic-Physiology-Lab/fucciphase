@@ -106,6 +106,7 @@ def process_trackmate(
     manual_min: Optional[List[float]] = None,
     manual_max: Optional[List[float]] = None,
     generate_unique_tracks: bool = False,
+    estimate_percentage: bool = True,
 ) -> pd.DataFrame:
     """Process a trackmate XML file, compute cell cycle percentage from two FUCCI cycle
     reporter channels, save an updated copy of the XML and return the results in a
@@ -141,6 +142,8 @@ def process_trackmate(
         Manually determined minimum for each channel, by default None
     manual_max : Optional[List[float]], optional
         Manually determined maximum for each channel, by default None
+    estimate_percentage: bool, optional
+        Estimate cell cycle percentage
 
     Returns
     -------
@@ -161,6 +164,7 @@ def process_trackmate(
         manual_min=manual_min,
         manual_max=manual_max,
         generate_unique_tracks=generate_unique_tracks,
+        estimate_percentage=estimate_percentage,
     )
 
     # update the XML
