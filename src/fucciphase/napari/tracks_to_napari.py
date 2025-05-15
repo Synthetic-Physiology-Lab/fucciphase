@@ -86,3 +86,32 @@ def add_trackmate_data_to_viewer(
     viewer.scale_bar.visible = True
     viewer.scale_bar.unit = "um"
     return
+
+
+def pandas_df_to_napari_tracks(
+    df: pd.DataFrame,
+    viewer: napari.Viewer,
+    unique_track_id_name: str,
+    frame_id_name: str,
+    position_x_name: str,
+    position_y_name: str,
+    feature_name: Optional[str] = None,
+    colormaps_dict: Optional[dict] = None,
+) -> None:
+    """Add tracks to Napari track layer.
+    Splitting and merging are not yet implemented.
+    """
+    # filter for valid tracks only
+    track_df = df[df[unique_track_id_name] > 0]
+    track_data = track_df[
+        [unique_track_id_name, frame_id_name, position_y_name, position_x_name]
+    ].to_numpy()
+    if track_df[feature_name].min() < 0 or track_df[feature_name].max() > 100.0:
+        raise ValueError(
+            "Make sure that the features are between 0 and 1, "
+            "otherwise the colormapping does not work well"
+        )
+    features = None
+    if feature_name is not None:
+        features = {feature_name: track_df[feature_name].to_numpy()}
+    viewer.add_tracks(track_data, features=features, colormaps_dict=colormaps_dict)
