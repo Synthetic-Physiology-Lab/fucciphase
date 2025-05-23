@@ -385,9 +385,9 @@ def plot_query_vs_reference_in_time(
             **plot_kwargs,
         )
 
-        ax[idx].set_ylabel(f"{channel.capitalize()} intensity / arb. u.")
         ax[idx].set_xlabel("Time / h")
         if idx == 0:
+            ax[idx].set_ylabel("Intensity / arb. u.")
             ax[idx].legend()
         plt.tight_layout()
 
