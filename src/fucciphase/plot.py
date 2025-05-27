@@ -337,6 +337,8 @@ def plot_query_vs_reference_in_time(
     ref_time_column: str = "time",
     query_time_column: str = "time",
     colors: Optional[List[str]] = None,
+    channel_titles: Optional[List[str]] = None,
+    fig_title: Optional[str] = None,
     **plot_kwargs: bool,
 ) -> None:
     """Plot query and alignment to reference curve.
@@ -357,6 +359,10 @@ def plot_query_vs_reference_in_time(
         Colors for plot
     plot_kwargs: dict
         Kwargs to be passed to matplotlib
+    channel_titles: Optional[List]
+        titles for each channel
+    fig_title: Optional[str]
+        Figure title
     """
     for channel in channels:
         if channel not in reference_df.columns:
@@ -368,6 +374,9 @@ def plot_query_vs_reference_in_time(
             "Time column not found in query DataFrame"
             f", available options {df.columns}"
         )
+    if channel_titles is not None:
+        if len(channels) != len(channel_titles):
+            raise ValueError("Provide a channel name for each channel")
     if ref_time_column not in reference_df.columns:
         raise ValueError(
             "Time column not found in reference DataFrame"
@@ -376,19 +385,29 @@ def plot_query_vs_reference_in_time(
     if colors is None:
         colors = ["cyan", "magenta"]
     fig, ax = plt.subplots(1, len(channels))
+    if fig_title is not None:
+        fig.suptitle(fig_title)
     for idx, channel in enumerate(channels):
-        ax[idx].plot(df[query_time_column], df[channel], label="Query", **plot_kwargs)
+        ax[idx].plot(
+            df[query_time_column],
+            df[channel],
+            label="Query",
+            color="blue",
+            **plot_kwargs,
+        )
         ax[idx].plot(
             reference_df[ref_time_column],
             reference_df[channel],
             color=colors[idx],
             **plot_kwargs,
         )
-
+        ax[idx].set_yticks([])
         ax[idx].set_xlabel("Time / h")
         if idx == 0:
             ax[idx].set_ylabel("Intensity / arb. u.")
             ax[idx].legend()
+        if channel_titles is not None:
+            ax[idx].set_title(channel_titles[idx])
         plt.tight_layout()
 
 
