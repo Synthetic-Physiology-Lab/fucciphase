@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 import pytest
+
 from fucciphase.utils import simulate_single_track
 
 
