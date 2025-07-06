@@ -5,6 +5,7 @@
 [![Python Version](https://img.shields.io/pypi/pyversions/fucciphase.svg?color=green)](https://python.org)
 [![CI](https://github.com/Synthetic-Physiology-Lab/fucciphase/actions/workflows/ci.yml/badge.svg)](https://github.com/Synthetic-Physiology-Lab/fucciphase/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/Synthetic-Physiology-Lab/fucciphase/branch/main/graph/badge.svg)](https://codecov.io/gh/Synthetic-Physiology-Lab/fucciphase)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Synthetic-Physiology-Lab/fucciphase/main.svg)](https://results.pre-commit.ci/latest/github/Synthetic-Physiology-Lab/fucciphase/main)
 
 FUCCI cell cycle analysis plugin.
 Obtain cell cycle information from FUCCI fluorescence intensities.
