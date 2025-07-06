@@ -53,8 +53,8 @@ def get_time_distortion_coefficient(
         lmbd[idx - alpha + 1 : idx] = 1.0 - alpha
         alpha = 0
 
-    distortion_score: float = np.sum(np.abs(lmbd))
-    compress_count: int = np.count_nonzero(lmbd > 0)
-    stretch_count:  int = np.count_nonzero(lmbd < 0)
+    distortion_score = np.sum(np.abs(lmbd))
+    compress_count = int(np.count_nonzero(lmbd > 0))
+    stretch_count = int(np.count_nonzero(lmbd < 0))
 
     return lmbd, distortion_score, compress_count, stretch_count
