@@ -1,4 +1,5 @@
 import numpy as np
+
 from fucciphase.utils.simulator import simulate_single_channel, simulate_single_track
 
 
