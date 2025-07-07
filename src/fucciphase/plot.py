@@ -91,7 +91,7 @@ def plot_feature_stacked(
     else:
         if not set(selected_tracks).issubset(tracks):
             raise ValueError(
-                "Selected tracks contain tracks " "that are not in track list."
+                "Selected tracks contain tracks that are not in track list."
             )
     if figsize is None:
         figsize = (10, 2 * len(selected_tracks))
@@ -395,7 +395,7 @@ def plot_cell_trajectory(
         raise ValueError("No phase column value provided but phase coloring required.")
     if percentage_column is None and coloring_mode == "percentage":
         raise ValueError(
-            "No percentage column value provided " "but percentage coloring required."
+            "No percentage column value provided but percentage coloring required."
         )
 
     if "ls" in kwargs or "linestyles" in kwargs:
