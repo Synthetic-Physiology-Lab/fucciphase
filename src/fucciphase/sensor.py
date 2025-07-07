@@ -145,7 +145,7 @@ class FUCCISASensor(FUCCISensor):
         """
         if not len(phase_markers) == 2:
             raise ValueError(
-                "The markers for G1 and S/G2/M channel have" "to be provided!"
+                "The markers for G1 and S/G2/M channel haveto be provided!"
             )
         g1_on = phase_markers[0]
         s_g2_on = phase_markers[1]
@@ -274,8 +274,7 @@ class FUCCISASensor(FUCCISensor):
             )
         except ValueError:
             print(
-                "WARNING: could not infer percentage in SG2M phase,"
-                " using average phase"
+                "WARNING: could not infer percentage in SG2M phase, using average phase"
             )
             return g1s_perc + 0.5 * (100.0 - g1s_perc - g1_perc)
 
@@ -354,7 +353,7 @@ class PIPFUCCISensor(FUCCISensor):
         """
         if not len(phase_markers) == 2:
             raise ValueError(
-                "The markers for G1 and S/G2/M channel have" "to be provided!"
+                "The markers for G1 and S/G2/M channel haveto be provided!"
             )
         g1_on = phase_markers[0]
         s_on = phase_markers[1]

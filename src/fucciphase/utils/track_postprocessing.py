@@ -384,9 +384,7 @@ def export_lineage_tree_to_svg(
     This function currently only supports
     the standard FUCCISA sensor.
     """
-    print(
-        "Warning: make sure that you updated the spot names " "using TrackMate actions!"
-    )
+    print("Warning: make sure that you updated the spot names using TrackMate actions!")
     # initialise lineage tree
     lt = lineageTree(trackmate_file, file_type="TrackMate")
     cmap_name = "cool"

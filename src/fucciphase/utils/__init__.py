@@ -1,22 +1,22 @@
 """Convenience functions for fucciphase."""
 
 __all__ = [
-    "simulate_single_track",
-    "normalize_channels",
-    "get_norm_channel_name",
-    "norm",
     "TrackMateXML",
-    "check_thresholds",
     "check_channels",
-    "split_track",
-    "fit_percentages",
-    "split_all_tracks",
-    "split_trackmate_tracks",
+    "check_thresholds",
     "compute_motility_parameters",
-    "postprocess_estimated_percentages",
-    "plot_trackscheme",
     "export_lineage_tree_to_svg",
+    "fit_percentages",
+    "get_norm_channel_name",
     "get_time_distortion_coefficient",
+    "norm",
+    "normalize_channels",
+    "plot_trackscheme",
+    "postprocess_estimated_percentages",
+    "simulate_single_track",
+    "split_all_tracks",
+    "split_track",
+    "split_trackmate_tracks",
 ]
 
 from .checks import check_channels, check_thresholds
