@@ -29,6 +29,8 @@ cd fucciphase
 pip install -e .
 ```
 
+The installation should not take longer than a few seconds (depending on your internet connection).
+
 To use the notebooks, also install jupyter:
     
 ```bash
@@ -62,6 +64,11 @@ Thus, in general data (e.g., stored in a CSV or XLSX file) that can be parsed in
 a DataFrame is supported.
 
 Have a look at the examples in the `example` folder to get more information!
+
+The runtime of the scripts depends on your datasize. 2D samples with a few hundred to a few thousand cells
+can be processed in a few minutes. Visualization in Napari can take a bit longer.
+Standard processing does not require a powerful computer.
+Make sure that you have sufficient RAM to load videos for visualization in Napari.
 
 ## Development
 
