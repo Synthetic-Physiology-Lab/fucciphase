@@ -1,7 +1,7 @@
 import re
 import xml.etree.ElementTree as et
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, Any
 
 import numpy as np
 import pandas as pd
@@ -57,8 +57,8 @@ class TrackMateXML:
             Path to the xml file.
         """
         # parse tree
-        self._tree: et.ElementTree = et.parse(xml_path)
-        self._root: et.Element = self._tree.getroot()
+        self._tree: et.ElementTree[et.Element[str]] = et.parse(xml_path)
+        self._root: et.Element | Any = self._tree.getroot()
 
         # placeholders
         self._model: Optional[et.Element] = None
