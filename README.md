@@ -90,6 +90,6 @@ pip install -e ".[test, dev, doc]"
 ## Cite us
 
 Di Sante, M., Pezzotti, M., Zimmermann, J., Enrico, A., Deschamps, J., Balmas, E.,
-Becca, S., Reali, A., Bertero, A., Jug, F. and Pasqualini, F., 2024.
+Becca, S., Solito, S., Reali, A., Bertero, A., Jug, F. and Pasqualini, F.S., 2025.
 CALIPERS: Cell cycle-aware live imaging for phenotyping experiments and regeneration studies.
 bioRxiv, https://doi.org/10.1101/2024.12.19.629259 
