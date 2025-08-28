@@ -424,7 +424,7 @@ def estimate_percentage_by_subsequence_alignment(
     series = np.array(series_diff)
     series = np.swapaxes(series, 0, 1)
 
-    df[NewColumns.cell_cycle_dtw()] = np.nan
+    df.loc[:, NewColumns.cell_cycle_dtw()] = np.nan
 
     track_ids = df[track_id_name].unique()
     for track_id in track_ids:
