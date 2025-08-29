@@ -348,7 +348,7 @@ def split_trackmate_tracks(
     subtrack_series = df.loc[df[label_id_name].str.contains(regex), label_id_name]
     new_track_ids = subtrack_series.transform(lambda x: mapping_of_subtracks[x])
 
-    df["UNIQUE_TRACK_ID"] = df[track_id_name].copy()
+    df.loc[:, "UNIQUE_TRACK_ID"] = df[track_id_name].copy()
     df["UNIQUE_TRACK_ID"].update(new_track_ids)
     return
 
