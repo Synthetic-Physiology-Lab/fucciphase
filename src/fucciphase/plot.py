@@ -371,8 +371,7 @@ def plot_query_vs_reference_in_time(
             raise ValueError(f"Channel {channel} not in query DataFrame")
     if query_time_column not in df.columns:
         raise ValueError(
-            "Time column not found in query DataFrame"
-            f", available options {df.columns}"
+            f"Time column not found in query DataFrame, available options {df.columns}"
         )
     if channel_titles is not None:
         if len(channels) != len(channel_titles):
