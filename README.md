@@ -15,7 +15,7 @@ Obtain cell cycle information from FUCCI fluorescence intensities.
 The best way to run fucciphase is to install it in a virtual conda environment.
 Make sure that git is installed and can be called from the command line.
 
-(SOON) To install from pip:
+To install from pip:
 
 ```bash
 pip install fucciphase
