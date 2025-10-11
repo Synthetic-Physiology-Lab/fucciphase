@@ -293,7 +293,7 @@ def plot_dtw_query_vs_reference(
             "Percentage column not found in reference DataFrame"
             f", available options {reference_df.columns}"
         )
-    fig, ax = plt.subplots(1, len(channels))
+    _, ax = plt.subplots(1, len(channels))
     for idx, channel in enumerate(channels):
         ax[idx].plot(
             df[est_percentage_column], df[channel], label="Query", **plot_kwargs
@@ -540,7 +540,7 @@ def plot_cell_trajectory(
                 **kwargs,
             )
         )
-    fig, ax = plt.subplots()
+    _, ax = plt.subplots()
     for line_collection in line_collections:
         ax.add_collection(line_collection)
     ax.margins(0.05)
