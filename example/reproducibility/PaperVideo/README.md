@@ -8,3 +8,14 @@ To get more info, run
 ```
 fucciphase -h
 ```
+
+Visualize the file from the CLI:
+
+We provide a downscaled version of the video for faster processing:
+
+```
+fucciphase-napari.exe merged_linked.ome.xml_processed.csv downscaled_hacat.ome.tif -m 0 -c 1 -s 2 --pixel_size 0.544
+```
+
+Please adjust segmentation contours etc. in napari.
+Consider [napari-animate](https://napari.org/napari-animation/) to prepare animations.

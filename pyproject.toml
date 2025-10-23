@@ -67,6 +67,7 @@ repository = "https://github.com/nobias-ht/fucciphase"
 # same as console_scripts entry point
 [project.scripts]
 fucciphase = "fucciphase.main_cli:main_cli"
+fucciphase-napari = "fucciphase.main_cli:main_visualization"
 
 # [project.entry-points."some.group"]
 # tomatoes = "fucciphase:main_tomatoes"
