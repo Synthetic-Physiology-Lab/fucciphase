@@ -95,12 +95,16 @@ def main_cli() -> None:
     else:
         raise ValueError("Tracking file must be an XML or CSV file.")
 
+    track_id_name = "UNIQUE_TRACK_ID"
+    if not args.generate_unique_tracks:
+        track_id_name = "TRACK_ID"
+
     estimate_percentage_by_subsequence_alignment(
         df,
         dt=args.timestep,
         channels=[args.cyan_channel, args.magenta_channel],
         reference_data=reference_df,
-        track_id_name="UNIQUE_TRACK_ID",
+        track_id_name=track_id_name
     )
     df.to_csv(args.tracking_file + "_processed.csv", index=False)
 
