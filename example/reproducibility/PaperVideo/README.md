@@ -19,3 +19,7 @@ fucciphase-napari merged_linked.ome.xml_processed.csv downscaled_hacat.ome.tif -
 
 Please adjust segmentation contours etc. in napari.
 Consider [napari-animate](https://napari.org/napari-animation/) to prepare animations.
+
+Click on the thumbnail for an example:
+[![Preview of the video](https://raw.githubusercontent.com/Synthetic-Physiology-Lab/fucciphase/cli/example/reproducibility/PaperVideo/thumbnail.png)](https://raw.githubusercontent.com/Synthetic-Physiology-Lab/fucciphase/cli/example/reproducibility/PaperVideo/video_downscaled_hacat.mp4)
+
