@@ -16,7 +16,27 @@ from .utils import get_norm_channel_name
 def set_phase_colors(
     df: pd.DataFrame, colordict: dict, phase_column: str = "DISCRETE_PHASE_MAX"
 ) -> None:
-    """Label each phase by fixed color."""
+    """Label each phase by fixed color.
+
+    This function adds a ``COLOR`` column to the dataframe by mapping each
+    entry in ``phase_column`` to a color specified in ``colordict``.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe containing at least ``phase_column``.
+    colordict : dict
+        Mapping from phase label (str) to a valid matplotlib color.
+    phase_column : str, optional
+        Name of the column containing phase labels. Default is
+        ``"DISCRETE_PHASE_MAX"``.
+
+    Raises
+    ------
+    ValueError
+        If not all phase labels present in the dataframe have a color
+        entry in ``colordict``.
+    """
     phases = df[phase_column].unique()
     if not all(phase in colordict for phase in phases):
         raise ValueError(f"Provide a color for every phase in: {phases}")
@@ -35,7 +55,36 @@ def plot_feature(
     ylim: Optional[tuple] = None,
     yticks: Optional[list] = None,
 ) -> Figure:
-    """Plot features of individual tracks in one plot."""
+    """Plot features of individual tracks in one plot.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe containing the feature and time columns.
+    time_column : str
+        Name of the column containing time or frame indices.
+    feature_name : str
+        Name of the feature column to plot.
+    interpolate_time : bool, optional
+        Currently unused; kept for API compatibility. Default is False.
+    track_id_name : str, optional
+        Name of the column containing track IDs. Default is ``"TRACK_ID"``.
+    ylim : tuple, optional
+        y-axis limits as ``(ymin, ymax)``.
+    yticks : list, optional
+        Explicit y-tick locations.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The figure containing the plot.
+
+    Raises
+    ------
+    ValueError
+        If the feature or time columns are not found.
+
+    """
     if feature_name not in df:
         raise ValueError(f"(Feature {feature_name} not in provided DataFrame.")
     if time_column not in df:
@@ -71,12 +120,49 @@ def plot_feature_stacked(
 ) -> Figure:
     """Stack features of individual tracks.
 
+    Each selected track is plotted in its own horizontal panel. If
+    ``interpolate_time`` is True, an additional panel at the bottom shows
+    the mean interpolated feature across all tracks.
 
     Notes
     -----
-    If `selected_tracks` are chosen, the averaging
-    is still performed on all tracks.
-    Few selected tracks are stacked to enhance visibility.
+    If ``selected_tracks`` are chosen, the averaging is still performed on
+    all tracks. The selected subset is only used for stacked visualization.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe containing the feature, time and COLOR columns.
+    time_column : str
+        Name of the column containing time or frame indices.
+    feature_name : str
+        Name of the feature column to plot.
+    interpolate_time : bool, optional
+        If True, add an extra panel showing the average interpolated
+        feature over time. Default is False.
+    track_id_name : str, optional
+        Name of the column containing track IDs. Default is ``"TRACK_ID"``.
+    ylim : tuple, optional
+        y-axis limits as ``(ymin, ymax)``.
+    yticks : list, optional
+        Explicit y-tick locations.
+    interpolation_steps : int, optional
+        Number of time points used for interpolation. Default is 1000.
+    figsize : tuple, optional
+        Figure size passed to ``plt.subplots``.
+    selected_tracks : list of int, optional
+        Subset of track IDs to plot in stacked panels.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The figure containing the stacked plots.
+
+    Raises
+    ------
+    ValueError
+        If required columns are missing or ``selected_tracks`` contains
+        IDs not present in the dataframe.
     """
     if feature_name not in df:
         raise ValueError(f"(Feature {feature_name} not in provided DataFrame.")
@@ -156,7 +242,27 @@ def plot_raw_intensities(
     time_label: str = "Frame #",
     **plot_kwargs: bool,
 ) -> None:
-    """Plot intensities of two-channel sensor."""
+    """Plot intensities of two-channel sensor over time.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe containing intensity and time columns.
+    channel1 : str
+        Name of the first intensity column.
+    channel2 : str
+        Name of the second intensity column.
+    color1 : str, optional
+        Color used for ``channel1``. Default is ``"cyan"``.
+    color2 : str, optional
+        Color used for ``channel2``. Default is ``"magenta"``.
+    time_column : str, optional
+        Name of the time/frame column. Default is ``"FRAME"``.
+    time_label : str, optional
+        Label used for the x-axis. Default is ``"Frame #"``.
+    plot_kwargs : dict
+        Additional keyword arguments passed to ``matplotlib.pyplot.plot``.
+    """
     ch1_intensity = df[channel1]
     ch2_intensity = df[channel2]
 
@@ -188,7 +294,27 @@ def plot_normalized_intensities(
     time_label: str = "Frame #",
     **plot_kwargs: bool,
 ) -> None:
-    """Plot normalised intensities of two-channel sensor."""
+    """Plot normalised intensities of two-channel sensor.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Dataframe containing normalized intensity and time columns.
+    channel1 : str
+        Name of the first channel (pre-normalization).
+    channel2 : str
+        Name of the second channel (pre-normalization).
+    color1 : str, optional
+        Color used for ``channel1``. Default is ``"cyan"``.
+    color2 : str, optional
+        Color used for ``channel2``. Default is ``"magenta"``.
+    time_column : str, optional
+        Name of the time/frame column. Default is ``"FRAME"``.
+    time_label : str, optional
+        Label used for the x-axis. Default is ``"Frame #"``.
+    plot_kwargs : dict
+        Additional keyword arguments passed to ``matplotlib.pyplot.plot``.
+    """
     ch1_intensity = df[get_norm_channel_name(channel1)]
     ch2_intensity = df[get_norm_channel_name(channel2)]
 
@@ -200,30 +326,28 @@ def plot_normalized_intensities(
 
 
 def plot_phase(df: pd.DataFrame, channel1: str, channel2: str) -> None:
-    """Plot the two channels and vertical lines
-    corresponding to the change of phase.
+    """Plot discrete cell-cycle phase-related signals over time.
 
-    The dataframe must be preprocessed with one of the available phase
-    computation function and must contain the following columns:
+    Plot the two normalized channels and the unique intensity curve over
+    frame number. The dataframe must already contain:
 
-        - normalised channels (channel1 + "_NORM", etc)
-        - cell cycle percentage
-        - FRAME
+        - normalized channels (e.g. ``channel + "_NORM"``),
+        - the cell cycle percentage column,
+        - the ``FRAME`` column.
 
     Parameters
     ----------
-    df : pd.DataFrame
-        Dataframe
+    df : pandas.DataFrame
+        Input dataframe.
     channel1 : str
-        First channel
+        First channel name (pre-normalization).
     channel2 : str
-        Second channel
+        Second channel name (pre-normalization).
 
     Raises
     ------
     ValueError
-        If the dataframe does not contain the FRAME, CELL_CYCLE_PERC and normalised
-        columns.
+        If the dataframe does not contain the required columns.
     """
     # check if the FRAME column is present
     if "FRAME" not in df.columns:
@@ -255,26 +379,42 @@ def plot_dtw_query_vs_reference(
     colors: Optional[List[str]] = None,
     **plot_kwargs: bool,
 ) -> None:
-    """Plot query and alignment to reference curve.
+    """
+    Plot query curves and their alignment to a reference cell-cycle curve.
+
+    For each channel, this function plots:
+
+    - the query intensity as a function of estimated percentage,
+    - the reference intensity as a function of reference percentage,
+    - the reference curve re-sampled at the query percentages (match).
+
+    Optionally, ground truth curves can be overlaid.
 
     Parameters
     ----------
-    reference_df: pd.DataFrame
-        DataFrame with reference curve data
-    df: pd.DataFrame
-        DataFrame used for query
-    channels: List[str]
-        Name of the channels
-    ref_percentage_column: str
-        Name of column with percentages of reference curve
-    est_percentage_column: str
-        Name of column with estimated percentages
-    ground_truth: pd.DataFrame
-        DataFrame with ground truth data, needs to be named as reference_df
-    colors: List[str]
-        Colors for plot
-    plot_kwargs: dict
-        Kwargs to be passed to matplotlib
+    reference_df : pandas.DataFrame
+        Dataframe with the reference curve (percentage vs intensity).
+    df : pandas.DataFrame
+        Dataframe used as query (estimated percentage vs intensity).
+    channels : list of str
+        Names of the channels to plot.
+    ref_percentage_column : str, optional
+        Column name for reference percentages. Default is ``"percentage"``.
+    est_percentage_column : str, optional
+        Column name for estimated percentages in the query dataframe.
+        Default is ``"CELL_CYCLE_PERC_DTW"``.
+    ground_truth : pandas.DataFrame, optional
+        Dataframe containing ground truth intensities, with the same
+        column names as ``reference_df``.
+    colors : list of str, optional
+        Colors to use for each channel in the reference plots.
+    plot_kwargs : dict
+        Additional keyword arguments passed to ``matplotlib.pyplot.plot``.
+
+    Raises
+    ------
+    ValueError
+        If required columns are missing in the reference or query dataframes.
     """
     for channel in channels:
         if channel not in reference_df.columns:
@@ -341,28 +481,33 @@ def plot_query_vs_reference_in_time(
     fig_title: Optional[str] = None,
     **plot_kwargs: bool,
 ) -> None:
-    """Plot query and alignment to reference curve.
+    """
+    Plot query and reference curves as a function of time.
+
+    For each channel, this function overlays the query intensity and the
+    reference intensity over time. This is useful to visually compare
+    dynamics in the original time domain.
 
     Parameters
     ----------
-    reference_df: pd.DataFrame
-        DataFrame with reference curve data
-    df: pd.DataFrame
-        DataFrame used for query
-    channels: List[str]
-        Name of the channels
-    ref_time_column: str
-        Name of column with times of reference curve
-    query_time_column: str
-        Name of column with times in query
-    colors: List[str]
-        Colors for plot
-    plot_kwargs: dict
-        Kwargs to be passed to matplotlib
-    channel_titles: Optional[List]
-        titles for each channel
-    fig_title: Optional[str]
-        Figure title
+    reference_df : pandas.DataFrame
+        Dataframe with reference curve data (time vs intensity).
+    df : pandas.DataFrame
+        Dataframe with query data (time vs intensity).
+    channels : list of str
+        Names of the channels to plot.
+    ref_time_column : str, optional
+        Column name for reference time values. Default is ``"time"``.
+    query_time_column : str, optional
+        Column name for query time values. Default is ``"time"``.
+    colors : list of str, optional
+        Colors to use for the reference curves.
+    plot_kwargs : dict
+        Additional keyword arguments passed to ``matplotlib.pyplot.plot``.
+    channel_titles : list, optional
+        Per-channel titles to display above each subplot.
+    fig_title : str, optional
+        Overall figure title.
     """
     for channel in channels:
         if channel not in reference_df.columns:
@@ -444,7 +589,8 @@ def plot_cell_trajectory(
     line_cycle: Optional[list] = None,
     **kwargs: int,
 ) -> None:
-    """Plot cell migration trajectories with phase or percentage-based coloring.
+    """
+    Plot cell migration trajectories with phase- or percentage-based coloring.
 
     Parameters
     ----------
@@ -453,27 +599,30 @@ def plot_cell_trajectory(
     track_id_name : str
         Column name containing unique track identifiers.
     min_track_length : int, optional
-        Minimum number of timepoints required to include a track, default is 30.
+        Minimum number of timepoints required to include a track.
+        Default is 30.
     centroid0_name : str, optional
-        Column name for x-coordinate of cell centroid, default is "centroid-0".
+        Column name for x-coordinate of the cell centroid.
     centroid1_name : str, optional
-        Column name for y-coordinate of cell centroid, default is "centroid-1".
+        Column name for y-coordinate of the cell centroid.
     phase_column : str, optional
-        Column name containing cell cycle phase information, default is None.
+        Column name containing cell-cycle phase information. Required if
+        ``coloring_mode == "phase"``.
     percentage_column : str, optional
-        Column name containing percentage values for coloring, default is None.
+        Column name containing percentage values for coloring. Required if
+        ``coloring_mode == "percentage"``.
     coloring_mode : str, optional
-        Color tracks by cell cycle phase (`phase`) or by percentage (`percentage`)
-    line_cycle: list
-        Cycle through the list, can help with visualization
-    kwargs: dict, optional
-        Kwargs are directly passed to the LineCollection, use it to adjust
-        the linestyle for example
+        Color tracks by cell-cycle phase (``"phase"``) or by percentage
+        (``"percentage"``). Default is ``"phase"``.
+    line_cycle : list, optional
+        List of linestyles to cycle through for successive tracks.
+    kwargs : dict, optional
+        Additional keyword arguments passed to ``matplotlib.collections.LineCollection``.
 
     Notes
     -----
-    Phase or percentage columns need to be provided for the respective coloring.
-    If not, an error will be raised.
+    Phase or percentage columns need to be provided for the respective
+    coloring mode. If not, an error will be raised.
 
     """
     # inital checks

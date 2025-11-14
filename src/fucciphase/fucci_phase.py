@@ -23,8 +23,16 @@ def process_dataframe(
     label_id_name: str = "name",
     estimate_percentage: bool = True,
 ) -> None:
-    """Process a pd.DataFrame by computing the cell cycle percentage from two FUCCI
-    cycle reporter channels in place.
+    """ Apply the FUCCIphase analysis pipeline to an existing dataframe.
+
+    This function assumes that tracking and fluorescence information are
+    already available in a pandas DataFrame with the expected column
+    structure. It performs the same core steps as ``process_trackmate``,
+    but skips the TrackMate file I/O and starts directly from tabular data.
+
+    Use this when your tracking pipeline already provides a dataframe, or
+    when you have manually assembled the input table and still want to use
+    FUCCIphase for cell-cycle analysis and visualization.
 
     The dataframe must contain ID and TRACK_ID features.
 
@@ -38,34 +46,54 @@ def process_dataframe(
     Parameters
     ----------
     df : pandas.DataFrame
-        Dataframe
+        Input dataframe containing tracking and intensity features.
+
     channels: List[str]
-        Names of channels holding FUCCI information
+         Names of columns holding FUCCI fluorescence information.
+
     sensor : FUCCISensor
-        FUCCI sensor with phase specifics
+        FUCCI sensor with phase-specific parameters.
+
     thresholds: List[float]
-        Thresholds to separate phases
+        Thresholds used to separate cell-cycle phases.
+
     use_moving_average : bool, optional
-        Use moving average before normalization, by default True
+        If True, apply a moving average before normalization. Default is True.
+
     window_size : int, optional
-        Window size of the moving average, by default 5
+        Window size of the moving average. Default is 7.
+
     manual_min : Optional[List[float]], optional
         Manually determined minimum for each channel, by default None
+
     manual_max : Optional[List[float]], optional
         Manually determined maximum for each channel, by default None
-    estimate_percentage: bool
-        Estimate cell cycle percentage
-    label_id_name: str
-        Give an indentifier for the spot name (needed for unique track ID generation)
+
     generate_unique_tracks: bool
-        Assign unique track IDs to splitted tracks.
-        Requires usage of action in TrackMate.
+        If True, assign unique track IDs to split tracks. This requires
+        using the appropriate action in TrackMate. Default is False.
+
     track_id_name: str
-        Name of column with track IDs
+        Name of the column containing track IDs. Default is ``"TRACK_ID"``.
+
+    label_id_name: str
+        Column name identifying the spot label / name (used for unique
+        track ID generation). Default is ``"name"``.
+
+    estimate_percentage: bool, optional
+        If True, estimate cell-cycle percentage along each track. Default is True.
+
+    Returns
+    -------
+    pandas.DataFrame
+        The same dataframe, modified in-place to include normalized channels,
+        phase labels and (optionally) cell-cycle percentage.
     """
+    # ensure that the number of provided channels matches the sensor definition
     if len(channels) != sensor.fluorophores:
         raise ValueError(f"Need to provide {sensor.fluorophores} channel names.")
 
+    # optionally split TrackMate subtracks and re-label them as unique tracks
     if generate_unique_tracks:
         if "TRACK_ID" in df.columns:
             split_trackmate_tracks(df, label_id_name=label_id_name)
@@ -86,7 +114,7 @@ def process_dataframe(
         track_id_name=track_id_name,
     )
 
-    # compute the phases
+    # compute the phases (and, optionally, the cycle percentage)
     generate_cycle_phases(
         df,
         sensor=sensor,
@@ -108,9 +136,17 @@ def process_trackmate(
     generate_unique_tracks: bool = False,
     estimate_percentage: bool = True,
 ) -> pd.DataFrame:
-    """Process a trackmate XML file, compute cell cycle percentage from two FUCCI cycle
-    reporter channels, save an updated copy of the XML and return the results in a
-    dataframe.
+    """Run the full FUCCIphase pipeline on a TrackMate export.
+
+    This high-level helper takes tracking data exported from Fiji/TrackMate
+    (typically XML or CSV), converts it into a pandas DataFrame with the
+    expected fucciphase columns, applies basic quality checks and
+    preprocessing, and estimates cell-cycle phase information that can be
+    used for downstream analysis and plotting.
+
+    The returned table is intended to be the main entry point for
+    fucciphase workflows, and is compatible with the plotting and
+    visualization functions provided in this package.
 
     This function applies the following steps:
         - load the XML file and generate a dataframe from the spots and tracks
@@ -124,36 +160,36 @@ def process_trackmate(
     Parameters
     ----------
     xml_path : Union[str, Path]
-        Path to the XML file
-    channels: List[str]
-        Names of channels holding FUCCI information
-    generate_unique_tracks: bool
-        Assign unique track IDs to splitted tracks.
-        Requires usage of action in TrackMate.
+        Path to the TrackMate XML file.
+    channels : List[str]
+        Names of columns holding FUCCI fluorescence information.
     sensor : FUCCISensor
-        FUCCI sensor with phase specifics
-    thresholds: List[float]
-        Thresholds to separate phases
+        FUCCI sensor with phase-specific parameters.
+    thresholds : List[float]
+        Thresholds used to separate cell-cycle phases.
     use_moving_average : bool, optional
-        Use moving average before normalization, by default True
+        If True, apply a moving average before normalization. Default is True.
     window_size : int, optional
-        Window size of the moving average, by default 5
+        Window size of the moving average. Default is 7.
     manual_min : Optional[List[float]], optional
-        Manually determined minimum for each channel, by default None
+        Manually determined minimum for each channel, by default None.
     manual_max : Optional[List[float]], optional
-        Manually determined maximum for each channel, by default None
-    estimate_percentage: bool, optional
-        Estimate cell cycle percentage
+        Manually determined maximum for each channel, by default None.
+    generate_unique_tracks : bool, optional
+        If True, assign unique track IDs to split tracks. This requires
+        using the appropriate action in TrackMate. Default is False.
+    estimate_percentage : bool, optional
+        If True, estimate cell-cycle percentage along each track. Default is True.
 
     Returns
     -------
-    pd.DataFrame
-        Dataframe with the cell cycle percentage and the corresponding phases
+    pandas.DataFrame
+        Dataframe with the cell-cycle percentage and the corresponding phases.
     """
-    # read the XML
+    # read the XML and extract the dataframe and XML wrapper
     df, tmxml = read_trackmate_xml(xml_path)
 
-    # process the dataframe
+    # process the dataframe in-place (and also get a reference to it)
     process_dataframe(
         df,
         channels,
@@ -167,10 +203,10 @@ def process_trackmate(
         estimate_percentage=estimate_percentage,
     )
 
-    # update the XML
+    # update the XML with the new features
     tmxml.update_features(df)
 
-    # export the xml
+    # export the updated XML next to the original file
     new_name = Path(xml_path).stem + "_processed.xml"
     new_path = Path(xml_path).parent / new_name
     tmxml.save_xml(new_path)
