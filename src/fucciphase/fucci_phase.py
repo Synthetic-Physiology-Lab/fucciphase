@@ -85,9 +85,8 @@ def process_dataframe(
 
     Returns
     -------
-    pandas.DataFrame
-        The same dataframe, modified in-place to include normalized channels,
-        phase labels and (optionally) cell-cycle percentage.
+    None
+        The input dataframe is modified in-place. No value is returned.
     """
     # ensure that the number of provided channels matches the sensor definition
     if len(channels) != sensor.fluorophores:
@@ -135,6 +134,8 @@ def process_trackmate(
     manual_max: Optional[List[float]] = None,
     generate_unique_tracks: bool = False,
     estimate_percentage: bool = True,
+    output_dir: Optional[Union[str, Path]] = None,
+
 ) -> pd.DataFrame:
     """Run the full FUCCIphase pipeline on a TrackMate export.
 
@@ -180,11 +181,15 @@ def process_trackmate(
         using the appropriate action in TrackMate. Default is False.
     estimate_percentage : bool, optional
         If True, estimate cell-cycle percentage along each track. Default is True.
+    output_dir : Optional[Union[str, Path]], optional
+        Optional directory where the updated XML should be written. If None,
+        the file is saved next to the input XML.
 
     Returns
     -------
     pandas.DataFrame
         Dataframe with the cell-cycle percentage and the corresponding phases.
+
     """
     # read the XML and extract the dataframe and XML wrapper
     df, tmxml = read_trackmate_xml(xml_path)
@@ -201,6 +206,7 @@ def process_trackmate(
         manual_max=manual_max,
         generate_unique_tracks=generate_unique_tracks,
         estimate_percentage=estimate_percentage,
+
     )
 
     # update the XML with the new features
@@ -208,7 +214,14 @@ def process_trackmate(
 
     # export the updated XML next to the original file
     new_name = Path(xml_path).stem + "_processed.xml"
-    new_path = Path(xml_path).parent / new_name
+
+    if output_dir is not None:
+        output_dir = Path(output_dir)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        new_path = output_dir / new_name
+    else:
+        new_path = Path(xml_path).parent / new_name
+
     tmxml.save_xml(new_path)
 
     return df

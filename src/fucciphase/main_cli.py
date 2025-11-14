@@ -1,6 +1,6 @@
 import argparse
 import json
-
+from pathlib import Path
 import pandas as pd
 
 from fucciphase import process_dataframe, process_trackmate
@@ -86,6 +86,9 @@ def main_cli() -> None:
     )
 
     args = parser.parse_args()
+    # Decide where to store outputs (CSV and, for XML input, processed XML)
+    output_dir = Path("outputs")
+    output_dir.mkdir(exist_ok=True)
 
     # ---------------- 2. Load and adapt the reference cell-cycle trace ----------------
     reference_df = pd.read_csv(args.reference_file)
@@ -112,6 +115,8 @@ def main_cli() -> None:
             sensor=sensor,
             thresholds=[0.1, 0.1],
             generate_unique_tracks=args.generate_unique_tracks,
+            output_dir=output_dir,
+
         )
     elif args.tracking_file.endswith(".csv"):
         # CSV: read the table and then run the processing pipeline on it
@@ -139,7 +144,9 @@ def main_cli() -> None:
         track_id_name=track_id_name
     )
     # ---------------- 6. Save results ----------------
-    df.to_csv(args.tracking_file + "_processed.csv", index=False)
+    tracking_path = Path(args.tracking_file)
+    output_csv = output_dir / (tracking_path.stem + "_processed.csv")
+    df.to_csv(output_csv, index=False)
 
 
 def main_visualization() -> None:
@@ -196,6 +203,10 @@ def main_visualization() -> None:
             default=None)
 
     args = parser.parse_args()
+
+    # Decide where to store outputs (CSV and, for XML input, processed XML)
+    output_dir = Path("outputs")
+    output_dir.mkdir(exist_ok=True)
 
     # Try to read the video using AICSImage; fall back to bioio if needed
     AICSIMAGE = False
