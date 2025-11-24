@@ -104,7 +104,7 @@ def main_cli() -> None:
         dt=args.timestep,
         channels=[args.cyan_channel, args.magenta_channel],
         reference_data=reference_df,
-        track_id_name=track_id_name
+        track_id_name=track_id_name,
     )
     df.to_csv(args.tracking_file + "_processed.csv", index=False)
 
@@ -142,10 +142,11 @@ def main_visualization() -> None:
         required=True,
     )
     parser.add_argument(
-            "--pixel_size",
-            type=float,
-            help="Pixel size, only used if not in metadata",
-            default=None)
+        "--pixel_size",
+        type=float,
+        help="Pixel size, only used if not in metadata",
+        default=None,
+    )
 
     args = parser.parse_args()
 
