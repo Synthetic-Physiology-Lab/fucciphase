@@ -1,6 +1,9 @@
-# FUCCIphase resources
+# How to use FUCCIphase from the command line 
 
-This folder contains a complete, end-to-end example showing how to:
+This folder contains a complete, end-to-end example showing how to run FUCCIphase 
+from the command line, no coding required.
+
+The example shows how to:
 
 1. Process a TrackMate XML file with the FUCCIphase command-line interface (CLI)
 2. Estimate cell-cycle percentages using DTW subsequence alignment
@@ -20,16 +23,11 @@ reproducibility/
 │   ├── downscaled_hacat.ome.tif       # Example fluorescence video (downscaled)
 │   └── hacat_fucciphase_reference.csv # Reference FUCCI calibration curve
 │
-├── outputs/         # Results generated during the tutorial
-│   ├── merged_linked.ome.xml_processed.csv
-│   ├── merged_linked.ome_processed.xml
-│   ├── thumbnail.png
-│   └── video_downscaled_hacat.mp4
-│
-└── notebooks/       # Optional notebooks for reproducing plots and calibration
-├── percentage_reconstruction.ipynb
-├── phaselocking-workflow-lazy.ipynb
-└── extract_calibration_data.ipynb
+├── outputs/         
+    ├── merged_linked.ome.xml_processed.csv  # Results generated during the tutorial
+    ├── merged_linked.ome_processed.xml      # Results generated during the tutorial
+    ├── thumbnail.png
+    └── video_downscaled_hacat.mp4
 ```
 
 ---
@@ -81,10 +79,11 @@ inputs/downscaled_hacat.ome.tif
 Launch Napari:
 
 ```bash
-fucciphase-napari \
-    outputs/merged_linked.ome.xml_processed.csv \
-    inputs/downscaled_hacat.ome.tif \
-    -m 0 -c 1 -s 2 --pixel_size 0.544
+fucciphase-napari 
+  outputs/merged_linked.ome_processed.csv 
+  inputs/downscaled_hacat.ome.tif 
+  -m 0 -c 1 -s 2 
+  --pixel_size 0.544
 ```
 
 Napari will display:
@@ -122,8 +121,6 @@ The `notebooks/` folder contains Jupyter notebooks that reproduce:
 * [extract_calibration_data.ipynb](notebooks/extract_calibration_data.ipynb)
 * [percentage_reconstruction.ipynb](notebooks/percentage_reconstruction.ipynb) to estimate the cell cycle percentages
 * [phaselocking-workflow-lazy.ipynb](notebooks/phaselocking-workflow-lazy.ipynb) to process a trackmate file and render a video in Napari
-
-This is optional and provided to help you understand how FUCCIphase works internally.
 
 ---
 

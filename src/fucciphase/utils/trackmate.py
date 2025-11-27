@@ -270,7 +270,7 @@ class TrackMateXML:
     ) -> Tuple[List[pd.DataFrame], List[pd.DataFrame]]:
         """Locate all tracks that may describe a full cycle.
         Tracks need to be auto-named by TrackMate.
-        For example, Track_1a, Track_1aa, Track_1b etc.
+        For examples, Track_1a, Track_1aa, Track_1b etc.
         This can be done in TrackMate by executing an action after the tracking.
         In addition, tracks longer than a certain minimum length can be selected.
         """

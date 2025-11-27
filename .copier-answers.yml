@@ -1,7 +1,7 @@
 # Do not edit - changes here will be overwritten by Copier
 _commit: v1.0
 _src_path: gh:pydev-guide/pyrepo-copier
-author_email: first.last@example.com
+author_email: first.last@examples.com
 author_name: Joran Deschamps
 git_versioning: true
 github_username: jdeschamps

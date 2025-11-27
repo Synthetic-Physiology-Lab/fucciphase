@@ -152,7 +152,3 @@ To process your own dataset:
 If you find bugs, unexpected behavior, or want new features, open an issue:
 
 🔗 [https://github.com/Synthetic-Physiology-Lab/fucciphase/issues](https://github.com/Synthetic-Physiology-Lab/fucciphase/issues)
-
----
-
-Feel free to explore each notebook and adapt the workflows to your own FUCCI-based cell-cycle imaging experiments.
