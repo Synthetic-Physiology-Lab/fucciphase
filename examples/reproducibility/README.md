@@ -1,4 +1,4 @@
-# FUCCIphase – Example Tutorial
+# FUCCIphase resources
 
 This folder contains a complete, end-to-end example showing how to:
 
@@ -151,21 +151,3 @@ To apply the pipeline to your own dataset:
 If you encounter issues or have feature requests, please open an issue:
 
 [https://github.com/Synthetic-Physiology-Lab/fucciphase/issues](https://github.com/Synthetic-Physiology-Lab/fucciphase/issues)
-
-```
-
----
-
-# 🎉 Done!
-
-This README:
-
-- matches your new folder structure  
-- is clean, readable, and PyCharm-safe  
-- uses correct GitHub links  
-- rewrites the old content into a proper tutorial  
-- removes outdated paths (`PaperVideo/…`)  
-- explains each step clearly  
-
-If you want, I can **also rewrite the top-level project README** to match your reorganized example folder.
-```
