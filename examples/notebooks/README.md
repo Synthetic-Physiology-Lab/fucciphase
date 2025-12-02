@@ -19,7 +19,6 @@ All notebooks assume that:
 > then navigate to `examples/notebooks/`.
 
 ## Notebook overview
-## Notebook overview
 
 | Notebook file                          | Purpose                                                                                              | 
 |----------------------------------------|------------------------------------------------------------------------------------------------------|
