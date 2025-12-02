@@ -71,7 +71,7 @@ Interactive Jupyter workflows demonstrating how to use FUCCIphase in practical s
 
 ### 2 — `examples/reproducibility/` [📁 reproducibility](examples/reproducibility)
 
-Minimal workflow using sample data. Run it in one command:
+This is a minimal workflow that uses the sample data. Navigate to the reproducibility directory, then run the following command in one step:
 
 ```bash
 fucciphase inputs/merged_linked.ome.xml
