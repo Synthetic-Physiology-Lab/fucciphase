@@ -118,9 +118,9 @@ Below is a thumbnail preview that links to the example video stored in `outputs/
 
 The `notebooks/` folder contains Jupyter notebooks that reproduce:
 
-* [extract_calibration_data.ipynb](notebooks/extract_calibration_data.ipynb)
-* [percentage_reconstruction.ipynb](notebooks/percentage_reconstruction.ipynb) to estimate the cell cycle percentages
-* [phaselocking-workflow-lazy.ipynb](notebooks/phaselocking-workflow-lazy.ipynb) to process a trackmate file and render a video in Napari
+* [extract_calibration_data.ipynb](../notebooks/extract_calibration_data.ipynb)
+* [percentage_reconstruction.ipynb](../notebooks/percentage_reconstruction.ipynb) to estimate the cell cycle percentages
+* [phaselocking-workflow-lazy.ipynb](../notebooks/phaselocking-workflow-lazy.ipynb) to process a trackmate file and render a video in Napari
 
 ---
 
