@@ -137,37 +137,11 @@ It includes:
 
 * **inputs**: TrackMate XML, reference CSV, example video
 * **outputs**: processed CSV files, thumbnails, exported XML
-* **notebooks**: full reproduction of the analysis
-* **README**: a step-by-step tutorial
 
 This is the recommended starting point for reproducing the figures shown in the repository.
 
 ---
-
-# 5. Using your own data
-
-To process your own dataset:
-
-1. Export tracking from Fiji/TrackMate as `.xml`
-2. Build a reference CSV (minimum one full cell cycle):
-
-   ```
-   time, percentage, cyan, magenta
-   ```
-3. Run:
-
-   ```bash
-   fucciphase your_tracks.xml -ref your_reference.csv -dt <your timestep> -m <ch1> -c <ch2>
-   ```
-4. Visualize with:
-
-   ```bash
-   fucciphase-napari your_tracks_processed.csv your_video.ome.tif -m <ch1> -c <ch2> -s <mask>
-   ```
-
----
-
-# 6. Troubleshooting & Support
+# 5. Troubleshooting & Support
 
 If you find bugs, unexpected behavior, or want new features, open an issue:
 

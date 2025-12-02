@@ -29,13 +29,13 @@ pip install -e .
 
 The installation should not take longer than a few seconds (depending on your internet connection).
 
-To use the notebooks, also install jupyter:
-    
-```bash
-pip install jupyter
-```
+A minimal environment for running the [notebooks](examples/notebooks) can be set up with:
 
-### Install Napari + movie reading support (optional but recommended)
+```bash
+pip install fucciphase jupyter matplotlib pandas
+````
+
+### Install Napari + movie reading support (optional)
 
 FUCCIphase does not install Napari by default. For .ome.tif visualisation, install:
 ```bash
@@ -129,7 +129,6 @@ df = process_trackmate(trackmate_xml,
                        thresholds=[0.1, 0.1])
 print(df)
 ```
-
 The TrackMate XML is converted to a [Pandas](https://pandas.pydata.org/) DataFrame.
 Thus, in general data (e.g., stored in a CSV or XLSX file) that can be parsed into
 a DataFrame is supported.
@@ -139,6 +138,33 @@ can be processed in a few minutes. Visualization in Napari can take a bit longer
 Standard processing does not require a powerful computer.
 Make sure that you have sufficient RAM to load videos for visualization in Napari.
 
+### Using your own data
+
+To process your own dataset:
+
+1. Export tracking from Fiji/TrackMate as `.xml`
+
+
+2. Build a reference CSV (minimum one full cell cycle):
+
+   ```
+   percentage, time, cyan, magenta
+   ```
+   For reference, check the example files available in the `example_data` folder.
+
+
+3. Run:
+
+   ```bash
+   fucciphase your_tracks.xml -ref your_reference.csv -dt <your timestep> -m <ch1> -c <ch2>
+   ```
+4. Visualize with:
+
+   ```bash
+   fucciphase-napari your_tracks_processed.csv your_video.ome.tif -m <ch1> -c <ch2> -s <mask>
+   ```
+
+---
 ## Development
 
 To develop fucciphase, clone the repository, install fucciphase in your environment

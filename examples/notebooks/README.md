@@ -31,18 +31,4 @@ All notebooks assume that:
 | `percentage_reconstruction.ipynb`      | Reconstruct and smooth phase-percentage trajectories and compare raw vs reconstructed dynamics.      | 
 | `phaselocking-workflow-lazy.ipynb`     | Phase-lock and align many trajectories to a common reference using a lightweight, scalable workflow. | 
 | `example_estimated.ipynb`              | Explore and visualise FUCCIphase output tables with per-cell phase estimates over time.              | 
-| `color-tails-by-percentage.ipynb`      | Visualise phase distributions over time or conditions as “colour tail” plots for figures.            | 
-
-### Environment
-
-A minimal environment for running these notebooks is:
-
-```bash
-pip install fucciphase jupyter matplotlib pandas
-````
-
-For Napari-based visualisation and OME-TIFF reading, also install:
-
-```bash
-pip install napari bioio bioio-ome-tiff bioio-tifffile
-```
+| `color-tails-by-percentage.ipynb`      | Visualise phase distributions over time or conditions as “colour tail” plots for figures.            |
