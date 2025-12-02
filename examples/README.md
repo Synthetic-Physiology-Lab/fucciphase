@@ -131,7 +131,7 @@ These notebooks are intended as **mini-tutorials** for common tasks.
 
 A complete, end-to-end workflow with real data is located in:
 
-[reproducibility/ folder](example/reproducibility/)
+[reproducibility folder](./reproducibility/)
 
 It includes:
 
