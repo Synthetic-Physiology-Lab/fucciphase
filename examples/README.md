@@ -9,22 +9,42 @@ This folder contains practical examples showing how to use FUCCIphase for:
 
 The folder is organized into two main sections:
 ````
-example/
+examples/
 │
-├── notebooks/ → General example notebooks
-│ ├── getting_started.ipynb
-│ ├── example_simulated.ipynb
-│ ├── example_estimated.ipynb
-│ ├── example_reconstruction.ipynb
-│ ├── color-tails-by-percentage.ipynb
-│ ├── explanation-dtw-alignment.ipynb
-│ └── sensor_calibration.ipynb
+├── README.md
 │
-└── reproducibility/ → End-to-end workflow (inputs, outputs, notebooks)
-├── inputs/
-├── outputs/
+├── example_data/
+│   ├── example_data_tempophase.csv
+│   ├── fuccisa_hacat.json
+│   ├── fuccisa_hela_molcel_2017.json
+│   ├── fuccisa_tempophase.json
+│   └── hacat_fucciphase_reference.csv
+│
 ├── notebooks/
-└── README.md
+│   ├── color-tails-by-percentage.ipynb
+│   ├── example_estimated.ipynb
+│   ├── example_reconstruction.ipynb
+│   ├── example_simulated.ipynb
+│   ├── explanation-dtw-alignment.ipynb
+│   ├── extract_calibration_data.ipynb
+│   ├── getting_started.ipynb
+│   ├── movie_tails_percentages.mp4
+│   ├── percentage_reconstruction.ipynb
+│   ├── phaselocking-workflow-lazy.ipynb
+│   ├── sensor_calibration.ipynb
+│   └── README.md
+│
+└── reproducibility/
+    ├── README.md
+    │
+    ├── inputs/
+    │   ├── downscaled_hacat.ome.tif
+    │   ├── hacat_fucciphase_reference.csv
+    │   └── merged_linked.ome.xml
+    │
+    └── outputs/
+        ├── thumbnail.png
+        └── video_downscaled_hacat.mp4
 ````
 ---
 # 1. Quickstart: run FUCCIphase on your data
