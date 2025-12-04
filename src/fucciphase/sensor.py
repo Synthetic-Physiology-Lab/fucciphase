@@ -81,7 +81,7 @@ class FUCCISensor(ABC):
 
         Notes
         -----
-        Discrete phase refers to, for examples, G1 or S phase.
+        Discrete phase refers to, for example, G1 or S phase.
         The phase_markers must match the number of used fluorophores.
         """
         pass
