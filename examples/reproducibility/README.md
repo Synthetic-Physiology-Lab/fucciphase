@@ -34,12 +34,15 @@ reproducibility/
 
 # 1. Process the TrackMate XML file
 
-This example uses the XML file at `inputs/merged_linked.ome.xml`
-
-Run FUCCIphase as follows:
+This example uses the XML file at `inputs/merged_linked.ome.xml`. Make sure you are inside the `reproducibility folder` before running the command:
 ```bash
-fucciphase inputs/merged_linked.ome.xml -ref inputs/hacat_fucciphase_reference.csv -dt 0.25 -m MEAN_INTENSITY_CH1 -c MEAN_INTENSITY_CH2 --generate_unique_tracks true
-````
+fucciphase inputs/merged_linked.ome.xml `
+          -ref ../example_data/hacat_fucciphase_reference.csv `
+          -dt 0.25 `
+          -m MEAN_INTENSITY_CH1 `
+          -c MEAN_INTENSITY_CH2 `
+          --generate_unique_tracks true `
+```
 
 This will generate two files in the `outputs/` folder:
 
@@ -68,13 +71,13 @@ fucciphase -h
 We provide a downscaled OME-TIFF video to make the example easy to run on laptops:
 
 ```
-inputs/downscaled_hacat.ome.tif
+examples/reproducibility/inputs/downscaled_hacat.ome.tif
 ```
 
 Launch Napari:
 
 ```bash
-fucciphase-napari outputs/merged_linked.ome_processed.csv inputs/downscaled_hacat.ome.tif -m 0 -c 1 -s 2 --pixel_size 0.544
+fucciphase-napari examples/reproducibility/outputs/merged_linked.ome_processed.csv examples/reproducibility/inputs/downscaled_hacat.ome.tif -m 0 -c 1 -s 2 --pixel_size 0.544
 ```
 
 Napari will display:
