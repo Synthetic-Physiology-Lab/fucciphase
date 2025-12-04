@@ -1,4 +1,10 @@
-"""Cell cycle analysis plugin."""
+"""
+FUCCIphase: Analysis tools for cell-cycle estimation from FUCCI imaging.
+
+This module exposes the main public API of the package, including the
+core processing functions and the package version.
+
+"""
 
 from importlib.metadata import PackageNotFoundError, version
 

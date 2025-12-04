@@ -1,4 +1,17 @@
-"""Convenience functions for fucciphase."""
+"""
+Convenience functions for fucciphase - Utility submodule for FUCCIphase.
+
+This package collects helper functions used throughout FUCCIphase, including:
+- TrackMate XML parsing and rewriting
+- Channel normalization
+- Track splitting and postprocessing
+- Motility and lineage visualizations
+- Synthetic data generation
+- DTW time-distortion utilities
+
+Everything listed in ``__all__`` is considered part of the public FUCCIphase API.
+
+"""
 
 __all__ = [
     "TrackMateXML",
