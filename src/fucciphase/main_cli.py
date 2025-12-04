@@ -1,6 +1,7 @@
 import argparse
 import json
 from pathlib import Path
+
 import pandas as pd
 
 from fucciphase import process_dataframe, process_trackmate
@@ -116,7 +117,6 @@ def main_cli() -> None:
             thresholds=[0.1, 0.1],
             generate_unique_tracks=args.generate_unique_tracks,
             output_dir=output_dir,
-
         )
     elif args.tracking_file.endswith(".csv"):
         # CSV: read the table and then run the processing pipeline on it
