@@ -23,7 +23,7 @@ def process_dataframe(
     label_id_name: str = "name",
     estimate_percentage: bool = True,
 ) -> None:
-    """ Apply the FUCCIphase analysis pipeline to an existing dataframe.
+    """Apply the FUCCIphase analysis pipeline to an existing dataframe.
 
     This function assumes that tracking and fluorescence information are
     already available in a pandas DataFrame with the expected column
@@ -135,7 +135,6 @@ def process_trackmate(
     generate_unique_tracks: bool = False,
     estimate_percentage: bool = True,
     output_dir: Optional[Union[str, Path]] = None,
-
 ) -> pd.DataFrame:
     """Run the full FUCCIphase pipeline on a TrackMate export.
 
@@ -206,7 +205,6 @@ def process_trackmate(
         manual_max=manual_max,
         generate_unique_tracks=generate_unique_tracks,
         estimate_percentage=estimate_percentage,
-
     )
 
     # update the XML with the new features

@@ -186,7 +186,7 @@ def estimate_cell_cycle_percentage(
 
     Parameters
     ----------
-   df : pandas.DataFrame
+    df : pandas.DataFrame
         Dataframe with normalized intensity columns and a phase column.
     channels : List[str]
         Names of normalized intensity columns for each fluorophore.
