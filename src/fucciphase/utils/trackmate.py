@@ -250,6 +250,7 @@ class TrackMateXML:
                             spot.attrib[feature] = str(spot_df[feature].values[0])
 
     def save_xml(self, xml_path: Union[str, Path]) -> None:
+
         """Save the xml file.
 
         Parameters
@@ -257,6 +258,7 @@ class TrackMateXML:
         xml_path : Union[str, Path]
             Path to the xml file.
         """
+
         with open(xml_path, "wb") as f:
             self._tree.write(f)
 

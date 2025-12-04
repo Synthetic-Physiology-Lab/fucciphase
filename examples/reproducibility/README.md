@@ -38,20 +38,15 @@ This example uses the XML file at `inputs/merged_linked.ome.xml`
 
 Run FUCCIphase as follows:
 ```bash
-fucciphase inputs/merged_linked.ome.xml \
-    -ref inputs/hacat_fucciphase_reference.csv \
-    -dt 0.25 \
-    -m MEAN_INTENSITY_CH1 \
-    -c MEAN_INTENSITY_CH2 \
-    --generate_unique_tracks true
+fucciphase inputs/merged_linked.ome.xml -ref inputs/hacat_fucciphase_reference.csv -dt 0.25 -m MEAN_INTENSITY_CH1 -c MEAN_INTENSITY_CH2 --generate_unique_tracks true
 ````
 
 This will generate two files in the `outputs/` folder:
 
-```
-outputs/merged_linked.ome.xml_processed.csv
-outputs/merged_linked.ome_processed.xml
-```
+
+* outputs / merged_linked.ome.xml_processed.csv
+* outputs / merged_linked.ome_processed.xml
+
 
 These contain:
 
@@ -79,11 +74,7 @@ inputs/downscaled_hacat.ome.tif
 Launch Napari:
 
 ```bash
-fucciphase-napari 
-  outputs/merged_linked.ome_processed.csv 
-  inputs/downscaled_hacat.ome.tif 
-  -m 0 -c 1 -s 2 
-  --pixel_size 0.544
+fucciphase-napari outputs/merged_linked.ome_processed.csv inputs/downscaled_hacat.ome.tif -m 0 -c 1 -s 2 --pixel_size 0.544
 ```
 
 Napari will display:

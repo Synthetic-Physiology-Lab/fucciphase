@@ -58,12 +58,7 @@ If you already have:
 you can run FUCCIphase from the command line:
 
 ```bash
-fucciphase path/to/your_tracks.xml \
-    -ref path/to/your_reference.csv \
-    -dt 0.25 \
-    -m MEAN_INTENSITY_CH1 \
-    -c MEAN_INTENSITY_CH2 \
-    --generate_unique_tracks true
+fucciphase path/to/your_tracks.xml -ref path/to/your_reference.csv -dt 0.25 -m MEAN_INTENSITY_CH1 -c MEAN_INTENSITY_CH2 --generate_unique_tracks true
 ````
 
 This produces a processed CSV:
@@ -88,10 +83,7 @@ fucciphase -h
 You can launch the Napari viewer with:
 
 ```bash
-fucciphase-napari \
-    your_tracks_processed.csv \
-    your_video.ome.tif \
-    -m 0 -c 1 -s 2 --pixel_size <pixel size>
+fucciphase-napari your_tracks_processed.csv your_video.ome.tif -m 0 -c 1 -s 2 --pixel_size <pixel size>
 ```
 
 This opens:
