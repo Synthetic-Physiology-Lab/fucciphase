@@ -73,7 +73,7 @@ def add_trackmate_data_to_viewer(
         labels_layer = viewer.add_labels(new_labels, scale=scale)
         labels_layer.contour = 10
 
-    for image, colormap in zip(image_data, colormaps):
+    for image, colormap in zip(image_data, colormaps, strict=True):
         viewer.add_image(image, blending="additive", colormap=colormap, scale=scale)
     # TODO implement cropping, filter points in / outside range
     # crop_fov =
