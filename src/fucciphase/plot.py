@@ -1,5 +1,4 @@
 from itertools import cycle
-from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -32,8 +31,8 @@ def plot_feature(
     feature_name: str,
     interpolate_time: bool = False,
     track_id_name: str = "TRACK_ID",
-    ylim: Optional[tuple] = None,
-    yticks: Optional[list] = None,
+    ylim: tuple | None = None,
+    yticks: list | None = None,
 ) -> Figure:
     """Plot features of individual tracks in one plot."""
     if feature_name not in df:
@@ -63,11 +62,11 @@ def plot_feature_stacked(
     feature_name: str,
     interpolate_time: bool = False,
     track_id_name: str = "TRACK_ID",
-    ylim: Optional[tuple] = None,
-    yticks: Optional[list] = None,
+    ylim: tuple | None = None,
+    yticks: list | None = None,
     interpolation_steps: int = 1000,
-    figsize: Optional[tuple] = None,
-    selected_tracks: Optional[List[int]] = None,
+    figsize: tuple | None = None,
+    selected_tracks: list[int] | None = None,
 ) -> Figure:
     """Stack features of individual tracks.
 
@@ -248,11 +247,11 @@ def plot_phase(df: pd.DataFrame, channel1: str, channel2: str) -> None:
 def plot_dtw_query_vs_reference(
     reference_df: pd.DataFrame,
     df: pd.DataFrame,
-    channels: List[str],
+    channels: list[str],
     ref_percentage_column: str = "percentage",
     est_percentage_column: str = "CELL_CYCLE_PERC_DTW",
-    ground_truth: Optional[pd.DataFrame] = None,
-    colors: Optional[List[str]] = None,
+    ground_truth: pd.DataFrame | None = None,
+    colors: list[str] | None = None,
     **plot_kwargs: bool,
 ) -> None:
     """Plot query and alignment to reference curve.
@@ -333,12 +332,12 @@ def plot_dtw_query_vs_reference(
 def plot_query_vs_reference_in_time(
     reference_df: pd.DataFrame,
     df: pd.DataFrame,
-    channels: List[str],
+    channels: list[str],
     ref_time_column: str = "time",
     query_time_column: str = "time",
-    colors: Optional[List[str]] = None,
-    channel_titles: Optional[List[str]] = None,
-    fig_title: Optional[str] = None,
+    colors: list[str] | None = None,
+    channel_titles: list[str] | None = None,
+    fig_title: str | None = None,
     **plot_kwargs: bool,
 ) -> None:
     """Plot query and alignment to reference curve.
@@ -438,10 +437,10 @@ def plot_cell_trajectory(
     min_track_length: int = 30,
     centroid0_name: str = "centroid-0",
     centroid1_name: str = "centroid-1",
-    phase_column: Optional[str] = None,
-    percentage_column: Optional[str] = None,
+    phase_column: str | None = None,
+    percentage_column: str | None = None,
     coloring_mode: str = "phase",
-    line_cycle: Optional[list] = None,
+    line_cycle: list | None = None,
     **kwargs: int,
 ) -> None:
     """Plot cell migration trajectories with phase or percentage-based coloring.
