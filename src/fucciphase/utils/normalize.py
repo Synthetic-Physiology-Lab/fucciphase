@@ -1,5 +1,3 @@
-from typing import List, Optional, Tuple, Union
-
 import numpy as np
 import pandas as pd
 from scipy import signal
@@ -37,7 +35,7 @@ def get_avg_channel_name(channel: str) -> str:
     return f"{channel}_AVG"
 
 
-def norm(vector: Union[pd.Series, np.ndarray]) -> Union[pd.Series, np.ndarray]:
+def norm(vector: pd.Series | np.ndarray) -> pd.Series | np.ndarray:
     """Normalize a vector by subtracting the min and dividing by (max - min).
 
     Parameters
@@ -63,13 +61,13 @@ def norm(vector: Union[pd.Series, np.ndarray]) -> Union[pd.Series, np.ndarray]:
 # flake8: noqa: C901
 def normalize_channels(
     df: pd.DataFrame,
-    channels: Union[str, List[str]],
+    channels: str | list[str],
     use_moving_average: bool = True,
     moving_average_window: int = 7,
-    manual_min: Optional[List[float]] = None,
-    manual_max: Optional[List[float]] = None,
+    manual_min: list[float] | None = None,
+    manual_max: list[float] | None = None,
     track_id_name: str = "TRACK_ID",
-) -> List[str]:
+) -> list[str]:
     """Normalize channels, add in place the resulting columns to the
     dataframe, and return the new columns' name.
 
@@ -173,7 +171,7 @@ def smooth_track(
     channel: str,
     track_id_name: str,
     moving_average_window: int = 7,
-) -> Tuple[pd.Index, np.ndarray]:
+) -> tuple[pd.Index, np.ndarray]:
     """Smooth intensity in one channel for a single track.
 
     Parameters

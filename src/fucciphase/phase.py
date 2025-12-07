@@ -1,5 +1,4 @@
 from enum import Enum
-from typing import List
 
 import dtaidistance.preprocessing
 import numpy as np
@@ -99,9 +98,9 @@ class NewColumns(str, Enum):
 
 def generate_cycle_phases(
     df: pd.DataFrame,
-    channels: List[str],
+    channels: list[str],
     sensor: FUCCISensor,
-    thresholds: List[float],
+    thresholds: list[float],
     estimate_percentage: bool = False,
 ) -> None:
     """Add a column in place to the dataframe with the phase of the cell cycle.
@@ -180,7 +179,7 @@ def generate_cycle_phases(
 
 
 def estimate_cell_cycle_percentage(
-    df: pd.DataFrame, channels: List[str], sensor: FUCCISensor, phase_column: str
+    df: pd.DataFrame, channels: list[str], sensor: FUCCISensor, phase_column: str
 ) -> None:
     """Estimate cell cycle percentage from intensity pairs.
 
@@ -210,10 +209,10 @@ def estimate_cell_cycle_percentage(
 
 def estimate_cell_phase_from_max_intensity(
     df: pd.DataFrame,
-    channels: List[str],
+    channels: list[str],
     sensor: FUCCISensor,
-    background: List[float],
-    thresholds: List[float],
+    background: list[float],
+    thresholds: list[float],
 ) -> None:
     """Add a column in place to the dataframe with the estimated phase of the cell
     cycle, where the phase is determined by thresholding the channel intensities.
@@ -257,7 +256,7 @@ def estimate_cell_phase_from_max_intensity(
     check_channels(sensor.fluorophores, channels)
     check_thresholds(sensor.fluorophores, thresholds)
 
-    phase_markers_list: List[pd.Series[bool]] = []
+    phase_markers_list: list[pd.Series[bool]] = []
     for channel, bg_value, threshold in zip(channels, background, thresholds, strict=True):
         # get intensities and subtract background
         intensity = df[channel] - bg_value
@@ -275,10 +274,10 @@ def estimate_cell_phase_from_max_intensity(
 
 def estimate_cell_phase_from_background(
     df: pd.DataFrame,
-    channels: List[str],
+    channels: list[str],
     sensor: FUCCISensor,
-    background: List[float],
-    thresholds: List[float],
+    background: list[float],
+    thresholds: list[float],
 ) -> None:
     """Add a column in place to the dataframe with the estimated phase of the cell
     cycle, where the phase is determined by comparing the channel intensities to
@@ -319,7 +318,7 @@ def estimate_cell_phase_from_background(
 
     check_channels(sensor.fluorophores, channels)
 
-    phase_markers_list: List[pd.Series[bool]] = []
+    phase_markers_list: list[pd.Series[bool]] = []
     for channel, bg_value, threshold in zip(channels, background, thresholds, strict=True):
         intensity = df[channel]
         # threshold channels to decide if ON / OFF (data is in list per spot)
@@ -337,7 +336,7 @@ def estimate_cell_phase_from_background(
 def estimate_percentage_by_subsequence_alignment(
     df: pd.DataFrame,
     dt: float,
-    channels: List[str],
+    channels: list[str],
     reference_data: pd.DataFrame,
     smooth: float = 0.1,
     penalty: float = 0.05,

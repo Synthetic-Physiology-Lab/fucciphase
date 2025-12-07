@@ -1,12 +1,11 @@
 from pathlib import Path
-from typing import Tuple, Union
 
 import pandas as pd
 
 from .utils import TrackMateXML
 
 
-def read_trackmate_xml(xml_path: Union[Path, str]) -> Tuple[pd.DataFrame, TrackMateXML]:
+def read_trackmate_xml(xml_path: Path | str) -> tuple[pd.DataFrame, TrackMateXML]:
     """Read a trackmate exported xml file.
 
     Parameters
@@ -32,7 +31,7 @@ def read_trackmate_xml(xml_path: Union[Path, str]) -> Tuple[pd.DataFrame, TrackM
     return df, trackmate
 
 
-def read_trackmate_csv(csv_path: Union[Path, str]) -> pd.DataFrame:
+def read_trackmate_csv(csv_path: Path | str) -> pd.DataFrame:
     """Read a trackmate exported csv file.
 
     The first three rows (excluding header) of the csv file are skipped as

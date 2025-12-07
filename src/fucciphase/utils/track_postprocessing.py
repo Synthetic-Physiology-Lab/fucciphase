@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -157,7 +155,7 @@ def compute_motility_parameters(
 
 
 def compute_displacements(
-    centroids_x: np.ndarray, centroids_y: np.ndarray, centroids_z: Optional[np.ndarray]
+    centroids_x: np.ndarray, centroids_y: np.ndarray, centroids_z: np.ndarray | None
 ) -> np.ndarray:
     """Compute displacement w.r.t origin."""
     N = len(centroids_x)
@@ -180,7 +178,7 @@ def compute_displacements(
 
 
 def compute_velocities(
-    centroids_x: np.ndarray, centroids_y: np.ndarray, centroids_z: Optional[np.ndarray]
+    centroids_x: np.ndarray, centroids_y: np.ndarray, centroids_z: np.ndarray | None
 ) -> np.ndarray:
     """Compute velocity."""
     N = len(centroids_x)
@@ -205,7 +203,7 @@ def compute_velocities(
 
 
 def compute_MSD(
-    centroids_x: np.ndarray, centroids_y: np.ndarray, centroids_z: Optional[np.ndarray]
+    centroids_x: np.ndarray, centroids_y: np.ndarray, centroids_z: np.ndarray | None
 ) -> np.ndarray:
     """Compute mean-squared distance.
 
@@ -357,9 +355,9 @@ def split_trackmate_tracks(
 def export_lineage_tree_to_svg(
     df: pd.DataFrame,
     trackmate_file: str,
-    node_color_column: Optional[str] = None,
-    stroke_width: Optional[float] = None,
-) -> List[str]:
+    node_color_column: str | None = None,
+    stroke_width: float | None = None,
+) -> list[str]:
     """Write a lineage tree colored by FUCCI phases.
 
     Parameters
