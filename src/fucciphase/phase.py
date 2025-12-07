@@ -257,7 +257,9 @@ def estimate_cell_phase_from_max_intensity(
     check_thresholds(sensor.fluorophores, thresholds)
 
     phase_markers_list: list[pd.Series[bool]] = []
-    for channel, bg_value, threshold in zip(channels, background, thresholds, strict=True):
+    for channel, bg_value, threshold in zip(
+        channels, background, thresholds, strict=True
+    ):
         # get intensities and subtract background
         intensity = df[channel] - bg_value
         # threshold channels to decide if ON / OFF (data is in list per spot)
@@ -319,7 +321,9 @@ def estimate_cell_phase_from_background(
     check_channels(sensor.fluorophores, channels)
 
     phase_markers_list: list[pd.Series[bool]] = []
-    for channel, bg_value, threshold in zip(channels, background, thresholds, strict=True):
+    for channel, bg_value, threshold in zip(
+        channels, background, thresholds, strict=True
+    ):
         intensity = df[channel]
         # threshold channels to decide if ON / OFF (data is in list per spot)
         phase_markers_list.append(intensity > threshold * bg_value)
