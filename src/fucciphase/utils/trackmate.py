@@ -1,7 +1,7 @@
 import re
 import xml.etree.ElementTree as et
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -46,7 +46,7 @@ class TrackMateXML:
         List of all features in the xml file, and whether they are integer features.
     """
 
-    def __init__(self, xml_path: Union[str, Path]) -> None:
+    def __init__(self, xml_path: str | Path) -> None:
         """Initialize the TrackMateXML object.
 
         The xml file is parsed and the model and all spots are imported.
@@ -61,12 +61,12 @@ class TrackMateXML:
         self._root: et.Element | Any = self._tree.getroot()
 
         # placeholders
-        self._model: Optional[et.Element] = None
-        self._allspots: Optional[et.Element] = None
+        self._model: et.Element | None = None
+        self._allspots: et.Element | None = None
 
         self.nspots: int = 0  # number of spots
-        self.features: Dict[str, type] = {}  # features and their types
-        self.spot_features: List[str] = []  # list of spot features
+        self.features: dict[str, type] = {}  # features and their types
+        self.spot_features: list[str] = []  # list of spot features
 
         # import model and all spots
         self._import_data()
@@ -74,7 +74,7 @@ class TrackMateXML:
     def _get_spot_features(self) -> None:
         """Get the spot features from the tree."""
         if self._allspots is not None:
-            spot_features: List[str] = []
+            spot_features: list[str] = []
             for frame in self._allspots:
                 for spot in frame:
                     spot_features.extend(spot.attrib.keys())
@@ -249,7 +249,7 @@ class TrackMateXML:
                         for feature in new_features:
                             spot.attrib[feature] = str(spot_df[feature].values[0])
 
-    def save_xml(self, xml_path: Union[str, Path]) -> None:
+    def save_xml(self, xml_path: str | Path) -> None:
         """Save the xml file.
 
         Parameters
@@ -262,12 +262,12 @@ class TrackMateXML:
 
     def get_full_tracks(
         df: pd.DataFrame,
-        channels: List[str],
+        channels: list[str],
         track_id_name: str = "UNIQUE_TRACK_ID",
         spot_name: str = "name",
         frame_name: str = "FRAME",
         min_length: int = 40,
-    ) -> Tuple[List[pd.DataFrame], List[pd.DataFrame]]:
+    ) -> tuple[list[pd.DataFrame], list[pd.DataFrame]]:
         """Locate all tracks that may describe a full cycle.
         Tracks need to be auto-named by TrackMate.
         For example, Track_1a, Track_1aa, Track_1b etc.
@@ -275,8 +275,8 @@ class TrackMateXML:
         In addition, tracks longer than a certain minimum length can be selected.
         """
         regex = "Track_[0-9]+.[a-z]+"
-        candidate_tracks: List[pd.DataFrame] = []
-        save_tracks: List[pd.DataFrame] = []
+        candidate_tracks: list[pd.DataFrame] = []
+        save_tracks: list[pd.DataFrame] = []
         track_ids = df[track_id_name].unique()
         for track_id in track_ids:
             track = df[df[track_id_name] == track_id]

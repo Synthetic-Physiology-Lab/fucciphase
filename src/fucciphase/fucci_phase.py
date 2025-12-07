@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import List, Optional, Union
 
 import pandas as pd
 
@@ -11,13 +10,13 @@ from .utils import normalize_channels, split_trackmate_tracks
 
 def process_dataframe(
     df: pd.DataFrame,
-    channels: List[str],
+    channels: list[str],
     sensor: FUCCISensor,
-    thresholds: List[float],
+    thresholds: list[float],
     use_moving_average: bool = True,
     window_size: int = 7,
-    manual_min: Optional[List[float]] = None,
-    manual_max: Optional[List[float]] = None,
+    manual_min: list[float] | None = None,
+    manual_max: list[float] | None = None,
     generate_unique_tracks: bool = False,
     track_id_name: str = "TRACK_ID",
     label_id_name: str = "name",
@@ -97,14 +96,14 @@ def process_dataframe(
 
 
 def process_trackmate(
-    xml_path: Union[str, Path],
-    channels: List[str],
+    xml_path: str | Path,
+    channels: list[str],
     sensor: FUCCISensor,
-    thresholds: List[float],
+    thresholds: list[float],
     use_moving_average: bool = True,
     window_size: int = 7,
-    manual_min: Optional[List[float]] = None,
-    manual_max: Optional[List[float]] = None,
+    manual_min: list[float] | None = None,
+    manual_max: list[float] | None = None,
     generate_unique_tracks: bool = False,
     estimate_percentage: bool = True,
 ) -> pd.DataFrame:
