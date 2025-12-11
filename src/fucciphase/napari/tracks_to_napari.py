@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 import numpy as np
 import pandas as pd
 
@@ -15,18 +13,18 @@ def add_trackmate_data_to_viewer(
     df: pd.DataFrame,
     viewer: napari.Viewer,
     scale: tuple,
-    image_data: List[np.ndarray],
-    colormaps: List[str],
-    labels: Optional[np.ndarray],
-    cycle_percentage_id: Optional[str] = "CELL_CYCLE_PERC_POST",
+    image_data: list[np.ndarray],
+    colormaps: list[str],
+    labels: np.ndarray | None,
+    cycle_percentage_id: str | None = "CELL_CYCLE_PERC_POST",
     dim: int = 2,
-    textkwargs: Optional[dict] = None,
-    label_id_name: Optional[str] = "MAX_INTENSITY_CH3",
-    track_id_name: Optional[str] = "TRACK_ID",
-    time_id_name: Optional[str] = "POSITION_T",
-    pos_x_id_name: Optional[str] = "POSITION_X",
-    pos_y_id_name: Optional[str] = "POSITION_Y",
-    crop_fov: Optional[List[float]] = None,
+    textkwargs: dict | None = None,
+    label_id_name: str | None = "MAX_INTENSITY_CH3",
+    track_id_name: str | None = "TRACK_ID",
+    time_id_name: str | None = "POSITION_T",
+    pos_x_id_name: str | None = "POSITION_X",
+    pos_y_id_name: str | None = "POSITION_Y",
+    crop_fov: list[float] | None = None,
 ) -> None:
     """Overlay tracking result and video.
 
@@ -73,7 +71,7 @@ def add_trackmate_data_to_viewer(
         labels_layer = viewer.add_labels(new_labels, scale=scale)
         labels_layer.contour = 10
 
-    for image, colormap in zip(image_data, colormaps):
+    for image, colormap in zip(image_data, colormaps, strict=True):
         viewer.add_image(image, blending="additive", colormap=colormap, scale=scale)
     # TODO implement cropping, filter points in / outside range
     # crop_fov =
@@ -95,8 +93,8 @@ def pandas_df_to_napari_tracks(
     frame_id_name: str,
     position_x_name: str,
     position_y_name: str,
-    feature_name: Optional[str] = None,
-    colormaps_dict: Optional[dict] = None,
+    feature_name: str | None = None,
+    colormaps_dict: dict | None = None,
 ) -> None:
     """Add tracks to Napari track layer.
     Splitting and merging are not yet implemented.

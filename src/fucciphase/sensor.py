@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Union
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -7,8 +7,8 @@ from scipy import optimize
 
 
 def logistic(
-    x: Union[float, np.ndarray], center: float, sigma: float, sign: float = 1.0
-) -> Union[float, np.ndarray]:
+    x: float | np.ndarray, center: float, sigma: float, sign: float = 1.0
+) -> float | np.ndarray:
     """Logistic function."""
     tiny = 1.0e-15
     arg = sign * (x - center) / max(tiny, sigma)
@@ -16,21 +16,21 @@ def logistic(
 
 
 def accumulation_function(
-    x: Union[float, np.ndarray],
+    x: float | np.ndarray,
     center: float,
     sigma: float,
     offset_intensity: float = 0,
-) -> Union[float, np.ndarray]:
+) -> float | np.ndarray:
     """Function to describe accumulation of sensor."""
     return 1.0 - logistic(x, center, sigma) - offset_intensity
 
 
 def degradation_function(
-    x: Union[float, np.ndarray],
+    x: float | np.ndarray,
     center: float,
     sigma: float,
     offset_intensity: float = 0,
-) -> Union[float, np.ndarray]:
+) -> float | np.ndarray:
     """Function to describe degradation of sensor."""
     return 1.0 - logistic(x, center, sigma, sign=-1.0) - offset_intensity
 
@@ -41,9 +41,9 @@ class FUCCISensor(ABC):
     @abstractmethod
     def __init__(
         self,
-        phase_percentages: List[float],
-        center: List[float],
-        sigma: List[float],
+        phase_percentages: list[float],
+        center: list[float],
+        sigma: list[float],
     ) -> None:
         pass
 
@@ -55,17 +55,17 @@ class FUCCISensor(ABC):
 
     @property
     @abstractmethod
-    def phases(self) -> List[str]:
+    def phases(self) -> list[str]:
         """Function to hard-code the supported phases of a sensor."""
         pass
 
     @property
-    def phase_percentages(self) -> List[float]:
+    def phase_percentages(self) -> list[float]:
         """Percentage of individual phases."""
         return self._phase_percentages
 
     @phase_percentages.setter
-    def phase_percentages(self, values: List[float]) -> None:
+    def phase_percentages(self, values: list[float]) -> None:
         if len(values) != len(self.phases):
             raise ValueError("Pass percentage for each phase.")
 
@@ -76,7 +76,7 @@ class FUCCISensor(ABC):
         self._phase_percentages = values
 
     @abstractmethod
-    def get_phase(self, phase_markers: Union[List[bool], "pd.Series[bool]"]) -> str:
+    def get_phase(self, phase_markers: Union[list[bool], "pd.Series[bool]"]) -> str:
         """Get the discrete phase based on phase markers.
 
         Notes
@@ -88,13 +88,13 @@ class FUCCISensor(ABC):
 
     @abstractmethod
     def get_estimated_cycle_percentage(
-        self, phase: str, intensities: List[float]
+        self, phase: str, intensities: list[float]
     ) -> float:
         """Estimate percentage based on sensor intensities."""
         pass
 
     def set_accumulation_and_degradation_parameters(
-        self, center: List[float], sigma: List[float]
+        self, center: list[float], sigma: list[float]
     ) -> None:
         """Pass list of functions for logistic functions.
 
@@ -114,8 +114,8 @@ class FUCCISensor(ABC):
 
     @abstractmethod
     def get_expected_intensities(
-        self, percentage: Union[float, np.ndarray]
-    ) -> List[Union[float, np.ndarray]]:
+        self, percentage: float | np.ndarray
+    ) -> list[float | np.ndarray]:
         """Return value of calibrated curves."""
         pass
 
@@ -124,7 +124,7 @@ class FUCCISASensor(FUCCISensor):
     """FUCCI(SA) sensor."""
 
     def __init__(
-        self, phase_percentages: List[float], center: List[float], sigma: List[float]
+        self, phase_percentages: list[float], center: list[float], sigma: list[float]
     ) -> None:
         self.phase_percentages = phase_percentages
         self.set_accumulation_and_degradation_parameters(center, sigma)
@@ -135,11 +135,11 @@ class FUCCISASensor(FUCCISensor):
         return 2
 
     @property
-    def phases(self) -> List[str]:
+    def phases(self) -> list[str]:
         """Function to hard-code the supported phases of a sensor."""
         return ["G1", "G1/S", "S/G2/M"]
 
-    def get_phase(self, phase_markers: Union[List[bool], "pd.Series[bool]"]) -> str:
+    def get_phase(self, phase_markers: Union[list[bool], "pd.Series[bool]"]) -> str:
         """Return the discrete phase based channel ON / OFF data for the
         FUCCI(SA) sensor.
         """
@@ -279,7 +279,7 @@ class FUCCISASensor(FUCCISensor):
             return g1s_perc + 0.5 * (100.0 - g1s_perc - g1_perc)
 
     def get_estimated_cycle_percentage(
-        self, phase: str, intensities: List[float]
+        self, phase: str, intensities: list[float]
     ) -> float:
         """Estimate a cell cycle percentage based on intensities.
 
@@ -300,8 +300,8 @@ class FUCCISASensor(FUCCISensor):
             return self._find_sg2m_percentage(intensities[1])
 
     def get_expected_intensities(
-        self, percentage: Union[float, np.ndarray]
-    ) -> List[Union[float, np.ndarray]]:
+        self, percentage: float | np.ndarray
+    ) -> list[float | np.ndarray]:
         """Return value of calibrated curves."""
         g1_acc = accumulation_function(
             percentage, self._center_values[0], self._sigma_values[0]
@@ -332,7 +332,7 @@ class PIPFUCCISensor(FUCCISensor):
     """PIP-FUCCI sensor."""
 
     def __init__(
-        self, phase_percentages: List[float], center: List[float], sigma: List[float]
+        self, phase_percentages: list[float], center: list[float], sigma: list[float]
     ) -> None:
         self.phase_percentages = phase_percentages
         self.set_accumulation_and_degradation_parameters(center, sigma)
@@ -343,11 +343,11 @@ class PIPFUCCISensor(FUCCISensor):
         return 2
 
     @property
-    def phases(self) -> List[str]:
+    def phases(self) -> list[str]:
         """Function to hard-code the supported phases of a sensor."""
         return ["G1", "S", "G2/M"]
 
-    def get_phase(self, phase_markers: Union[List[bool], "pd.Series[bool]"]) -> str:
+    def get_phase(self, phase_markers: Union[list[bool], "pd.Series[bool]"]) -> str:
         """Return the discrete phase based channel ON / OFF data for the
         FUCCI(SA) sensor.
         """
@@ -414,7 +414,7 @@ class PIPFUCCISensor(FUCCISensor):
         raise NotImplementedError("Percentage estimate not yet implemented!")
 
     def get_estimated_cycle_percentage(
-        self, phase: str, intensities: List[float]
+        self, phase: str, intensities: list[float]
     ) -> float:
         """Estimate a cell cycle percentage based on intensities.
 
@@ -437,8 +437,8 @@ class PIPFUCCISensor(FUCCISensor):
             return self._find_g2m_percentage(intensities[1])
 
     def get_expected_intensities(
-        self, percentage: Union[float, np.ndarray]
-    ) -> List[Union[float, np.ndarray]]:
+        self, percentage: float | np.ndarray
+    ) -> list[float | np.ndarray]:
         """Return value of calibrated curves."""
         raise NotImplementedError("Intensity estimate not yet implemented!")
 

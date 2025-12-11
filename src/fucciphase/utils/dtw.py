@@ -1,10 +1,8 @@
-from typing import List, Union
-
 import numpy as np
 
 
 def get_time_distortion_coefficient(
-    path: Union[np.ndarray, List[List[float]]],
+    path: np.ndarray | list[list[float]],
 ) -> tuple[np.ndarray, float, int, int]:
     """Compute distortion coefficient from warping path.
 
@@ -20,7 +18,7 @@ def get_time_distortion_coefficient(
     lmbd = np.zeros(len(path) - 1)
     alpha = 0
     beta = 0
-    p: Union[np.ndarray, List[float]]
+    p: np.ndarray | list[float]
     for idx, p in enumerate(path):
         # first index is skipped
         if idx == 0:

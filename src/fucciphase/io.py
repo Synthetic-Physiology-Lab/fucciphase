@@ -1,14 +1,12 @@
 from pathlib import Path
-from typing import Tuple, Union
 
 import pandas as pd
 
 from .utils import TrackMateXML
 
 
-def read_trackmate_xml(xml_path: Union[Path, str]) -> Tuple[pd.DataFrame, TrackMateXML]:
-    """
-    Read a TrackMate-exported XML file and return data and XML wrapper.
+def read_trackmate_xml(xml_path: Path | str) -> tuple[pd.DataFrame, TrackMateXML]:
+    """Read a TrackMate-exported XML file and return data and XML wrapper.
 
     Parameters
     ----------
@@ -34,9 +32,11 @@ def read_trackmate_xml(xml_path: Union[Path, str]) -> Tuple[pd.DataFrame, TrackM
     return df, trackmate
 
 
-def read_trackmate_csv(csv_path: Union[Path, str]) -> pd.DataFrame:
-    """
-    Read a TrackMate-exported CSV file.
+def read_trackmate_csv(csv_path: Path | str) -> pd.DataFrame:
+    """Read a TrackMate-exported CSV file.
+
+    The first three rows (excluding header) of the csv file are skipped as
+    they contain duplicate titles of columns and units (Trackmate specific).
 
     The first three rows (excluding the header) of the CSV file are
     skipped as they contain duplicate column titles and units

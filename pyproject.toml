@@ -21,10 +21,11 @@ authors = [{ name = "Joran Deschamps", email = "joran.deschamps@fht.org" }]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "License :: OSI Approved :: BSD License",
     # "Typing :: Typed",
 ]
@@ -76,7 +77,7 @@ fucciphase-napari = "fucciphase.main_cli:main_visualization"
 # https://github.com/charliermarsh/ruff
 [tool.ruff]
 line-length = 88
-target-version = "py38"
+target-version = "py310"
 # https://beta.ruff.rs/docs/rules/
 lint.extend-select = [
     "E", # style errors
