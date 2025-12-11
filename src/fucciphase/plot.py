@@ -617,7 +617,8 @@ def plot_cell_trajectory(
     line_cycle : list, optional
         List of linestyles to cycle through for successive tracks.
     kwargs : dict, optional
-        Additional keyword arguments passed to ``matplotlib.collections.LineCollection``.
+        Additional keyword arguments passed to
+        ``matplotlib.collections.LineCollection``.
 
     Notes
     -----

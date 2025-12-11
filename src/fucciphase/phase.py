@@ -123,14 +123,14 @@ def generate_cycle_phases(
 
     Parameters
     ----------
-     df : pandas.DataFrame
+    df : pandas.DataFrame
         Dataframe with columns holding normalized intensities.
     channels : List[str]
         Names of normalized channels to use for phase estimation.
     sensor : FUCCISensor
         FUCCI sensor with phase-specific information.
     thresholds : List[float]
-        Thresholds (0–1) used to separate phases.
+        Thresholds (0-1) used to separate phases.
     estimate_percentage : bool, optional
         If True, also estimate a continuous cell-cycle percentage.
 
@@ -236,7 +236,7 @@ def estimate_cell_phase_from_max_intensity(
     background : List[float]
         Single background value per channel.
     thresholds : List[float]
-        Thresholds (0–1) used to separate phases.
+        Thresholds (0-1) used to separate phases.
 
     Raises
     ------
