@@ -133,7 +133,7 @@ def process_trackmate(
     manual_max: list[float] | None = None,
     generate_unique_tracks: bool = False,
     estimate_percentage: bool = True,
-    output_dir: Optional[Union[str, Path]] = None,
+    output_dir: str | Path | None = None,
 ) -> pd.DataFrame:
     """Run the full FUCCIphase pipeline on a TrackMate export.
 
