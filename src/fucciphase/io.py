@@ -6,19 +6,20 @@ from .utils import TrackMateXML
 
 
 def read_trackmate_xml(xml_path: Path | str) -> tuple[pd.DataFrame, TrackMateXML]:
-    """Read a trackmate exported xml file.
+    """Read a TrackMate-exported XML file and return data and XML wrapper.
 
     Parameters
     ----------
     xml_path : Union[Path, str]
-        Path to the xml file.
+        Path to the XML file.
 
     Returns
     -------
     df : pandas.DataFrame
-        Dataframe containing the xml data.
+        Dataframe containing the spot and track data, sorted by FRAME.
     trackmate : TrackMateXML
-        TrackMateXML object.
+        TrackMateXML object wrapping the original XML and allowing
+        feature updates / re-export.
     """
     # read in the xml file
     trackmate = TrackMateXML(xml_path)
@@ -32,26 +33,30 @@ def read_trackmate_xml(xml_path: Path | str) -> tuple[pd.DataFrame, TrackMateXML
 
 
 def read_trackmate_csv(csv_path: Path | str) -> pd.DataFrame:
-    """Read a trackmate exported csv file.
+    """Read a TrackMate-exported CSV file.
 
     The first three rows (excluding header) of the csv file are skipped as
     they contain duplicate titles of columns and units (Trackmate specific).
 
+    The first three rows (excluding the header) of the CSV file are
+    skipped as they contain duplicate column titles and units
+    (TrackMate-specific).
 
     Parameters
     ----------
-    csv_path : str
-        Path to the csv file.
+    csv_path : Union[Path, str]
+        Path to the CSV file.
 
     Returns
     -------
     df : pandas.DataFrame
-        Dataframe containing the csv data.
+        Dataframe containing the CSV data with converted dtypes.
 
     Raises
     ------
     ValueError
-        If the csv file does not contain at least two channels.
+        If the CSV file does not contain both MEAN_INTENSITY_CH1 and
+        MEAN_INTENSITY_CH2 columns.
     """
     df = pd.read_csv(csv_path, encoding="unicode_escape", skiprows=[1, 2, 3])
 

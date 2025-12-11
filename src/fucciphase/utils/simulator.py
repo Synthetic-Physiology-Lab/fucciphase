@@ -47,7 +47,7 @@ def simulate_single_track(track_id: float = 42, mean: float = 0.5) -> pd.DataFra
     pd.DataFrame
         Dataframe mocking a Trackmate single track import.
     """
-    # example data
+    # examples data
     phase_percentages = [33.3, 33.3, 33.3]
     center = [20.0, 55.0, 70.0, 95.0]
     sigma = [5.0, 5.0, 10.0, 1.0]

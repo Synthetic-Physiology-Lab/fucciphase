@@ -55,6 +55,8 @@ dev = [
     "pre-commit",
 ]
 
+napari  = ["napari", "bioio", "bioio-ome-tiff", "bioio-tifffile"]
+
 jupyter = ["jupyter"]
 
 doc = ["sphinx"]

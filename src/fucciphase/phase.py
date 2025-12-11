@@ -103,40 +103,35 @@ def generate_cycle_phases(
     thresholds: list[float],
     estimate_percentage: bool = False,
 ) -> None:
-    """Add a column in place to the dataframe with the phase of the cell cycle.
+    """Add cell-cycle phase (and optionally percentage) columns to the dataframe.
 
-    The phase is determined using a threshold on the channel intensities
-    assuming a FUCCI sensor.
+    The phase is determined using thresholds on the normalized channel
+    intensities, assuming a FUCCI-like sensor. For each row (spot) in the
+    dataframe, this function:
 
-    The thresholds per channel must be between 0 and 1.
+    1. Checks that normalized intensity columns exist for all requested channels.
+    2. Uses :func:`estimate_cell_phase_from_max_intensity` to assign a
+       discrete phase label based on whether each channel is ON/OFF.
+    3. Optionally calls :func:`estimate_cell_cycle_percentage` to estimate
+       a continuous cell-cycle percentage from the intensities and the
+       discrete phase.
 
-    Example:
-        channels = ["CH1", "CH2"]
-        thresholds = [0.1, 0.1]
-
-    The sensor needs to be calibrated for each cell line.
-    For that, record the FUCCI intensities of multiple cell cycles
-    by live-cell fluorescence microscopy.
-    See the examples for more details.
-
-    The thresholds need to be chosen based on the expected noise of the background and
-    uncertainty in intensity computation.
-    They give the ratio to the maximum intensity.
-    E.g., a threshold of 0.1 means that all intensities below 0.1 times the maximum
-    intensity are considered background signal.
+    The thresholds per channel must be between 0 and 1 and are interpreted
+    as fractions of the maximum intensity in that channel (e.g. 0.1 means
+    “10% of max”).
 
     Parameters
     ----------
-    df : pd.DataFrame
-        Dataframe with columns holding normalized intensities
-    sensor: FUCCISensor
-        FUCCI sensor with phase specifics
-    channels: List[str]
-        Names of channels
-    thresholds: List[float]
-        Thresholds to separate phases
-    estimate_percentage: bool
-        Estimate cell cycle percentages
+    df : pandas.DataFrame
+        Dataframe with columns holding normalized intensities.
+    channels : List[str]
+        Names of normalized channels to use for phase estimation.
+    sensor : FUCCISensor
+        FUCCI sensor with phase-specific information.
+    thresholds : List[float]
+        Thresholds (0-1) used to separate phases.
+    estimate_percentage : bool, optional
+        If True, also estimate a continuous cell-cycle percentage.
 
 
     Raises
@@ -162,7 +157,7 @@ def generate_cycle_phases(
     # check that all channels are present
     check_channels(sensor.fluorophores, channels)
 
-    # compute phases
+    # compute discrete phases based on normalized intensities
     estimate_cell_phase_from_max_intensity(
         df,
         norm_channel_names,
@@ -171,9 +166,9 @@ def generate_cycle_phases(
         thresholds=thresholds,
     )
 
-    # name of phase_column
+    # name of phase column
     phase_column = NewColumns.discrete_phase_max()
-    # compute percentages
+    # optionally compute continuous cell-cycle percentages
     if estimate_percentage:
         estimate_cell_cycle_percentage(df, norm_channel_names, sensor, phase_column)
 
@@ -183,16 +178,21 @@ def estimate_cell_cycle_percentage(
 ) -> None:
     """Estimate cell cycle percentage from intensity pairs.
 
+    For each row in the dataframe, this function reads the normalized
+    intensities in ``channels`` together with the discrete phase label in
+    ``phase_column`` and queries the sensor for an estimated cell-cycle
+    percentage. The result is stored in the ``CELL_CYCLE_PERC`` column.
+
     Parameters
     ----------
-    df : pd.DataFrame
-        Dataframe with columns holding normalized intensities
-    sensor: FUCCISensor
-        FUCCI sensor with phase specifics
-    channels: List[str]
-        Names of channels
-    phase_column: str
-        Name of phase column
+    df : pandas.DataFrame
+        Dataframe with normalized intensity columns and a phase column.
+    channels : List[str]
+        Names of normalized intensity columns for each fluorophore.
+    sensor : FUCCISensor
+        FUCCI sensor used to map intensities and phase to cycle percentage.
+    phase_column : str
+        Name of the column storing discrete phase labels.
     """
     percentages = []
     # iterate through data frame
@@ -214,34 +214,34 @@ def estimate_cell_phase_from_max_intensity(
     background: list[float],
     thresholds: list[float],
 ) -> None:
-    """Add a column in place to the dataframe with the estimated phase of the cell
-    cycle, where the phase is determined by thresholding the channel intensities.
+    """Estimate discrete cell-cycle phase by thresholding normalized intensities.
 
-    The provided thresholds are used to decide if a channel is switched on (ON).
-    For that, the background is subtracted from the mean intensity.
-    The obtained values are normalized w.r.t. the maximum mean intensity in the
-    respective channel available in the DataFrame.
-    Hence, the threshold values should be between 0 and 1.
-    This method will not work reliably if not enough cells from different phases
-    are contained in the DataFrame.
+    For each channel, the background value is subtracted from the mean
+    intensity. The resulting intensities are normalized by the maximum
+    mean intensity observed in that channel. A channel is considered ON
+    if its normalized intensity exceeds the corresponding threshold.
+
+    The ON/OFF pattern across channels is then mapped to a discrete phase
+    using the sensor model.
 
     Parameters
     ----------
-    df: pd.DataFrame
-        Dataframe with a CELL_CYCLE_PERC column
-    channels: List[str]
-        Names of channels
-    sensor: FUCCISensor
-        FUCCI sensor with specific phase analysis information
-    background: List[float]
-        Single value per channel representing background
-    thresholds: List[float]
-        Thresholds to separate phases
+    df : pandas.DataFrame
+        Dataframe containing the normalized intensity columns.
+    channels : List[str]
+        Names of normalized intensity columns.
+    sensor : FUCCISensor
+        FUCCI sensor with phase analysis information.
+    background : List[float]
+        Single background value per channel.
+    thresholds : List[float]
+        Thresholds (0-1) used to separate phases.
 
     Raises
     ------
     ValueError
-        If the dataframe does not contain the normalized channels.
+        If required channels are missing or if background/threshold lists
+        are inconsistent with the number of channels.
     """
     # sanity check: check that channels are present
     for channel in channels:
