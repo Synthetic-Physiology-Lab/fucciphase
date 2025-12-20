@@ -61,10 +61,7 @@ def read_trackmate_csv(csv_path: Path | str) -> pd.DataFrame:
     df = pd.read_csv(csv_path, encoding="unicode_escape", skiprows=[1, 2, 3])
 
     # sanity check: trackmate must have at least two channels
-    if (
-        "MEAN_INTENSITY_CH1" not in df.columns
-        or "MEAN_INTENSITY_CH2" not in df.columns
-    ):
+    if "MEAN_INTENSITY_CH1" not in df.columns or "MEAN_INTENSITY_CH2" not in df.columns:
         raise ValueError("Trackmate must have at least two channels.")
 
     # return dataframe with converted types (object -> string)
