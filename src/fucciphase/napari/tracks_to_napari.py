@@ -109,8 +109,8 @@ def pandas_df_to_napari_tracks(
     if feature_name is not None:
         if track_df[feature_name].min() < 0 or track_df[feature_name].max() > 100.0:
             raise ValueError(
-            "Make sure that the features are between 0 and 1, "
-            "otherwise the colormapping does not work well"
-        )
+                "Make sure that the features are between 0 and 1, "
+                "otherwise the colormapping does not work well"
+            )
         features = {feature_name: track_df[feature_name].to_numpy()}
     viewer.add_tracks(track_data, features=features, colormaps_dict=colormaps_dict)
