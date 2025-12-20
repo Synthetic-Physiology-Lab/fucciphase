@@ -9,6 +9,7 @@ from fucciphase.napari import add_trackmate_data_to_viewer
 from fucciphase.phase import estimate_percentage_by_subsequence_alignment
 from fucciphase.sensor import FUCCISASensor, get_fuccisa_default_sensor
 
+
 def main_cli() -> None:
     """Fucciphase CLI: Command-line entry point for FUCCIphase.
 
@@ -160,7 +161,6 @@ def main_visualization() -> None:
     console script and does not return a value.
 
     """
-
     try:
         import napari
     except ImportError as err:
