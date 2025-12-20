@@ -420,7 +420,7 @@ def estimate_percentage_by_subsequence_alignment(
                     "WARNING: The smoothing failed, continue without smoothing"
                     f" for channel {channel}"
                 )
-            diff_ch = dtaidistance.preprocessing.differencing(series)
+                diff_ch = dtaidistance.preprocessing.differencing(series)
         else:
             diff_ch = series
         series_diff.append(diff_ch)
