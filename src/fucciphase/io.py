@@ -27,7 +27,7 @@ def read_trackmate_xml(xml_path: Path | str) -> tuple[pd.DataFrame, TrackMateXML
     # convert the spots to a dataframe
     df = trackmate.to_pandas()
     # sort by frame number to have increasing time
-    df.sort_values(by="FRAME")
+    df = df.sort_values(by="FRAME")
 
     return df, trackmate
 
@@ -63,7 +63,7 @@ def read_trackmate_csv(csv_path: Path | str) -> pd.DataFrame:
     # sanity check: trackmate must have at least two channels
     if (
         "MEAN_INTENSITY_CH1" not in df.columns
-        and "MEAN_INTENSITY_CH2" not in df.columns
+        or "MEAN_INTENSITY_CH2" not in df.columns
     ):
         raise ValueError("Trackmate must have at least two channels.")
 
