@@ -46,6 +46,10 @@ def norm(
     ----------
     vector : Union[pd.Series, np.ndarray]
         Vector to normalize.
+    max_ch: Optional[float]
+        Optional value for the maximum used in normalization
+    min_ch: Optional[float]
+        Optional value for the minimum used in normalization
 
     Returns
     -------

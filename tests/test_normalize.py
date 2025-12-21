@@ -87,8 +87,8 @@ def test_normalize_manual_minmax(trackmate_df: pd.DataFrame):
     channel2 = "MEAN_INTENSITY_CH4"
 
     # get min, max, for both channels
-    max_idx_ch1 = trackmate_df[channel1].argmax()
-    max_idx_ch2 = trackmate_df[channel2].argmax()
+    max_idx_ch1 = trackmate_df[channel1].argmin()
+    max_idx_ch2 = trackmate_df[channel2].argmin()
     min_ch = [trackmate_df[channel1][max_idx_ch2], trackmate_df[channel2][max_idx_ch1]]
     max_ch = [trackmate_df[channel1].max(), trackmate_df[channel2].max()]
 
