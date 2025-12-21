@@ -35,7 +35,7 @@ def get_avg_channel_name(channel: str) -> str:
     return f"{channel}_AVG"
 
 
-def norm(vector: pd.Series | np.ndarray) -> pd.Series | np.ndarray:
+def norm(vector: pd.Series | np.ndarray, max_ch: float | None = None, min_ch: float | None =None) -> pd.Series | np.ndarray:
     """Normalize a vector by subtracting the min and dividing by (max - min).
 
     Parameters
@@ -48,8 +48,10 @@ def norm(vector: pd.Series | np.ndarray) -> pd.Series | np.ndarray:
     Union[pd.Series, np.ndarray]
         Normalized vector.
     """
-    max_ch = vector.max()
-    min_ch = vector.min()
+    if max_ch is None:
+        max_ch = vector.max()
+    if min_ch is None:
+        min_ch = vector.min()
     norm_ch = np.round(
         (vector - min_ch) / (max_ch - min_ch),
         2,  # number of decimals
@@ -148,14 +150,22 @@ def normalize_channels(
                 df.loc[index, avg_channel] = ma
 
     # normalize channels
-    for channel in channels:
+    for idx, channel in enumerate(channels):
         # moving average creates a new column with an own name
         if use_moving_average:
             avg_channel = get_avg_channel_name(channel)
         else:
             avg_channel = channel
         # normalize channel
-        norm_ch = norm(df[avg_channel])
+        # default: compute max and min per channel
+        max_ch = None
+        min_ch = None
+        # if manually specified limits, overwrite
+        if manual_max is not None:
+            max_ch = manual_max[idx]
+        if manual_min is not None:
+            min_ch = manual_min[idx]
+        norm_ch = norm(df[avg_channel], max_ch=max_ch, min_ch=min_ch)
 
         # add the new column
         new_column = get_norm_channel_name(channel)
@@ -186,9 +196,14 @@ def smooth_track(
         Name of column with track IDs
     moving_average_window : int
         Size of the window used for the moving average, default 7.
+        Must be greater than 3.
     """
     # get the track
     track: pd.DataFrame = df[df[track_id_name] == track_ID]
+
+    # hard-coded polyorder is 3, window length must be longer
+    if moving_average_window <= 3:
+        raise ValueError("Use moving_average_window of at least 4.")
 
     # compute the moving average
     ma = signal.savgol_filter(
