@@ -35,7 +35,11 @@ def get_avg_channel_name(channel: str) -> str:
     return f"{channel}_AVG"
 
 
-def norm(vector: pd.Series | np.ndarray, max_ch: float | None = None, min_ch: float | None =None) -> pd.Series | np.ndarray:
+def norm(
+    vector: pd.Series | np.ndarray,
+    max_ch: float | None = None,
+    min_ch: float | None = None,
+) -> pd.Series | np.ndarray:
     """Normalize a vector by subtracting the min and dividing by (max - min).
 
     Parameters
