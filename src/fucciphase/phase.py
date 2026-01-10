@@ -1,4 +1,6 @@
+import logging
 from enum import Enum
+from typing import Literal
 
 import dtaidistance.preprocessing
 import numpy as np
@@ -14,6 +16,11 @@ from .utils import (
     get_norm_channel_name,
     get_time_distortion_coefficient,
 )
+
+logger = logging.getLogger(__name__)
+
+# Type alias for signal processing mode
+SignalMode = Literal["signal", "derivative", "both"]
 
 
 class NewColumns(str, Enum):
@@ -336,6 +343,72 @@ def estimate_cell_phase_from_background(
     df[NewColumns.discrete_phase_bg()] = pd.Series(phase_names, dtype=str)  # add as str
 
 
+def _process_channel(
+    series: np.ndarray,
+    signal_mode: SignalMode,
+    smooth: float,
+    channel_name: str = "",
+) -> list[np.ndarray]:
+    """Process a single channel according to the signal mode.
+
+    Parameters
+    ----------
+    series : np.ndarray
+        The input signal array.
+    signal_mode : SignalMode
+        Processing mode: "signal", "derivative", or "both".
+    smooth : float
+        Smoothing factor for differencing.
+    channel_name : str, optional
+        Channel name for warning messages.
+
+    Returns
+    -------
+    list[np.ndarray]
+        List of processed arrays. Length 1 for "signal" or "derivative",
+        length 2 for "both" (signal first, then derivative).
+    """
+    results = []
+
+    if signal_mode in ("signal", "both"):
+        results.append(series.copy())
+
+    if signal_mode in ("derivative", "both"):
+        try:
+            diff = dtaidistance.preprocessing.differencing(series, smooth=smooth)
+        except ValueError:
+            if channel_name:
+                logger.warning(
+                    "Smoothing failed for channel %s, continuing without smoothing",
+                    channel_name,
+                )
+            diff = dtaidistance.preprocessing.differencing(series)
+        results.append(diff)
+
+    return results
+
+
+def _compute_output_length_offset(signal_mode: SignalMode) -> int:
+    """Return the offset to add to query length for output array size.
+
+    When using derivatives, the output is 1 element shorter, so we need
+    to add 1 to get back to the original track length.
+
+    Parameters
+    ----------
+    signal_mode : SignalMode
+        The signal processing mode.
+
+    Returns
+    -------
+    int
+        Offset to add: 1 if derivative is used, 0 otherwise.
+    """
+    if signal_mode in ("derivative", "both"):
+        return 1
+    return 0
+
+
 # flake8: noqa: C901
 def estimate_percentage_by_subsequence_alignment(
     df: pd.DataFrame,
@@ -347,7 +420,8 @@ def estimate_percentage_by_subsequence_alignment(
     track_id_name: str = "TRACK_ID",
     minimum_track_length: int = 10,
     use_zscore_norm: bool = True,
-    use_derivative: bool = True,
+    signal_mode: SignalMode = "derivative",
+    use_derivative: bool | None = None,
 ) -> None:
     """Use subsequence alignment to estimate percentage.
 
@@ -373,10 +447,26 @@ def estimate_percentage_by_subsequence_alignment(
         Use z-score normalization before differencing curves
         Probably not needed if intensities of reference and measured
         curve are similar
-    use_derivative: bool
-        Take derivative to perform alignment independent of intensity
-        baseline (in default mode also after normalization)
+    signal_mode: SignalMode
+        Signal processing mode:
+        - "signal": use raw signal only
+        - "derivative": use derivative only (default, for baseline independence)
+        - "both": use both signal and derivative as features
+    use_derivative: bool | None
+        Deprecated. Use signal_mode instead. If provided, overrides signal_mode
+        for backward compatibility (True -> "derivative", False -> "signal").
     """
+    # Handle backward compatibility with use_derivative parameter
+    if use_derivative is not None:
+        import warnings
+
+        warnings.warn(
+            "use_derivative is deprecated, use signal_mode instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        signal_mode = "derivative" if use_derivative else "signal"
+
     if "time" not in reference_data:
         raise ValueError("Need to provide time column in reference_data.")
     if "percentage" not in reference_data:
@@ -398,33 +488,37 @@ def estimate_percentage_by_subsequence_alignment(
 
     num_time = int(time_scale[-1] / dt)
     new_time_scale = np.linspace(0, dt * num_time, num=num_time + 1)
-    assert np.isclose(dt, new_time_scale[1] - new_time_scale[0])
+    actual_dt = new_time_scale[1] - new_time_scale[0]
+    if not np.isclose(dt, actual_dt):
+        raise ValueError(
+            f"Time scale mismatch: requested dt={dt}, but computed dt={actual_dt}. "
+            "Check that the reference data time scale is compatible with "
+            "the requested timestep."
+        )
 
     # reference curve in time scale of provided track
     percentage_ref = f_percentage(new_time_scale)
 
-    series_diff = []
+    processed_series = []
     for channel in channels:
         series = interpolation_functions[channel](new_time_scale)
         if use_zscore_norm:
             series = stats.zscore(series)
-        # if all values are the same, we zero to not numerical issues
+        # if all values are the same, we zero to avoid numerical issues
         if np.all(np.isnan(series)):
-            series = 0.0
+            series = np.zeros_like(series)
 
-        if use_derivative:
-            try:
-                diff_ch = dtaidistance.preprocessing.differencing(series, smooth=smooth)
-            except ValueError:
-                print(
-                    "WARNING: The smoothing failed, continue without smoothing"
-                    f" for channel {channel}"
-                )
-                diff_ch = dtaidistance.preprocessing.differencing(series)
-        else:
-            diff_ch = series
-        series_diff.append(diff_ch)
-    series = np.array(series_diff)
+        channel_features = _process_channel(series, signal_mode, smooth, channel)
+        processed_series.extend(channel_features)
+
+    # For "both" mode, trim signal features to match derivative length
+    if signal_mode == "both":
+        min_len = min(len(s) for s in processed_series)
+        processed_series = [s[-min_len:] for s in processed_series]
+        # Also trim the percentage reference to match
+        percentage_ref = percentage_ref[-min_len:]
+
+    series = np.array(processed_series)
     series = np.swapaxes(series, 0, 1)
 
     df.loc[:, NewColumns.cell_cycle_dtw()] = np.nan
@@ -444,37 +538,42 @@ def estimate_percentage_by_subsequence_alignment(
         # find percentages if track is long enough
         queries = track_df[channels].to_numpy()
 
-        queries_diff = []
+        processed_queries = []
         for idx in range(len(channels)):
+            query_series = queries[:, idx].copy()
             if use_zscore_norm:
-                queries[:, idx] = stats.zscore(queries[:, idx])
-            # if all values are the same, we zero to not numerical issues
-            if np.all(np.isnan(queries[:, idx])):
-                queries[:, idx] = 0.0
-            if use_derivative:
-                diff_ch = dtaidistance.preprocessing.differencing(
-                    queries[:, idx], smooth=smooth
-                )
-            else:
-                diff_ch = queries[:, idx]
-            queries_diff.append(diff_ch)
+                query_series = stats.zscore(query_series)
+            # if all values are the same, we zero to avoid numerical issues
+            if np.all(np.isnan(query_series)):
+                query_series = np.zeros_like(query_series)
 
-        query = np.array(queries_diff)
+            channel_features = _process_channel(query_series, signal_mode, smooth)
+            processed_queries.extend(channel_features)
+
+        # For "both" mode, trim signal features to match derivative length
+        if signal_mode == "both":
+            min_len = min(len(q) for q in processed_queries)
+            processed_queries = [q[-min_len:] for q in processed_queries]
+
+        query = np.array(processed_queries)
         query = np.swapaxes(query, 0, 1)
 
         sa = subsequence_alignment(query, series, penalty=penalty)
         best_match = sa.best_match()
-        if use_derivative:
-            new_percentage = np.zeros(query.shape[0] + 1)
+        length_offset = _compute_output_length_offset(signal_mode)
+        new_percentage = np.zeros(query.shape[0] + length_offset)
+
+        # Handle empty path case
+        if len(best_match.path) == 0:
+            new_percentage[:] = np.nan
         else:
-            new_percentage = np.zeros(query.shape[0])
-        for p in best_match.path:
-            new_percentage[p[0]] = percentage_ref[p[1]]
-        if p[1] + 1 < len(percentage_ref):
-            last_percentage = p[1] + 1
-        else:
-            last_percentage = p[1]
-        new_percentage[-1] = percentage_ref[last_percentage]
+            for p in best_match.path:
+                new_percentage[p[0]] = percentage_ref[p[1]]
+            if p[1] + 1 < len(percentage_ref):
+                last_percentage = p[1] + 1
+            else:
+                last_percentage = p[1]
+            new_percentage[-1] = percentage_ref[last_percentage]
         # save estimated cell cycle percentages
         df.loc[df[track_id_name] == track_id, NewColumns.cell_cycle_dtw()] = (
             new_percentage[:]
@@ -484,21 +583,35 @@ def estimate_percentage_by_subsequence_alignment(
             best_match.value
         )
 
-        _, distortion_score, _, _ = get_time_distortion_coefficient(best_match.path)
-        # save DTW distortion
-        df.loc[df[track_id_name] == track_id, NewColumns.dtw_distortion()] = (
-            distortion_score
-        )
-        df.loc[df[track_id_name] == track_id, NewColumns.dtw_distortion_norm()] = (
-            distortion_score / len(track_df)
-        )
+        # Handle empty path case for DTW metrics
+        if len(best_match.path) == 0:
+            df.loc[df[track_id_name] == track_id, NewColumns.dtw_distortion()] = np.nan
+            df.loc[
+                df[track_id_name] == track_id, NewColumns.dtw_distortion_norm()
+            ] = np.nan
+            df.loc[
+                df[track_id_name] == track_id, NewColumns.dtw_warping_amount()
+            ] = np.nan
+            df.loc[
+                df[track_id_name] == track_id, NewColumns.rel_dtw_warping_amount()
+            ] = np.nan
+        else:
+            _, distortion_score, _, _ = get_time_distortion_coefficient(
+                best_match.path
+            )
+            # save DTW distortion
+            df.loc[df[track_id_name] == track_id, NewColumns.dtw_distortion()] = (
+                distortion_score
+            )
+            df.loc[df[track_id_name] == track_id, NewColumns.dtw_distortion_norm()] = (
+                distortion_score / len(track_df)
+            )
 
-        # save DTW warping amount
-        df.loc[df[track_id_name] == track_id, NewColumns.dtw_warping_amount()] = (
-            warping_amount(best_match.path)
-        )
+            # save DTW warping amount
+            df.loc[df[track_id_name] == track_id, NewColumns.dtw_warping_amount()] = (
+                warping_amount(best_match.path)
+            )
 
-        # save DTW warping amount
-        df.loc[df[track_id_name] == track_id, NewColumns.rel_dtw_warping_amount()] = (
-            warping_amount(best_match.path) / len(track_df)
-        )
+            df.loc[
+                df[track_id_name] == track_id, NewColumns.rel_dtw_warping_amount()
+            ] = (warping_amount(best_match.path) / len(track_df))
