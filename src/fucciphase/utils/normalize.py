@@ -55,11 +55,24 @@ def norm(
     -------
     Union[pd.Series, np.ndarray]
         Normalized vector.
+
+    Raises
+    ------
+    ValueError
+        If max_ch equals min_ch (constant signal), which would cause division by zero.
     """
     if max_ch is None:
         max_ch = vector.max()
     if min_ch is None:
         min_ch = vector.min()
+
+    # Check for division by zero (constant signal)
+    if np.isclose(max_ch, min_ch):
+        raise ValueError(
+            f"Cannot normalize: max ({max_ch}) equals min ({min_ch}). "
+            "The signal appears to be constant."
+        )
+
     norm_ch = np.round(
         (vector - min_ch) / (max_ch - min_ch),
         2,  # number of decimals
