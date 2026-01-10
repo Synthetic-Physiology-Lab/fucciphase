@@ -55,9 +55,26 @@ class TrackMateXML:
         ----------
         xml_path : Union[str, Path]
             Path to the xml file.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the XML file does not exist.
+        ValueError
+            If the XML file is malformed or not a valid TrackMate file.
         """
         # parse tree
-        self._tree: et.ElementTree[et.Element[str]] = et.parse(xml_path)
+        xml_path = Path(xml_path)
+        if not xml_path.exists():
+            raise FileNotFoundError(f"TrackMate XML file not found: {xml_path}")
+
+        try:
+            self._tree: et.ElementTree[et.Element[str]] = et.parse(xml_path)
+        except et.ParseError as e:
+            raise ValueError(
+                f"Failed to parse TrackMate XML file {xml_path}: {e}"
+            ) from None
+
         self._root: et.Element | Any = self._tree.getroot()
 
         # placeholders
