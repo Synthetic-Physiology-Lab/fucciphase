@@ -1,9 +1,13 @@
+import logging
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from LineageTree import lineageTree
 from matplotlib import colormaps
 from scipy import signal
+
+logger = logging.getLogger(__name__)
 
 
 def split_track(
@@ -385,7 +389,9 @@ def export_lineage_tree_to_svg(
     This function currently only supports
     the standard FUCCISA sensor.
     """
-    print("Warning: make sure that you updated the spot names using TrackMate actions!")
+    logger.warning(
+        "Make sure that you updated the spot names using TrackMate actions!"
+    )
     # initialise lineage tree
     lt = lineageTree(trackmate_file, file_type="TrackMate")
     cmap_name = "cool"

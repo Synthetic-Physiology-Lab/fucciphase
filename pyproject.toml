@@ -131,6 +131,9 @@ pretty = true
 minversion = "6.0"
 testpaths = ["tests"]
 filterwarnings = ["error"]
+log_cli = true
+log_cli_level = "WARNING"
+log_cli_format = "%(levelname)s - %(name)s - %(message)s"
 
 # https://coverage.readthedocs.io/en/6.4/config.html
 [tool.coverage.report]

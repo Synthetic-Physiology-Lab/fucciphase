@@ -38,6 +38,11 @@ def main_cli() -> None:
     not return a value. It will raise a ``ValueError`` if the tracking
     file does not have an XML or CSV extension.
     """
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(levelname)s - %(name)s - %(message)s",
+    )
+
     parser = argparse.ArgumentParser(
         prog="fucciphase",
         description="FUCCIphase tool to estimate cell cycle phases and percentages.",
@@ -200,6 +205,11 @@ def main_visualization() -> None:
     console script and does not return a value.
 
     """
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(levelname)s - %(name)s - %(message)s",
+    )
+
     try:
         import napari
     except ImportError as err:
