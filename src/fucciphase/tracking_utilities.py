@@ -29,7 +29,13 @@ def get_feature_value_at_frame(
         If zero or multiple rows match the requested label.
     """
     value = labels[labels[label_name] == label, feature].to_numpy()
-    assert len(value) == 1
+    if len(value) == 0:
+        raise ValueError(f"No rows match label '{label}' in column '{label_name}'.")
+    if len(value) > 1:
+        raise ValueError(
+            f"Multiple rows ({len(value)}) match label '{label}' "
+            f"in column '{label_name}'. Expected exactly one match."
+        )
     return float(value[0])
 
 

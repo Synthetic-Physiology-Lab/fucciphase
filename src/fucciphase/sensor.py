@@ -1,9 +1,12 @@
+import logging
 from abc import ABC, abstractmethod
 from typing import Union
 
 import numpy as np
 import pandas as pd
 from scipy import optimize
+
+logger = logging.getLogger(__name__)
 
 
 def logistic(
@@ -273,8 +276,8 @@ class FUCCISASensor(FUCCISensor):
                 )
             )
         except ValueError:
-            print(
-                "WARNING: could not infer percentage in SG2M phase, using average phase"
+            logger.warning(
+                "Could not infer percentage in SG2M phase, using average phase value"
             )
             return g1s_perc + 0.5 * (100.0 - g1s_perc - g1_perc)
 
@@ -289,9 +292,20 @@ class FUCCISASensor(FUCCISensor):
             Name of phase
         intensities: List[float]
             List of channel intensities for all fluorophores
+
+        Raises
+        ------
+        ValueError
+            If the phase is not defined for this sensor or if the intensities
+            list does not have the expected number of elements.
         """
         if phase not in self.phases:
             raise ValueError(f"Phase {phase} is not defined for this sensor.")
+        if len(intensities) < self.fluorophores:
+            raise ValueError(
+                f"Expected {self.fluorophores} intensity values, "
+                f"but got {len(intensities)}."
+            )
         if phase == "G1":
             return self._find_g1_percentage(intensities[0])
         if phase == "G1/S":
