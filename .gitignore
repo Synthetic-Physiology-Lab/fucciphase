@@ -121,3 +121,8 @@ example/*.png
 # Sphinx files
 make.bat
 _build/
+
+# Example files
+examples/reproducibility/inputs/
+examples/reproducibility/outputs/
+examples/notebooks/*.svg

@@ -388,6 +388,61 @@ def _process_channel(
     return results
 
 
+def _compute_both_mode_scale_factor(processed_series: list[np.ndarray]) -> float:
+    """Compute scale factor to balance signal and derivative contributions.
+
+    In "both" mode, signals and derivatives may have different magnitudes.
+    This function computes a scale factor to apply to signals so they
+    contribute equally to the DTW distance.
+
+    Parameters
+    ----------
+    processed_series : list[np.ndarray]
+        List of processed arrays in order: [signal_ch1, deriv_ch1, signal_ch2, deriv_ch2, ...]
+
+    Returns
+    -------
+    float
+        Scale factor to multiply signals by. Returns 1.0 if derivatives have zero std.
+    """
+    # In "both" mode, signals are at even indices, derivatives at odd indices
+    signals = [processed_series[i] for i in range(0, len(processed_series), 2)]
+    derivatives = [processed_series[i] for i in range(1, len(processed_series), 2)]
+
+    signal_std = np.mean([np.std(s) for s in signals])
+    deriv_std = np.mean([np.std(d) for d in derivatives])
+
+    if signal_std == 0:
+        return 1.0
+    return deriv_std / signal_std  # type: ignore[no-any-return]
+
+
+def _apply_both_mode_scaling(
+    processed_series: list[np.ndarray], scale_factor: float
+) -> list[np.ndarray]:
+    """Apply scale factor to signal features in "both" mode.
+
+    Parameters
+    ----------
+    processed_series : list[np.ndarray]
+        List of processed arrays in order: [signal_ch1, deriv_ch1, signal_ch2, deriv_ch2, ...]
+    scale_factor : float
+        Scale factor to multiply signals by.
+
+    Returns
+    -------
+    list[np.ndarray]
+        Scaled processed series with signals multiplied by scale_factor.
+    """
+    scaled = []
+    for i, arr in enumerate(processed_series):
+        if i % 2 == 0:  # Signal (even index)
+            scaled.append(arr * scale_factor)
+        else:  # Derivative (odd index)
+            scaled.append(arr)
+    return scaled
+
+
 def _compute_output_length_offset(signal_mode: SignalMode) -> int:
     """Return the offset to add to query length for output array size.
 
@@ -511,12 +566,16 @@ def estimate_percentage_by_subsequence_alignment(
         channel_features = _process_channel(series, signal_mode, smooth, channel)
         processed_series.extend(channel_features)
 
-    # For "both" mode, trim signal features to match derivative length
+    # For "both" mode, trim signal features to match derivative length and scale
+    both_mode_scale_factor = 1.0
     if signal_mode == "both":
         min_len = min(len(s) for s in processed_series)
         processed_series = [s[-min_len:] for s in processed_series]
         # Also trim the percentage reference to match
         percentage_ref = percentage_ref[-min_len:]
+        # Compute and apply scaling to balance signal and derivative contributions
+        both_mode_scale_factor = _compute_both_mode_scale_factor(processed_series)
+        processed_series = _apply_both_mode_scaling(processed_series, both_mode_scale_factor)
 
     series = np.array(processed_series)
     series = np.swapaxes(series, 0, 1)
@@ -550,10 +609,14 @@ def estimate_percentage_by_subsequence_alignment(
             channel_features = _process_channel(query_series, signal_mode, smooth)
             processed_queries.extend(channel_features)
 
-        # For "both" mode, trim signal features to match derivative length
+        # For "both" mode, trim signal features to match derivative length and scale
         if signal_mode == "both":
             min_len = min(len(q) for q in processed_queries)
             processed_queries = [q[-min_len:] for q in processed_queries]
+            # Apply same scale factor as reference to ensure consistent weighting
+            processed_queries = _apply_both_mode_scaling(
+                processed_queries, both_mode_scale_factor
+            )
 
         query = np.array(processed_queries)
         query = np.swapaxes(query, 0, 1)
