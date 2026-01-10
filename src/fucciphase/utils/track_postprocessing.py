@@ -91,10 +91,13 @@ def split_all_tracks(
     """
     if track_id_name not in track_df.columns:
         raise ValueError(f"{track_id_name} column is missing.")
-    highest_track_idx = track_df[track_id_name].max()
-    highest_track_idx_counter = highest_track_idx
+
+    # Use unique() to handle non-contiguous track IDs correctly
+    track_ids = track_df[track_id_name].unique()
+    highest_track_idx_counter = track_df[track_id_name].max()
+
     # go through all tracks and split if needed
-    for track_idx in range(highest_track_idx):
+    for track_idx in track_ids:
         track = track_df.loc[track_df[track_id_name] == track_idx]
         if len(track) < minimum_track_length:
             continue
