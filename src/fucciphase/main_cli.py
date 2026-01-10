@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 from pathlib import Path
 
 import pandas as pd
@@ -8,6 +9,8 @@ from fucciphase import process_dataframe, process_trackmate
 from fucciphase.napari import add_trackmate_data_to_viewer
 from fucciphase.phase import estimate_percentage_by_subsequence_alignment
 from fucciphase.sensor import FUCCISASensor, get_fuccisa_default_sensor
+
+logger = logging.getLogger(__name__)
 
 
 def main_cli() -> None:
@@ -76,9 +79,8 @@ def main_cli() -> None:
     )
     parser.add_argument(
         "--generate_unique_tracks",
-        type=bool,
+        action="store_true",
         help="Split subtracks (TrackMate specific)",
-        default=False,
     )
 
     args = parser.parse_args()
@@ -87,17 +89,41 @@ def main_cli() -> None:
     output_dir.mkdir(exist_ok=True)
 
     # ---------------- 2. Load and adapt the reference cell-cycle trace ----------------
-    reference_df = pd.read_csv(args.reference_file)
+    try:
+        reference_df = pd.read_csv(args.reference_file)
+    except FileNotFoundError:
+        raise FileNotFoundError(
+            f"Reference file not found: {args.reference_file}"
+        ) from None
+    except pd.errors.EmptyDataError:
+        raise ValueError(
+            f"Reference file is empty: {args.reference_file}"
+        ) from None
+    except pd.errors.ParserError as e:
+        raise ValueError(
+            f"Failed to parse reference file {args.reference_file}: {e}"
+        ) from None
+
     # The reference file is expected to contain 'cyan' and 'magenta' columns;
     # they are renamed here to match the actual channel names in the data.
     reference_df.rename(
         columns={"cyan": args.cyan_channel, "magenta": args.magenta_channel},
         inplace=True,
     )
+
     # ---------------- 3. Build the sensor model ----------------
     if args.sensor_file is not None:
-        with open(args.sensor_file) as fp:
-            sensor_properties = json.load(fp)
+        try:
+            with open(args.sensor_file) as fp:
+                sensor_properties = json.load(fp)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"Sensor file not found: {args.sensor_file}"
+            ) from None
+        except json.JSONDecodeError as e:
+            raise ValueError(
+                f"Invalid JSON in sensor file {args.sensor_file}: {e}"
+            ) from None
         sensor = FUCCISASensor(**sensor_properties)
     else:
         sensor = get_fuccisa_default_sensor()
@@ -115,7 +141,20 @@ def main_cli() -> None:
         )
     elif args.tracking_file.endswith(".csv"):
         # CSV: read the table and then run the processing pipeline on it
-        df = pd.read_csv(args.tracking_file)
+        try:
+            df = pd.read_csv(args.tracking_file)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"Tracking file not found: {args.tracking_file}"
+            ) from None
+        except pd.errors.EmptyDataError:
+            raise ValueError(
+                f"Tracking file is empty: {args.tracking_file}"
+            ) from None
+        except pd.errors.ParserError as e:
+            raise ValueError(
+                f"Failed to parse tracking file {args.tracking_file}: {e}"
+            ) from None
         process_dataframe(
             df,
             channels=[args.cyan_channel, args.magenta_channel],
@@ -211,24 +250,24 @@ def main_visualization() -> None:
 
     # Try to read the video using AICSImage; fall back to bioio if needed
     AICSIMAGE = False
-    BIOIMAGE = False
     try:
         from aicsimageio import AICSImage
 
         AICSIMAGE = True
-    except ImportError as err:
-        from bioio import BioImage
-
-        BIOIMAGE = True
-        import bioio_ome_tiff
-
-        if not BIOIMAGE:
+    except ImportError:
+        try:
+            import bioio_ome_tiff
+            from bioio import BioImage
+        except ImportError as err:
             raise ImportError(
-                "Please install AICSImage or bioio to read videos"
+                "Please install aicsimageio or bioio to read videos. "
+                "Install with: pip install aicsimageio "
+                "or pip install bioio bioio-ome-tiff"
             ) from err
+
     if AICSIMAGE:
         image = AICSImage(args.video)
-    elif BIOIMAGE:
+    else:
         image = BioImage(args.video, reader=bioio_ome_tiff.Reader)
 
     # Determine spatial scale; fall back to unit scale or user-provided pixel size
@@ -237,12 +276,26 @@ def main_visualization() -> None:
         if args.pixel_size is not None:
             scale = (args.pixel_size, args.pixel_size)
         else:
-            print("WARNING: No pixel sizes found, using unit scale")
+            logger.warning("No pixel sizes found in image metadata, using unit scale")
             scale = (1.0, 1.0)
     cyan = image.get_image_dask_data("TYX", C=args.cyan_channel)
     magenta = image.get_image_dask_data("TYX", C=args.magenta_channel)
     masks = image.get_image_dask_data("TYX", C=args.segmask_channel)
-    track_df = pd.read_csv(args.fucciphase_file)
+
+    try:
+        track_df = pd.read_csv(args.fucciphase_file)
+    except FileNotFoundError:
+        raise FileNotFoundError(
+            f"FUCCIphase file not found: {args.fucciphase_file}"
+        ) from None
+    except pd.errors.EmptyDataError:
+        raise ValueError(
+            f"FUCCIphase file is empty: {args.fucciphase_file}"
+        ) from None
+    except pd.errors.ParserError as e:
+        raise ValueError(
+            f"Failed to parse FUCCIphase file {args.fucciphase_file}: {e}"
+        ) from None
 
     viewer = napari.Viewer()
 
