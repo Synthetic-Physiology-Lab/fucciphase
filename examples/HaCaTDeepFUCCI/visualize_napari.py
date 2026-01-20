@@ -2,13 +2,15 @@
 Visualize FUCCIphase results in Napari and create video.
 
 This script loads processed track data from CSV, displays it in Napari
-with image data, and optionally creates an animation.
+with image data, and optionally creates an animation or screenshots.
 
 Usage:
     python visualize_napari.py --tracks processed_tracks.csv --image 2.nd2
+    python visualize_napari.py --tracks processed_tracks.csv --image 2.nd2 --screenshots 0 13 26 39
 """
 
 import argparse
+import os
 
 import napari
 import numpy as np
@@ -156,6 +158,44 @@ def setup_viewer(viewer: napari.Viewer, dt_minutes: float = 15.0) -> None:
     viewer.dims.current_step = (0, 0, 0)
 
 
+def export_screenshots(
+    viewer: napari.Viewer,
+    frames: list[int],
+    output_dir: str = ".",
+    prefix: str = "frame",
+) -> None:
+    """Export screenshots at specific frames.
+
+    Parameters
+    ----------
+    viewer : napari.Viewer
+        Napari viewer instance
+    frames : list of int
+        Frame numbers to screenshot
+    output_dir : str
+        Output directory for screenshots
+    prefix : str
+        Prefix for output filenames
+    """
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+
+    for frame in frames:
+        # Ensure overlays are visible
+        viewer.text_overlay.visible = True
+        viewer.text_overlay.font_size = 64
+        viewer.scale_bar.visible = True
+        viewer.scale_bar.font_size = 0
+
+        # Set the frame
+        viewer.dims.current_step = (frame, 0, 0)
+
+        # Export screenshot
+        output_path = os.path.join(output_dir, f"{prefix}_{frame}.png")
+        viewer.export_figure(output_path)
+        print(f"Saved screenshot: {output_path}")
+
+
 def create_animation(
     viewer: napari.Viewer,
     output_file: str,
@@ -206,6 +246,9 @@ def main(
     image_file: str | None = None,
     labels_file: str | None = None,
     output_video: str | None = None,
+    screenshot_frames: list[int] | None = None,
+    screenshot_dir: str = ".",
+    screenshot_prefix: str = "frame",
     cyan_channel_idx: int = 3,
     magenta_channel_idx: int = 0,
     tubulin_channel_idx: int | None = 2,
@@ -227,6 +270,12 @@ def main(
         Path to labels TIF file
     output_video : str or None
         Path for output video, None to skip
+    screenshot_frames : list of int or None
+        Frame numbers to export as screenshots, None to skip
+    screenshot_dir : str
+        Output directory for screenshots
+    screenshot_prefix : str
+        Prefix for screenshot filenames
     cyan_channel_idx : int
         Channel index for cyan
     magenta_channel_idx : int
@@ -346,6 +395,12 @@ def main(
         )
         create_animation(viewer, output_video, n_frames, fps=fps)
 
+    # Export screenshots if requested
+    if screenshot_frames:
+        export_screenshots(
+            viewer, screenshot_frames, output_dir=screenshot_dir, prefix=screenshot_prefix
+        )
+
     return viewer
 
 
@@ -388,6 +443,23 @@ if __name__ == "__main__":
     )
     parser.add_argument("--fps", type=int, default=4, help="Video frames per second")
     parser.add_argument(
+        "--screenshots",
+        "-s",
+        nargs="+",
+        type=int,
+        help="Frame numbers to export as screenshots (e.g., --screenshots 0 13 26 39)",
+    )
+    parser.add_argument(
+        "--screenshot-dir",
+        default=".",
+        help="Output directory for screenshots (default: current directory)",
+    )
+    parser.add_argument(
+        "--screenshot-prefix",
+        default="frame",
+        help="Prefix for screenshot filenames (default: 'frame')",
+    )
+    parser.add_argument(
         "--no-gui",
         action="store_true",
         help="Don't start the GUI (for batch processing)",
@@ -406,6 +478,9 @@ if __name__ == "__main__":
         image_file=args.image,
         labels_file=args.labels,
         output_video=args.output,
+        screenshot_frames=args.screenshots,
+        screenshot_dir=args.screenshot_dir,
+        screenshot_prefix=args.screenshot_prefix,
         cyan_channel_idx=args.cyan_channel,
         magenta_channel_idx=args.magenta_channel,
         tubulin_channel_idx=args.tubulin_channel,
