@@ -12,7 +12,7 @@ def fit_percentages(frames: np.ndarray, percentages: np.ndarray) -> np.ndarray:
         force_negative_derivative=False,
     )
     # clip to range (0, 100)
-    return np.clip(best_fit, 0.0, 100.0)
+    return np.clip(best_fit, 0.0, 100.0)  # type: ignore[no-any-return]
 
 
 def postprocess_estimated_percentages(
