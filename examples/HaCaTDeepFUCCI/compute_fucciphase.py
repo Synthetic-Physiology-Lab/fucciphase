@@ -287,6 +287,8 @@ def main(
     y_limits: tuple[float, float] | None = None,
     signal_mode: SignalMode = "derivative",
     penalty: float = 0.05,
+    signal_weight: float = 1.0,
+    signal_smooth: int = 0,
     plot_figures: bool = False,
     figures_dir: str = "figures",
 ) -> pd.DataFrame:
@@ -320,6 +322,11 @@ def main(
         DTW signal processing mode: "signal", "derivative", or "both"
     penalty : float
         Penalty for DTW algorithm, enforces diagonal warping path
+    signal_weight : float
+        Weight for signal relative to derivative in "both" mode.
+        Default 1.0 means equal contribution. Values > 1.0 weight signal higher.
+    signal_smooth : int
+        Window size for signal smoothing (Savitzky-Golay, polyorder=3). 0 means no smoothing, must be > 3 if used.
     plot_figures : bool
         If True, generate reference vs query comparison plots for each track
     figures_dir : str
@@ -360,6 +367,8 @@ def main(
         track_id_name="TRACK_ID",
         signal_mode=signal_mode,
         penalty=penalty,
+        signal_weight=signal_weight,
+        signal_smooth=signal_smooth,
     )
     postprocess_estimated_percentages(
         track_df, "CELL_CYCLE_PERC_DTW", track_id_name="TRACK_ID"
@@ -465,6 +474,18 @@ if __name__ == "__main__":
         help="DTW penalty to enforce diagonal warping path (default: 0.05)",
     )
     parser.add_argument(
+        "--signal-weight",
+        type=float,
+        default=1.0,
+        help="Weight for signal vs derivative in 'both' mode (default: 1.0, >1 weights signal higher)",
+    )
+    parser.add_argument(
+        "--signal-smooth",
+        type=int,
+        default=0,
+        help="Window size for signal smoothing (Savitzky-Golay filter). 0 = no smoothing, must be > 3 if used (default: 0)",
+    )
+    parser.add_argument(
         "--plot-figures",
         action="store_true",
         help="Generate reference vs query comparison plots for each track",
@@ -497,6 +518,8 @@ if __name__ == "__main__":
         y_limits=y_limits,
         signal_mode=args.signal_mode,
         penalty=args.penalty,
+        signal_weight=args.signal_weight,
+        signal_smooth=args.signal_smooth,
         plot_figures=args.plot_figures,
         figures_dir=args.figures_dir,
     )

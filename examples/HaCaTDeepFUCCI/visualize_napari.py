@@ -398,7 +398,10 @@ def main(
     # Export screenshots if requested
     if screenshot_frames:
         export_screenshots(
-            viewer, screenshot_frames, output_dir=screenshot_dir, prefix=screenshot_prefix
+            viewer,
+            screenshot_frames,
+            output_dir=screenshot_dir,
+            prefix=screenshot_prefix,
         )
 
     return viewer
