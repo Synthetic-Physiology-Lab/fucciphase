@@ -326,7 +326,8 @@ def main(
         Weight for signal relative to derivative in "both" mode.
         Default 1.0 means equal contribution. Values > 1.0 weight signal higher.
     signal_smooth : int
-        Window size for signal smoothing (Savitzky-Golay, polyorder=3). 0 means no smoothing, must be > 3 if used.
+        Window size for signal smoothing (Savitzky-Golay, polyorder=3).
+        0 means no smoothing, must be > 3 if used.
     plot_figures : bool
         If True, generate reference vs query comparison plots for each track
     figures_dir : str
@@ -477,13 +478,15 @@ if __name__ == "__main__":
         "--signal-weight",
         type=float,
         default=1.0,
-        help="Weight for signal vs derivative in 'both' mode (default: 1.0, >1 weights signal higher)",
+        help="Weight for signal vs derivative in 'both' mode "
+        "(default: 1.0, >1 weights signal higher)",
     )
     parser.add_argument(
         "--signal-smooth",
         type=int,
         default=0,
-        help="Window size for signal smoothing (Savitzky-Golay filter). 0 = no smoothing, must be > 3 if used (default: 0)",
+        help="Window size for signal smoothing (Savitzky-Golay filter). "
+        "0 = no smoothing, must be > 3 if used (default: 0)",
     )
     parser.add_argument(
         "--plot-figures",

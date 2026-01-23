@@ -1,0 +1,5 @@
+recursive-exclude examples *.csv
+recursive-exclude examples *.mp4
+recursive-exclude examples *.png
+recursive-exclude examples *.tif
+recursive-exclude examples *.xml

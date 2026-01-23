@@ -5,7 +5,8 @@ This script is a variant of visualize_napari.py optimized for .ome.tif files,
 which are faster to load than the original .nd2 files.
 
 Usage:
-    python visualize_napari_ometiff.py --tracks processed_tracks.csv --image downscaled_hacat_100x.ome.tif
+    python visualize_napari_ometiff.py --tracks processed_tracks.csv
+                                       --image downscaled_hacat_100x.ome.tif
 """
 
 import argparse
@@ -17,7 +18,6 @@ import napari
 import numpy as np
 import pandas as pd
 import vispy.color.colormap
-from skimage.io import imread
 
 from fucciphase.napari import add_trackmate_data_to_viewer, pandas_df_to_napari_tracks
 
@@ -308,7 +308,8 @@ if __name__ == "__main__":
         type=float,
         # default=1,
         default=0.068030333725549 * 9.0,
-        help="Factor by which image was downscaled (default: 9x downscale of original size)",
+        help="Factor by which image was downscaled "
+        "(default: 9x downscale of original size)",
     )
     parser.add_argument(
         "--screenshots",

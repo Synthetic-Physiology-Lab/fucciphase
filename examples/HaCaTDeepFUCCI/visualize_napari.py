@@ -6,7 +6,8 @@ with image data, and optionally creates an animation or screenshots.
 
 Usage:
     python visualize_napari.py --tracks processed_tracks.csv --image 2.nd2
-    python visualize_napari.py --tracks processed_tracks.csv --image 2.nd2 --screenshots 0 13 26 39
+    python visualize_napari.py --tracks processed_tracks.csv --image 2.nd2
+                               --screenshots 0 13 26 39
 """
 
 import argparse
@@ -241,6 +242,7 @@ def create_animation(
     print("Done!")
 
 
+# ruff: noqa: C901
 def main(
     tracks_file: str,
     image_file: str | None = None,

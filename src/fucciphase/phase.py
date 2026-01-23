@@ -413,7 +413,8 @@ def _compute_both_mode_scale_factor(processed_series: list[np.ndarray]) -> float
     Parameters
     ----------
     processed_series : list[np.ndarray]
-        List of processed arrays in order: [signal_ch1, deriv_ch1, signal_ch2, deriv_ch2, ...]
+        List of processed arrays in order:
+        [signal_ch1, deriv_ch1, signal_ch2, deriv_ch2, ...]
 
     Returns
     -------
@@ -440,7 +441,8 @@ def _apply_both_mode_scaling(
     Parameters
     ----------
     processed_series : list[np.ndarray]
-        List of processed arrays in order: [signal_ch1, deriv_ch1, signal_ch2, deriv_ch2, ...]
+        List of processed arrays in order:
+        [signal_ch1, deriv_ch1, signal_ch2, deriv_ch2, ...]
     scale_factor : float
         Scale factor to multiply signals by.
 
@@ -530,7 +532,8 @@ def estimate_percentage_by_subsequence_alignment(
         higher, values < 1.0 weight derivative higher. Ignored for other modes.
     signal_smooth: int
         Window size for signal smoothing (Savitzky-Golay filter, polyorder=3).
-        0 means no smoothing. Must be > 3 if used. Only applies in "signal" or "both" modes.
+        0 means no smoothing. Must be > 3 if used.
+        Only applies in "signal" or "both" modes.
     use_derivative: bool | None
         Deprecated. Use signal_mode instead. If provided, overrides signal_mode
         for backward compatibility (True -> "derivative", False -> "signal").
@@ -604,7 +607,9 @@ def estimate_percentage_by_subsequence_alignment(
         both_mode_scale_factor = (
             _compute_both_mode_scale_factor(processed_series) * signal_weight
         )
-        processed_series = _apply_both_mode_scaling(processed_series, both_mode_scale_factor)
+        processed_series = _apply_both_mode_scaling(
+            processed_series, both_mode_scale_factor
+        )
 
     series = np.array(processed_series)
     series = np.swapaxes(series, 0, 1)
@@ -680,19 +685,17 @@ def estimate_percentage_by_subsequence_alignment(
         # Handle empty path case for DTW metrics
         if len(best_match.path) == 0:
             df.loc[df[track_id_name] == track_id, NewColumns.dtw_distortion()] = np.nan
-            df.loc[
-                df[track_id_name] == track_id, NewColumns.dtw_distortion_norm()
-            ] = np.nan
-            df.loc[
-                df[track_id_name] == track_id, NewColumns.dtw_warping_amount()
-            ] = np.nan
+            df.loc[df[track_id_name] == track_id, NewColumns.dtw_distortion_norm()] = (
+                np.nan
+            )
+            df.loc[df[track_id_name] == track_id, NewColumns.dtw_warping_amount()] = (
+                np.nan
+            )
             df.loc[
                 df[track_id_name] == track_id, NewColumns.rel_dtw_warping_amount()
             ] = np.nan
         else:
-            _, distortion_score, _, _ = get_time_distortion_coefficient(
-                best_match.path
-            )
+            _, distortion_score, _, _ = get_time_distortion_coefficient(best_match.path)
             # save DTW distortion
             df.loc[df[track_id_name] == track_id, NewColumns.dtw_distortion()] = (
                 distortion_score
@@ -708,4 +711,4 @@ def estimate_percentage_by_subsequence_alignment(
 
             df.loc[
                 df[track_id_name] == track_id, NewColumns.rel_dtw_warping_amount()
-            ] = (warping_amount(best_match.path) / len(track_df))
+            ] = warping_amount(best_match.path) / len(track_df)
