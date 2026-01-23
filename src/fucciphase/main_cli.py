@@ -101,9 +101,7 @@ def main_cli() -> None:
             f"Reference file not found: {args.reference_file}"
         ) from None
     except pd.errors.EmptyDataError:
-        raise ValueError(
-            f"Reference file is empty: {args.reference_file}"
-        ) from None
+        raise ValueError(f"Reference file is empty: {args.reference_file}") from None
     except pd.errors.ParserError as e:
         raise ValueError(
             f"Failed to parse reference file {args.reference_file}: {e}"
@@ -153,9 +151,7 @@ def main_cli() -> None:
                 f"Tracking file not found: {args.tracking_file}"
             ) from None
         except pd.errors.EmptyDataError:
-            raise ValueError(
-                f"Tracking file is empty: {args.tracking_file}"
-            ) from None
+            raise ValueError(f"Tracking file is empty: {args.tracking_file}") from None
         except pd.errors.ParserError as e:
             raise ValueError(
                 f"Failed to parse tracking file {args.tracking_file}: {e}"
@@ -299,9 +295,7 @@ def main_visualization() -> None:
             f"FUCCIphase file not found: {args.fucciphase_file}"
         ) from None
     except pd.errors.EmptyDataError:
-        raise ValueError(
-            f"FUCCIphase file is empty: {args.fucciphase_file}"
-        ) from None
+        raise ValueError(f"FUCCIphase file is empty: {args.fucciphase_file}") from None
     except pd.errors.ParserError as e:
         raise ValueError(
             f"Failed to parse FUCCIphase file {args.fucciphase_file}: {e}"

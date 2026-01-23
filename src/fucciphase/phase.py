@@ -575,7 +575,9 @@ def estimate_percentage_by_subsequence_alignment(
         percentage_ref = percentage_ref[-min_len:]
         # Compute and apply scaling to balance signal and derivative contributions
         both_mode_scale_factor = _compute_both_mode_scale_factor(processed_series)
-        processed_series = _apply_both_mode_scaling(processed_series, both_mode_scale_factor)
+        processed_series = _apply_both_mode_scaling(
+            processed_series, both_mode_scale_factor
+        )
 
     series = np.array(processed_series)
     series = np.swapaxes(series, 0, 1)
@@ -649,19 +651,17 @@ def estimate_percentage_by_subsequence_alignment(
         # Handle empty path case for DTW metrics
         if len(best_match.path) == 0:
             df.loc[df[track_id_name] == track_id, NewColumns.dtw_distortion()] = np.nan
-            df.loc[
-                df[track_id_name] == track_id, NewColumns.dtw_distortion_norm()
-            ] = np.nan
-            df.loc[
-                df[track_id_name] == track_id, NewColumns.dtw_warping_amount()
-            ] = np.nan
+            df.loc[df[track_id_name] == track_id, NewColumns.dtw_distortion_norm()] = (
+                np.nan
+            )
+            df.loc[df[track_id_name] == track_id, NewColumns.dtw_warping_amount()] = (
+                np.nan
+            )
             df.loc[
                 df[track_id_name] == track_id, NewColumns.rel_dtw_warping_amount()
             ] = np.nan
         else:
-            _, distortion_score, _, _ = get_time_distortion_coefficient(
-                best_match.path
-            )
+            _, distortion_score, _, _ = get_time_distortion_coefficient(best_match.path)
             # save DTW distortion
             df.loc[df[track_id_name] == track_id, NewColumns.dtw_distortion()] = (
                 distortion_score
@@ -677,4 +677,4 @@ def estimate_percentage_by_subsequence_alignment(
 
             df.loc[
                 df[track_id_name] == track_id, NewColumns.rel_dtw_warping_amount()
-            ] = (warping_amount(best_match.path) / len(track_df))
+            ] = warping_amount(best_match.path) / len(track_df)

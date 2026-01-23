@@ -17,7 +17,6 @@ import napari
 import numpy as np
 import pandas as pd
 import vispy.color.colormap
-from skimage.io import imread
 
 from fucciphase.napari import add_trackmate_data_to_viewer, pandas_df_to_napari_tracks
 
