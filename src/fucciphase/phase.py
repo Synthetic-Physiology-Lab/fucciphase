@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 from dtaidistance.dtw import warping_amount
 from dtaidistance.subsequence.dtw import subsequence_alignment
-from scipy import interpolate, stats
+from scipy import interpolate, signal, stats
 
 from .sensor import FUCCISensor
 from .utils import (
@@ -348,6 +348,7 @@ def _process_channel(
     signal_mode: SignalMode,
     smooth: float,
     channel_name: str = "",
+    signal_smooth: int = 0,
 ) -> list[np.ndarray]:
     """Process a single channel according to the signal mode.
 
@@ -358,9 +359,13 @@ def _process_channel(
     signal_mode : SignalMode
         Processing mode: "signal", "derivative", or "both".
     smooth : float
-        Smoothing factor for differencing.
+        Smoothing factor for differencing (removes high frequencies).
     channel_name : str, optional
         Channel name for warning messages.
+    signal_smooth : int, optional
+        Window size for signal smoothing (Savitzky-Golay filter with polyorder=3).
+        0 means no smoothing. Must be > 3 if used.
+        Only applies when signal_mode is "signal" or "both".
 
     Returns
     -------
@@ -371,7 +376,17 @@ def _process_channel(
     results = []
 
     if signal_mode in ("signal", "both"):
-        results.append(series.copy())
+        smoothed_signal = series.copy()
+        if signal_smooth > 3:
+            smoothed_signal = signal.savgol_filter(
+                series, window_length=signal_smooth, polyorder=3, mode="nearest"
+            )
+        elif signal_smooth > 0:
+            logger.warning(
+                "signal_smooth=%d is too small (must be > 3), skipping smoothing",
+                signal_smooth,
+            )
+        results.append(smoothed_signal)
 
     if signal_mode in ("derivative", "both"):
         try:
@@ -476,6 +491,8 @@ def estimate_percentage_by_subsequence_alignment(
     minimum_track_length: int = 10,
     use_zscore_norm: bool = True,
     signal_mode: SignalMode = "derivative",
+    signal_weight: float = 1.0,
+    signal_smooth: int = 0,
     use_derivative: bool | None = None,
 ) -> None:
     """Use subsequence alignment to estimate percentage.
@@ -491,7 +508,7 @@ def estimate_percentage_by_subsequence_alignment(
     reference_data: pd.DataFrame
         Containing reference intensities over time
     smooth: float
-        Smoothing factor, see dtaidistance documentation
+        Smoothing factor for derivative (removes high frequencies, 0-0.5)
     penalty: float
         Penalty for DTW algorithm, enforces diagonal warping path
     track_id_name: str
@@ -507,6 +524,13 @@ def estimate_percentage_by_subsequence_alignment(
         - "signal": use raw signal only
         - "derivative": use derivative only (default, for baseline independence)
         - "both": use both signal and derivative as features
+    signal_weight: float
+        Weight for signal relative to derivative in "both" mode.
+        Default 1.0 means equal contribution. Values > 1.0 weight signal
+        higher, values < 1.0 weight derivative higher. Ignored for other modes.
+    signal_smooth: int
+        Window size for signal smoothing (Savitzky-Golay filter, polyorder=3).
+        0 means no smoothing. Must be > 3 if used. Only applies in "signal" or "both" modes.
     use_derivative: bool | None
         Deprecated. Use signal_mode instead. If provided, overrides signal_mode
         for backward compatibility (True -> "derivative", False -> "signal").
@@ -563,7 +587,9 @@ def estimate_percentage_by_subsequence_alignment(
         if np.all(np.isnan(series)):
             series = np.zeros_like(series)
 
-        channel_features = _process_channel(series, signal_mode, smooth, channel)
+        channel_features = _process_channel(
+            series, signal_mode, smooth, channel, signal_smooth
+        )
         processed_series.extend(channel_features)
 
     # For "both" mode, trim signal features to match derivative length and scale
@@ -574,7 +600,10 @@ def estimate_percentage_by_subsequence_alignment(
         # Also trim the percentage reference to match
         percentage_ref = percentage_ref[-min_len:]
         # Compute and apply scaling to balance signal and derivative contributions
-        both_mode_scale_factor = _compute_both_mode_scale_factor(processed_series)
+        # signal_weight > 1.0 weights signal higher relative to derivative
+        both_mode_scale_factor = (
+            _compute_both_mode_scale_factor(processed_series) * signal_weight
+        )
         processed_series = _apply_both_mode_scaling(processed_series, both_mode_scale_factor)
 
     series = np.array(processed_series)
@@ -606,7 +635,9 @@ def estimate_percentage_by_subsequence_alignment(
             if np.all(np.isnan(query_series)):
                 query_series = np.zeros_like(query_series)
 
-            channel_features = _process_channel(query_series, signal_mode, smooth)
+            channel_features = _process_channel(
+                query_series, signal_mode, smooth, signal_smooth=signal_smooth
+            )
             processed_queries.extend(channel_features)
 
         # For "both" mode, trim signal features to match derivative length and scale
