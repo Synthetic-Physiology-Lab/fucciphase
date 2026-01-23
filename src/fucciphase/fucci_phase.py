@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import pandas as pd
@@ -6,6 +7,8 @@ from .io import read_trackmate_xml
 from .phase import generate_cycle_phases
 from .sensor import FUCCISensor
 from .utils import normalize_channels, split_trackmate_tracks
+
+logger = logging.getLogger(__name__)
 
 
 def process_dataframe(
@@ -91,6 +94,25 @@ def process_dataframe(
     if len(channels) != sensor.fluorophores:
         raise ValueError(f"Need to provide {sensor.fluorophores} channel names.")
 
+    # validate DataFrame is not empty
+    if df.empty:
+        raise ValueError("Input DataFrame is empty.")
+
+    # validate that required channel columns exist
+    missing_channels = [ch for ch in channels if ch not in df.columns]
+    if missing_channels:
+        raise ValueError(
+            f"Missing channel columns in DataFrame: {missing_channels}. "
+            f"Available columns: {list(df.columns)}"
+        )
+
+    # validate that FRAME column exists (required for processing)
+    if "FRAME" not in df.columns:
+        raise ValueError(
+            "Missing required 'FRAME' column in DataFrame. "
+            f"Available columns: {list(df.columns)}"
+        )
+
     # optionally split TrackMate subtracks and re-label them as unique tracks
     if generate_unique_tracks:
         if "TRACK_ID" in df.columns:
@@ -98,8 +120,10 @@ def process_dataframe(
             # perform all operation on unique tracks
             track_id_name = "UNIQUE_TRACK_ID"
         else:
-            print("Warning: unique tracks can only be prepared for TrackMate files.")
-            print("The tracks have not been updated.")
+            logger.warning(
+                "Unique tracks can only be prepared for TrackMate files. "
+                "The tracks have not been updated."
+            )
 
     # normalize the channels
     normalize_channels(

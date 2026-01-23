@@ -1,6 +1,10 @@
+import logging
+
 import numpy as np
 import pandas as pd
 from monotonic_derivative import ensure_monotonic_derivative
+
+logger = logging.getLogger(__name__)
 
 
 def fit_percentages(frames: np.ndarray, percentages: np.ndarray) -> np.ndarray:
@@ -31,17 +35,17 @@ def postprocess_estimated_percentages(
         frames = track["FRAME"]
         percentages = track[percentage_column]
         if np.all(np.isnan(percentages)):
-            print("WARNING: No percentages to postprocess")
+            logger.warning("No percentages to postprocess")
             return
         try:
             restored_percentages = fit_percentages(frames, percentages)
         except ValueError:
-            print(f"Error in track {index}")
-            print(
-                "Make sure that the spots belong to a unique track,"
-                " i.e., not more than one spot per frame per track."
+            logger.error(
+                "Error in track %s. Make sure that the spots belong to a unique track, "
+                "i.e., not more than one spot per frame per track.\n%s",
+                index,
+                track,
             )
-            print(track)
         df.loc[df[track_id_name] == index, postprocessed_percentage_column] = (
             restored_percentages
         )

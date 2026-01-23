@@ -1,3 +1,4 @@
+import logging
 from itertools import cycle
 
 import numpy as np
@@ -10,6 +11,8 @@ from scipy import interpolate
 
 from .phase import NewColumns
 from .utils import get_norm_channel_name
+
+logger = logging.getLogger(__name__)
 
 
 def set_phase_colors(
@@ -569,7 +572,7 @@ def get_percentage_color(percentage: float) -> tuple:
     cmap_name = "cool"
     cmap = colormaps.get(cmap_name)
     if np.isnan(percentage):
-        print("WARNING: NaN value detected, plot will be transparent")
+        logger.warning("NaN percentage value detected, plot will be transparent")
         rgba_value = (0, 0, 0, 0)
     else:
         rgba_value = cmap(percentage / 100.0)
