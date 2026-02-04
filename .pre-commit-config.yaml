@@ -14,7 +14,7 @@ repos:
       - id: validate-pyproject
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.10
+    rev: v0.14.14
     hooks:
       - id: ruff
         types_or: [python, pyi, jupyter]
@@ -32,6 +32,6 @@ repos:
 
   # strip out jupyter notebooks
   - repo: https://github.com/kynan/nbstripout
-    rev: 0.8.2
+    rev: 0.9.0
     hooks:
       - id: nbstripout
