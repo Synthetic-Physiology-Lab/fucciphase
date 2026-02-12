@@ -6,7 +6,7 @@ from pathlib import Path
 import pandas as pd
 
 from fucciphase import process_dataframe, process_trackmate
-from fucciphase.napari import add_trackmate_data_to_viewer
+
 from fucciphase.phase import estimate_percentage_by_subsequence_alignment
 from fucciphase.sensor import FUCCISASensor, get_fuccisa_default_sensor
 
@@ -90,9 +90,10 @@ def main_cli() -> None:
     )
 
     args = parser.parse_args()
-    # Decide where to store outputs (CSV and, for XML input, processed XML)
-    output_dir = Path("outputs")
-    output_dir.mkdir(exist_ok=True)
+    # Store outputs in the reproducibility folder inside the repository.
+    repo_root = Path(__file__).resolve().parents[2]
+    output_dir = repo_root / "examples" / "reproducibility" / "outputs"
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     # ---------------- 2. Load and adapt the reference cell-cycle trace ----------------
     try:
@@ -211,6 +212,8 @@ def main_visualization() -> None:
         import napari
     except ImportError as err:
         raise ImportError("Install napari.") from err
+
+    from fucciphase.napari import add_trackmate_data_to_viewer
 
     parser = argparse.ArgumentParser(
         prog="fucciphase-napari",
