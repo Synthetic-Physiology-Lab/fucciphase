@@ -41,7 +41,7 @@ fucciphase inputs/merged_linked.ome.xml `
           -dt 0.25 `
           -m MEAN_INTENSITY_CH1 `
           -c MEAN_INTENSITY_CH2 `
-          --generate_unique_tracks true `
+          --generate_unique_tracks `
 ```
 
 This will generate two files in the `outputs/` folder:
