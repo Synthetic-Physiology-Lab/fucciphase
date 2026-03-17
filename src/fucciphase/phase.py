@@ -585,7 +585,7 @@ def estimate_percentage_by_subsequence_alignment(
     for channel in channels:
         series = interpolation_functions[channel](new_time_scale)
         if use_zscore_norm:
-            series = stats.zscore(series)
+            series = stats.zscore(np.asarray(series, dtype=float))
         # if all values are the same, we zero to avoid numerical issues
         if np.all(np.isnan(series)):
             series = np.zeros_like(series)
@@ -611,8 +611,7 @@ def estimate_percentage_by_subsequence_alignment(
             processed_series, both_mode_scale_factor
         )
 
-    series = np.array(processed_series)
-    series = np.swapaxes(series, 0, 1)
+    reference_series: np.ndarray = np.swapaxes(np.array(processed_series), 0, 1)
 
     df.loc[:, NewColumns.cell_cycle_dtw()] = np.nan
 
@@ -657,7 +656,7 @@ def estimate_percentage_by_subsequence_alignment(
         query = np.array(processed_queries)
         query = np.swapaxes(query, 0, 1)
 
-        sa = subsequence_alignment(query, series, penalty=penalty)
+        sa = subsequence_alignment(query, reference_series, penalty=penalty)
         best_match = sa.best_match()
         length_offset = _compute_output_length_offset(signal_mode)
         new_percentage = np.zeros(query.shape[0] + length_offset)

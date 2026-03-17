@@ -82,7 +82,7 @@ class TrackMateXML:
         self._allspots: et.Element | None = None
 
         self.nspots: int = 0  # number of spots
-        self.features: dict[str, type] = {}  # features and their types
+        self.features: dict[str, Any] = {}  # features and their types
         self.spot_features: list[str] = []  # list of spot features
 
         # import model and all spots
@@ -209,7 +209,7 @@ class TrackMateXML:
                     for spot in frame:
                         # if this is the first spot, initialize dataframe
                         if spot_count == 0:
-                            df = pd.DataFrame(columns=spot.attrib.keys())
+                            df = pd.DataFrame(columns=list(spot.attrib.keys()))
 
                         # add the spot to the dataframe
                         df.loc[spot_count] = spot.attrib
@@ -277,6 +277,7 @@ class TrackMateXML:
         with open(xml_path, "wb") as f:
             self._tree.write(f)
 
+    @staticmethod
     def get_full_tracks(
         df: pd.DataFrame,
         channels: list[str],

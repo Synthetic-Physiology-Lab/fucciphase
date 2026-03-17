@@ -32,3 +32,4 @@ All notebooks assume that:
 | `phaselocking-workflow-lazy.ipynb`     | Phase-lock and align many trajectories to a common reference using a lightweight, scalable workflow. | 
 | `example_estimated.ipynb`              | Explore and visualise FUCCIphase output tables with per-cell phase estimates over time.              | 
 | `color-tails-by-percentage.ipynb`      | Visualise phase distributions over time or conditions as “colour tail” plots for figures.            |
+| `signal_mode_comparison.ipynb`         | Compare alternative signal modes for DTW-based phase alignment.                                      |

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 import pandas as pd
 
@@ -52,6 +54,7 @@ def add_trackmate_data_to_viewer(
     if dim != 2:
         raise NotImplementedError("Workflow currently only implemented for 2D frames.")
     # make sure it is sorted
+    assert time_id_name is not None, "time_id_name must be provided"
     napari_val_df = df.sort_values(time_id_name)
     # extract points
     points = napari_val_df[[time_id_name, pos_y_id_name, pos_x_id_name]].to_numpy()

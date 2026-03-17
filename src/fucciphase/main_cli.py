@@ -6,39 +6,36 @@ from pathlib import Path
 import pandas as pd
 
 from fucciphase import process_dataframe, process_trackmate
-from fucciphase.napari import add_trackmate_data_to_viewer
 from fucciphase.phase import estimate_percentage_by_subsequence_alignment
 from fucciphase.sensor import FUCCISASensor, get_fuccisa_default_sensor
 
 logger = logging.getLogger(__name__)
 
+TABULAR_SUFFIXES = {".csv", ".xlsx"}
 
-# ruff: noqa: C901
+
+def _read_table(path_str: str, description: str) -> pd.DataFrame:
+    """Read a CSV or XLSX table with consistent error handling."""
+    path = Path(path_str)
+    suffix = path.suffix.lower()
+
+    try:
+        if suffix == ".csv":
+            return pd.read_csv(path)
+        if suffix == ".xlsx":
+            return pd.read_excel(path)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"{description} not found: {path_str}") from None
+    except pd.errors.EmptyDataError:
+        raise ValueError(f"{description} is empty: {path_str}") from None
+    except (pd.errors.ParserError, ValueError) as err:
+        raise ValueError(f"Failed to parse {description} {path_str}: {err}") from None
+
+    raise ValueError(f"{description} must be a CSV or XLSX file.")
+
+
 def main_cli() -> None:
-    """Fucciphase CLI: Command-line entry point for FUCCIphase.
-
-    This function is invoked by the ``fucciphase`` console script and
-    implements the standard command-line workflow:
-
-    1. Parse command-line arguments describing:
-       - a TrackMate tracking file (XML or CSV),
-       - a reference cell-cycle trace in CSV format,
-       - an optional FUCCI sensor JSON file,
-       - the acquisition timestep and channel names.
-    2. Load the reference data and rename its fluorescence columns to
-       match the user-specified channel names.
-    3. Load and preprocess the tracking data using either
-       :func:`process_trackmate` (for XML) or
-       :func:`process_dataframe` (for CSV).
-    4. Estimate cell-cycle percentages for each track by subsequence
-       alignment against the reference trace.
-    5. Write the processed table to ``<tracking_file>_processed.csv`` in
-       the same directory as the input file.
-
-    The function is designed to be used from the command line and does
-    not return a value. It will raise a ``ValueError`` if the tracking
-    file does not have an XML or CSV extension.
-    """
+    """Command-line entry point for FUCCIphase."""
     logging.basicConfig(
         level=logging.INFO,
         format="%(levelname)s - %(name)s - %(message)s",
@@ -46,76 +43,68 @@ def main_cli() -> None:
 
     parser = argparse.ArgumentParser(
         prog="fucciphase",
-        description="FUCCIphase tool to estimate cell cycle phases and percentages.",
+        description="Estimate FUCCI cell-cycle phases and percentages.",
         epilog="Please report bugs and errors on GitHub.",
     )
 
-    # -------------- 1. Parse command-line arguments --------------
-    parser.add_argument("tracking_file", type=str, help="TrackMate XML or CSV file")
+    parser.add_argument(
+        "tracking_file",
+        type=str,
+        help="TrackMate XML or tabular CSV/XLSX file",
+    )
     parser.add_argument(
         "-ref",
         "--reference_file",
         type=str,
-        help="Reference cell cycle CSV file",
+        help="Reference cell cycle CSV or XLSX file",
         required=True,
     )
     parser.add_argument(
         "--sensor_file",
         type=str,
-        help="sensor file in JSON format "
-        "(can be skipped, then FUCCI SA sensor is used by default)",
+        help=(
+            "Sensor file in JSON format. If omitted, the default FUCCI SA sensor "
+            "is used."
+        ),
         default=None,
     )
     parser.add_argument(
-        "-dt", "--timestep", type=float, help="timestep in hours", required=True
+        "-dt",
+        "--timestep",
+        type=float,
+        help="Timestep in hours",
+        required=True,
     )
     parser.add_argument(
         "-m",
         "--magenta_channel",
         type=str,
-        help="Name of magenta channel in TrackMate file",
+        help="Name of the magenta channel in the input table",
         required=True,
     )
     parser.add_argument(
         "-c",
         "--cyan_channel",
         type=str,
-        help="Name of cyan channel in TrackMate file",
+        help="Name of the cyan channel in the input table",
         required=True,
     )
     parser.add_argument(
         "--generate_unique_tracks",
         action="store_true",
-        help="Split subtracks (TrackMate specific)",
+        help="Split TrackMate subtracks into unique tracks",
     )
 
     args = parser.parse_args()
-    # Decide where to store outputs (CSV and, for XML input, processed XML)
     output_dir = Path("outputs")
     output_dir.mkdir(exist_ok=True)
 
-    # ---------------- 2. Load and adapt the reference cell-cycle trace ----------------
-    try:
-        reference_df = pd.read_csv(args.reference_file)
-    except FileNotFoundError:
-        raise FileNotFoundError(
-            f"Reference file not found: {args.reference_file}"
-        ) from None
-    except pd.errors.EmptyDataError:
-        raise ValueError(f"Reference file is empty: {args.reference_file}") from None
-    except pd.errors.ParserError as e:
-        raise ValueError(
-            f"Failed to parse reference file {args.reference_file}: {e}"
-        ) from None
-
-    # The reference file is expected to contain 'cyan' and 'magenta' columns;
-    # they are renamed here to match the actual channel names in the data.
+    reference_df = _read_table(args.reference_file, "Reference file")
     reference_df.rename(
         columns={"cyan": args.cyan_channel, "magenta": args.magenta_channel},
         inplace=True,
     )
 
-    # ---------------- 3. Build the sensor model ----------------
     if args.sensor_file is not None:
         try:
             with open(args.sensor_file) as fp:
@@ -132,9 +121,10 @@ def main_cli() -> None:
     else:
         sensor = get_fuccisa_default_sensor()
 
-    # ---------------- 4. Load and preprocess the tracking data ----------------
-    if args.tracking_file.endswith(".xml"):
-        # XML: let process_trackmate handle I/O and preprocessing
+    tracking_path = Path(args.tracking_file)
+    tracking_suffix = tracking_path.suffix.lower()
+
+    if tracking_suffix == ".xml":
         df = process_trackmate(
             args.tracking_file,
             channels=[args.cyan_channel, args.magenta_channel],
@@ -143,20 +133,8 @@ def main_cli() -> None:
             generate_unique_tracks=args.generate_unique_tracks,
             output_dir=output_dir,
         )
-    elif args.tracking_file.endswith(".csv"):
-        # CSV: read the table and then run the processing pipeline on it
-        try:
-            df = pd.read_csv(args.tracking_file)
-        except FileNotFoundError:
-            raise FileNotFoundError(
-                f"Tracking file not found: {args.tracking_file}"
-            ) from None
-        except pd.errors.EmptyDataError:
-            raise ValueError(f"Tracking file is empty: {args.tracking_file}") from None
-        except pd.errors.ParserError as e:
-            raise ValueError(
-                f"Failed to parse tracking file {args.tracking_file}: {e}"
-            ) from None
+    elif tracking_suffix in TABULAR_SUFFIXES:
+        df = _read_table(args.tracking_file, "Tracking file")
         process_dataframe(
             df,
             channels=[args.cyan_channel, args.magenta_channel],
@@ -165,12 +143,11 @@ def main_cli() -> None:
             generate_unique_tracks=args.generate_unique_tracks,
         )
     else:
-        raise ValueError("Tracking file must be an XML or CSV file.")
+        raise ValueError("Tracking file must be an XML, CSV, or XLSX file.")
 
-    # ---------------- 5. Estimate cell-cycle percentages ----------------
-    track_id_name = "UNIQUE_TRACK_ID"
-    if not args.generate_unique_tracks:
-        track_id_name = "TRACK_ID"
+    track_id_name = "TRACK_ID"
+    if args.generate_unique_tracks and "UNIQUE_TRACK_ID" in df.columns:
+        track_id_name = "UNIQUE_TRACK_ID"
 
     estimate_percentage_by_subsequence_alignment(
         df,
@@ -179,10 +156,9 @@ def main_cli() -> None:
         reference_data=reference_df,
         track_id_name=track_id_name,
     )
-    # ---------------- 6. Save results ----------------
-    tracking_path = Path(args.tracking_file)
-    output_csv = output_dir / (tracking_path.stem + "_processed.csv")
+    output_csv = output_dir / f"{tracking_path.stem}_processed.csv"
     df.to_csv(output_csv, index=False)
+    logger.info("Wrote processed table to %s", output_csv)
 
 
 def main_visualization() -> None:
@@ -211,6 +187,8 @@ def main_visualization() -> None:
         import napari
     except ImportError as err:
         raise ImportError("Install napari.") from err
+
+    from fucciphase.napari import add_trackmate_data_to_viewer
 
     parser = argparse.ArgumentParser(
         prog="fucciphase-napari",
@@ -258,7 +236,7 @@ def main_visualization() -> None:
     # Try to read the video using AICSImage; fall back to bioio if needed
     AICSIMAGE = False
     try:
-        from aicsimageio import AICSImage
+        from aicsimageio import AICSImage  # type: ignore[attr-defined]
 
         AICSIMAGE = True
     except ImportError:

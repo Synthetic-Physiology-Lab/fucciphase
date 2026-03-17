@@ -1,4 +1,5 @@
-# Adding a new sensor
+Adding a new sensor
+====================
 
 Steps to add a new sensor.
 Here, for example, the PIP-FUCCI sensor (TODO insert citation).

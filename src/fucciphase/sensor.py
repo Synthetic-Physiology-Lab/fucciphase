@@ -99,7 +99,7 @@ class FUCCISensor(ABC):
     def set_accumulation_and_degradation_parameters(
         self, center: list[float], sigma: list[float]
     ) -> None:
-        """Pass list of functions for logistic functions.
+        """Pass list of parameters for logistic functions.
 
         Parameters
         ----------
@@ -189,7 +189,7 @@ class FUCCISASensor(FUCCISensor):
             return g1_perc
         return float(
             optimize.bisect(
-                accumulation_function,
+                accumulation_function,  # type: ignore[arg-type]
                 0.0,
                 g1_perc,
                 args=(self._center_values[0], self._sigma_values[0], intensity),
@@ -221,7 +221,7 @@ class FUCCISASensor(FUCCISensor):
             return g1_perc + g1s_perc
         return float(
             optimize.bisect(
-                degradation_function,
+                degradation_function,  # type: ignore[arg-type]
                 g1_perc,
                 g1_perc + g1s_perc,
                 args=(self._center_values[1], self._sigma_values[1], intensity),
@@ -269,7 +269,7 @@ class FUCCISASensor(FUCCISensor):
                 intensity = intensity - 2.0 * (intensity - final_level)  # type: ignore[assignment]
             return float(
                 optimize.bisect(
-                    accumulation_function,
+                    accumulation_function,  # type: ignore[arg-type]
                     g1_perc + g1s_perc,
                     100.0,
                     args=(self._center_values[2], self._sigma_values[2], intensity),
@@ -440,15 +440,6 @@ class PIPFUCCISensor(FUCCISensor):
             List of channel intensities for all fluorophores
         """
         raise NotImplementedError("Percentage estimate not yet implemented!")
-        if phase not in self.phases:
-            raise ValueError(f"Phase {phase} is not defined for this sensor.")
-        # TODO fill the following structure with life!
-        if phase == "G1":
-            return self._find_g1_percentage(intensities[0])
-        if phase == "S":
-            return self._find_s_percentage(intensities[0])
-        else:
-            return self._find_g2m_percentage(intensities[1])
 
     def get_expected_intensities(
         self, percentage: float | np.ndarray
