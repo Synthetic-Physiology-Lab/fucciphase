@@ -12,7 +12,10 @@ This folder contains the main example and tutorial material for FUCCIphase.
 3. `notebooks/`
    Jupyter notebooks for calibration, reconstruction, simulation, and figure
    generation.
-4. `example_data/`
+4. `HaCaTDeepFUCCI/`
+   Complete HaCaT DeepFUCCI pipeline with standalone processing and Napari
+   visualization scripts.
+5. `example_data/`
    Reference curves and saved sensor JSON files.
 
 ## Quick CLI example

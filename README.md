@@ -13,25 +13,18 @@ Repository: https://github.com/Synthetic-Physiology-Lab/fucciphase
 
 ## Background
 
-**FUCCI** (Fluorescent Ubiquitination-based Cell Cycle Indicator) is a
-genetically encoded, dual-colour reporter that makes cell-cycle progression
-visible under a fluorescence microscope. One fluorescent protein (typically
-shown in **magenta/red**) accumulates during **G1** phase and is degraded at
-the G1/S transition, while a second protein (typically shown in **cyan/green**)
-accumulates during **S/G2/M** and is degraded after mitosis. The overlap of
-both signals marks the **G1/S** transition window.
+**FUCCI** (Fluorescent Ubiquitination-based Cell Cycle Indicator) is a dual-color live-cell reporter
+that makes cell-cycle progression directly visible by fluorescence microscopy.
+In this system, the cyan signal marks cells in G1, while the magenta signal labels cells in S/G2/M.
+Nuclei showing both signals correspond to cells passing through the G1/S transition,
+providing an immediate visual readout of cell-cycle state.
 
-FUCCIphase takes time-lapse intensity traces — exported from
-[TrackMate](https://imagej.net/plugins/trackmate/) or provided as CSV/XLSX —
-and:
-
-1. **Normalises** the fluorescence channels,
-2. **Classifies** each time point into a discrete cell-cycle phase
-   (G1, G1/S, S/G2/M, or mitosis), and
-3. **Estimates** a continuous cell-cycle percentage (0–100 %) by aligning each
-   track to a reference curve using
-   [Dynamic Time Warping (DTW)](https://en.wikipedia.org/wiki/Dynamic_time_warping),
-   which accounts for natural variation in phase durations between cells.
+FUCCIphase is an open-source analysis tool for time-lapse data.
+It takes tracked nuclear fluorescence traces from [TrackMate](https://imagej.net/plugins/trackmate/) or compatible CSV/XLSX tables,
+and uses the cyan and magenta intensity profiles to assign FUCCI-defined cell-cycle states and
+to estimate a continuous cell-cycle percentage (0–100%). The percentage is obtained by aligning each track to
+a reference trajectory using subsequence alignment / DTW-based matching, allowing comparison of cells even when
+individual phase durations vary.
 
 ## Installation
 
@@ -57,7 +50,6 @@ Optional extras:
 ```bash
 pip install -e ".[jupyter]"
 pip install -e ".[napari]"
-pip install -e ".[test,dev,doc]"
 ```
 
 If you only want notebook support without a source install, a minimal setup is:
@@ -183,6 +175,7 @@ full reproducibility workflow, and then explore notebooks or your own data.
 
 - [`examples/cli_quickstart/`](examples/cli_quickstart): smallest CLI example with CSV/XLSX input, reference data, sensor parameters, and an expected output table
 - [`examples/reproducibility/`](examples/reproducibility): TrackMate XML workflow plus Napari visualization and preview media
+- [`examples/HaCaTDeepFUCCI/`](examples/HaCaTDeepFUCCI): complete HaCaT DeepFUCCI pipeline with standalone processing and Napari visualization scripts
 - [`examples/notebooks/`](examples/notebooks): Jupyter notebooks for calibration, reconstruction, simulation, and figure generation
 - [`examples/example_data/`](examples/example_data): reference curves and saved sensor JSON files for calibration and testing
 
