@@ -26,10 +26,52 @@ to estimate a continuous cell-cycle percentage (0–100%). The percentage is obt
 a reference trajectory using subsequence alignment / DTW-based matching, allowing comparison of cells even when
 individual phase durations vary.
 
+## System Requirements
+
+```fucciphase``` is implemented in Python and supports Python `>=3.10`.
+
+Tested Python versions: Python 3.11.15
+
+Core Python dependencies are defined in `pyproject.toml` and include:
+```bash
+scipy
+numpy
+pandas
+openpyxl
+matplotlib
+dtaidistance
+monotonic-derivative
+svgwrite
+LineageTree (<1.5.0)
+```
+Optional extras:
+```
+`napari`, `bioio`, `bioio-ome-tiff`, `bioio-tifffile` for visualization
+`jupyter` for notebooks
+`pytest`, `pytest-cov` for testing
+`sphinx` for documentation
+```
+
+```fucciphase``` package was tested on the following system:
+
+- Operating System: Windows 10 Pro (version 22H2, OS build 19045)
+- Architecture: 64-bit
+- Processor: Intel CPU (~3.7 GHz)
+- RAM: 32 GB
+
+Non-standard hardware requirements:
+- No non-standard hardware is required for the core CLI workflow.
+- A GPU is not required.
+- For Napari visualization of large OME-TIFF files, higher RAM may be helpful.
+
 ## Installation
 
 A virtual environment is recommended. You can install FUCCIphase either from
 PyPI or from source.
+
+Typical installation time on a standard desktop or laptop computer:
+- PyPI install: a few seconds
+- Source install with optional extras: > 5 minutes
 
 Install from PyPI:
 
@@ -69,7 +111,7 @@ The smallest runnable example is in
 - a sensor JSON file
 - an expected processed output table
 
-Run the CSV example from the repository root:
+Run the CSV example from the repository root (expected runtime for the demo < 1 minute):
 
 ```bash
 fucciphase examples/cli_quickstart/tiny_tracks.csv \
@@ -175,7 +217,6 @@ full reproducibility workflow, and then explore notebooks or your own data.
 
 - [`examples/cli_quickstart/`](examples/cli_quickstart): smallest CLI example with CSV/XLSX input, reference data, sensor parameters, and an expected output table
 - [`examples/reproducibility/`](examples/reproducibility): TrackMate XML workflow plus Napari visualization and preview media
-- [`examples/HaCaTDeepFUCCI/`](examples/HaCaTDeepFUCCI): complete HaCaT DeepFUCCI pipeline with standalone processing and Napari visualization scripts
 - [`examples/notebooks/`](examples/notebooks): Jupyter notebooks for calibration, reconstruction, simulation, and figure generation
 - [`examples/example_data/`](examples/example_data): reference curves and saved sensor JSON files for calibration and testing
 
