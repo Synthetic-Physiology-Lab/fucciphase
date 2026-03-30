@@ -46,7 +46,7 @@ LineageTree (<1.5.0)
 ```
 Optional extras:
 ```
-`napari`, `bioio`, `bioio-ome-tiff`, `bioio-tifffile` for visualization
+`napari`, `pyqt6`, `bioio`, `bioio-ome-tiff`, `bioio-tifffile` for visualization
 `jupyter` for notebooks
 `pytest`, `pytest-cov` for testing
 `sphinx` for documentation
@@ -92,6 +92,14 @@ Optional extras:
 ```bash
 pip install -e ".[jupyter]"
 pip install -e ".[napari]"
+```
+
+The `napari` extra includes `PyQt6`, so the viewer is launchable after the
+install. If you prefer conda-managed Qt inside a conda environment, install
+`pyqt6` with conda instead:
+
+```bash
+conda install -c conda-forge pyqt6
 ```
 
 If you only want notebook support without a source install, a minimal setup is:

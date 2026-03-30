@@ -1,4 +1,5 @@
 import argparse
+import importlib.util
 import json
 import logging
 from pathlib import Path
@@ -12,6 +13,28 @@ from fucciphase.sensor import FUCCISASensor, get_fuccisa_default_sensor
 logger = logging.getLogger(__name__)
 
 TABULAR_SUFFIXES = {".csv", ".xlsx"}
+QT_BINDING_MODULES = ("PyQt6", "PyQt5", "PySide6")
+
+
+def _import_napari_with_qt():
+    """Import napari and verify that at least one Qt binding is installed."""
+    try:
+        import napari
+    except ImportError as err:
+        raise ImportError(
+            'Napari is not installed. Install visualization support with '
+            '`pip install -e ".[napari]"`.'
+        ) from err
+
+    if not any(importlib.util.find_spec(name) is not None for name in QT_BINDING_MODULES):
+        raise ImportError(
+            "No Qt bindings were found for napari. Reinstall visualization "
+            'support with `pip install -e ".[napari]"`, or install `pyqt6` '
+            "or `pyside6` explicitly. In a conda environment, "
+            "`conda install -c conda-forge pyqt6` also works."
+        )
+
+    return napari
 
 
 def _read_table(path_str: str, description: str) -> pd.DataFrame:
@@ -183,10 +206,7 @@ def main_visualization() -> None:
         format="%(levelname)s - %(name)s - %(message)s",
     )
 
-    try:
-        import napari
-    except ImportError as err:
-        raise ImportError("Install napari.") from err
+    napari = _import_napari_with_qt()
 
     from fucciphase.napari import add_trackmate_data_to_viewer
 

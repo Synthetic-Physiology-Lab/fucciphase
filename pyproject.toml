@@ -56,7 +56,7 @@ dev = [
     "pre-commit",
 ]
 
-napari  = ["napari", "bioio", "bioio-ome-tiff", "bioio-tifffile"]
+napari  = ["napari", "pyqt6", "bioio", "bioio-ome-tiff", "bioio-tifffile"]
 
 jupyter = ["jupyter"]
 

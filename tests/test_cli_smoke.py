@@ -5,13 +5,20 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
-
-from fucciphase.utils import simulate_single_track
+import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+SRC_ROOT = REPO_ROOT / "src"
+if str(SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(SRC_ROOT))
+
+from fucciphase.main_cli import _import_napari_with_qt
+from fucciphase.utils import simulate_single_track
+
 EXAMPLE_DIR = REPO_ROOT / "examples" / "cli_quickstart"
 SENSOR_DICT = {
     "phase_percentages": [33.3, 33.3, 33.4],
@@ -149,3 +156,15 @@ def test_pyproject_includes_small_example_assets_for_wheel() -> None:
     assert "[tool.hatch.build.targets.wheel.force-include]" in pyproject_text
     assert "examples/cli_quickstart" in pyproject_text
     assert "fucciphase/data/cli_quickstart" in pyproject_text
+    assert 'napari  = ["napari", "pyqt6"' in pyproject_text
+
+
+def test_napari_import_requires_qt_bindings(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setitem(sys.modules, "napari", SimpleNamespace())
+    monkeypatch.setattr(
+        "fucciphase.main_cli.importlib.util.find_spec",
+        lambda name: None if name in {"PyQt6", "PyQt5", "PySide6"} else object(),
+    )
+
+    with pytest.raises(ImportError, match="No Qt bindings were found for napari"):
+        _import_napari_with_qt()
