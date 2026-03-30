@@ -57,9 +57,7 @@ The TrackMate XML stores an absolute `folder` path inside `<ImageData>`.
 FUCCIphase ignores this field during processing, so you do not need to edit it
 to run this example.
 
-If `fucciphase-napari` reports missing Qt bindings, reinstall the visualization
-extra with `pip install -e ".[napari]"`. In a conda environment, you can also
-run `conda install -c conda-forge pyqt6`.
+Remember to install the visualization extra with `pip install -e ".[napari]"`.
 
 ```bash
 fucciphase-napari outputs/merged_linked.ome_processed.csv \
