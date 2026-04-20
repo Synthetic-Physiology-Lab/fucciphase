@@ -13,10 +13,10 @@ The pipeline consists of two main steps:
 
 | File | Description |
 |------|-------------|
-| `2.nd2` | Raw microscopy image (ND2 format, multi-channel time-lapse) |
+| `2.nd2` | Raw microscopy image (ND2 format, multi-channel time-lapse) — **not distributed (1.8 GB)**; use `downscaled_hacat_100x.ome.tif` with `visualize_napari_ometiff.py` instead |
 | `downscaled_hacat_100x.ome.tif` | Downscaled image (9x smaller, OME-TIFF format) |
 | `merged.ome.xml` | TrackMate tracking data (XML format) |
-| `stardist_labels_3_channel.tif` | Segmentation labels from StarDist |
+| `stardist_labels_3_channel.tif` | Segmentation labels from StarDist (uint8, deflate-compressed) |
 | `../example_data/fuccisa_hacat.json` | Sensor configuration for HaCaT cells |
 | `../example_data/hacat_fucciphase_reference.csv` | Reference curve for DTW alignment |
 
