@@ -9,7 +9,7 @@ SRC_ROOT = REPO_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
-from fucciphase.utils import simulate_single_track
+from fucciphase.utils import simulate_single_track  # noqa: E402
 
 
 @pytest.fixture

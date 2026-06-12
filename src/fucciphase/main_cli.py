@@ -3,6 +3,7 @@ import importlib.util
 import json
 import logging
 from pathlib import Path
+from types import ModuleType
 
 import pandas as pd
 
@@ -16,17 +17,19 @@ TABULAR_SUFFIXES = {".csv", ".xlsx"}
 QT_BINDING_MODULES = ("PyQt6", "PyQt5", "PySide6")
 
 
-def _import_napari_with_qt():
+def _import_napari_with_qt() -> ModuleType:
     """Import napari and verify that at least one Qt binding is installed."""
     try:
         import napari
     except ImportError as err:
         raise ImportError(
-            'Napari is not installed. Install visualization support with '
+            "Napari is not installed. Install visualization support with "
             '`pip install -e ".[napari]"`.'
         ) from err
 
-    if not any(importlib.util.find_spec(name) is not None for name in QT_BINDING_MODULES):
+    if not any(
+        importlib.util.find_spec(name) is not None for name in QT_BINDING_MODULES
+    ):
         raise ImportError(
             "No Qt bindings were found for napari. Reinstall visualization "
             'support with `pip install -e ".[napari]"`, or install `pyqt6` '
@@ -34,7 +37,8 @@ def _import_napari_with_qt():
             "`conda install -c conda-forge pyqt6` also works."
         )
 
-    return napari
+    napari_module: ModuleType = napari
+    return napari_module
 
 
 def _read_table(path_str: str, description: str) -> pd.DataFrame:
@@ -256,7 +260,7 @@ def main_visualization() -> None:
     # Try to read the video using AICSImage; fall back to bioio if needed
     AICSIMAGE = False
     try:
-        from aicsimageio import AICSImage  # type: ignore[attr-defined]
+        from aicsimageio import AICSImage
 
         AICSIMAGE = True
     except ImportError:

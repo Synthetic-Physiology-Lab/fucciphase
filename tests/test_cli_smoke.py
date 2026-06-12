@@ -16,8 +16,8 @@ SRC_ROOT = REPO_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
-from fucciphase.main_cli import _import_napari_with_qt
-from fucciphase.utils import simulate_single_track
+from fucciphase.main_cli import _import_napari_with_qt  # noqa: E402
+from fucciphase.utils import simulate_single_track  # noqa: E402
 
 EXAMPLE_DIR = REPO_ROOT / "examples" / "cli_quickstart"
 SENSOR_DICT = {

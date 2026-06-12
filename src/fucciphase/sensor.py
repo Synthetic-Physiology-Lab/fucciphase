@@ -189,7 +189,7 @@ class FUCCISASensor(FUCCISensor):
             return g1_perc
         return float(
             optimize.bisect(
-                accumulation_function,  # type: ignore[arg-type]
+                accumulation_function,
                 0.0,
                 g1_perc,
                 args=(self._center_values[0], self._sigma_values[0], intensity),
@@ -221,7 +221,7 @@ class FUCCISASensor(FUCCISensor):
             return g1_perc + g1s_perc
         return float(
             optimize.bisect(
-                degradation_function,  # type: ignore[arg-type]
+                degradation_function,
                 g1_perc,
                 g1_perc + g1s_perc,
                 args=(self._center_values[1], self._sigma_values[1], intensity),
@@ -269,7 +269,7 @@ class FUCCISASensor(FUCCISensor):
                 intensity = intensity - 2.0 * (intensity - final_level)  # type: ignore[assignment]
             return float(
                 optimize.bisect(
-                    accumulation_function,  # type: ignore[arg-type]
+                    accumulation_function,
                     g1_perc + g1s_perc,
                     100.0,
                     args=(self._center_values[2], self._sigma_values[2], intensity),
