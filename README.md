@@ -7,180 +7,291 @@
 [![codecov](https://codecov.io/gh/Synthetic-Physiology-Lab/fucciphase/branch/main/graph/badge.svg)](https://codecov.io/gh/Synthetic-Physiology-Lab/fucciphase)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Synthetic-Physiology-Lab/fucciphase/main.svg)](https://results.pre-commit.ci/latest/github/Synthetic-Physiology-Lab/fucciphase/main)
 
-FUCCI cell cycle analysis plugin. Obtain cell cycle information from FUCCI fluorescence intensities.
+FUCCIphase is open-source software for estimating cell-cycle phase and
+cell-cycle percentage from FUCCI fluorescence intensities.
+Repository: https://github.com/Synthetic-Physiology-Lab/fucciphase
+
+## Background
+
+**FUCCI** (Fluorescent Ubiquitination-based Cell Cycle Indicator) is a dual-color live-cell reporter
+that makes cell-cycle progression directly visible by fluorescence microscopy.
+In this system, the cyan signal marks cells in G1, while the magenta signal labels cells in S/G2/M.
+Nuclei showing both signals correspond to cells passing through the G1/S transition,
+providing an immediate visual readout of cell-cycle state.
+
+FUCCIphase is an open-source analysis tool for time-lapse data.
+It takes tracked nuclear fluorescence traces from [TrackMate](https://imagej.net/plugins/trackmate/) or compatible CSV/XLSX tables,
+and uses the cyan and magenta intensity profiles to assign FUCCI-defined cell-cycle states and
+to estimate a continuous cell-cycle percentage (0–100%). The percentage is obtained by aligning each track to
+a reference trajectory using subsequence alignment / DTW-based matching, allowing comparison of cells even when
+individual phase durations vary.
+
+## System Requirements
+
+```fucciphase``` is implemented in Python and supports Python `>=3.10`.
+
+Tested Python versions: Python 3.11.15
+
+Core Python dependencies are defined in `pyproject.toml` and include:
+```bash
+scipy
+numpy
+pandas
+openpyxl
+matplotlib
+dtaidistance
+monotonic-derivative
+svgwrite
+LineageTree (<1.5.0)
+```
+Optional extras:
+```
+`napari`, `pyqt6`, `bioio`, `bioio-ome-tiff`, `bioio-tifffile` for visualization
+`jupyter` for notebooks
+`pytest`, `pytest-cov` for testing
+`sphinx` for documentation
+```
+
+```fucciphase``` package was tested on the following system:
+
+- Operating System: Windows 10 Pro (version 22H2, OS build 19045)
+- Architecture: 64-bit
+- Processor: Intel CPU (~3.7 GHz)
+- RAM: 32 GB
+
+Non-standard hardware requirements:
+- No non-standard hardware is required for the core CLI workflow.
+- A GPU is not required.
+- For Napari visualization of large OME-TIFF files, higher RAM may be helpful.
 
 ## Installation
-The best way to run fucciphase is to install it in a virtual conda environment.
-Make sure that git is installed and can be called from the command line.
 
-To install from pip:
+A virtual environment is recommended. You can install FUCCIphase either from
+PyPI or from source.
+
+Typical installation time on a standard desktop or laptop computer:
+- PyPI install: a few seconds
+- Source install with optional extras: > 5 minutes
+
+Install from PyPI:
 
 ```bash
 pip install fucciphase
 ```
 
-If you wish to install it from source:
-    
+Install from source:
+
 ```bash
 git clone https://github.com/Synthetic-Physiology-Lab/fucciphase
 cd fucciphase
 pip install -e .
 ```
 
-The installation should not take longer than a few seconds (depending on your internet connection).
+Optional extras:
 
-A minimal environment for running the [notebooks](examples/notebooks) can be set up with:
+```bash
+pip install -e ".[jupyter]"
+pip install -e ".[napari]"
+```
+
+The `napari` extra includes `PyQt6`, so the viewer is launchable after the
+install. If you prefer conda-managed Qt inside a conda environment, install
+`pyqt6` with conda instead:
+
+```bash
+conda install -c conda-forge pyqt6
+```
+
+If you only want notebook support without a source install, a minimal setup is:
 
 ```bash
 pip install fucciphase jupyter matplotlib pandas
-````
-
-### Install Napari + movie reading support (optional)
-
-FUCCIphase does not install Napari by default. For .ome.tif visualisation, install:
-```bash
-pip install napari bioio bioio-ome-tiff bioio-tifffile
-```
-or, if installing from source with extras:
-```bash
-pip install -e ".[napari]"
-```
----
-## What’s Inside This Repository
-
-This repository is organized to support both **analysis workflows** and **reproducible usage examples** of FUCCIphase.
-If you're new to the tool, this is where to start.
-
-### 1 — `examples/notebooks/` [📁 notebooks](examples/notebooks)
-
-Interactive Jupyter workflows demonstrating how to use FUCCIphase in practical scenarios.
-
-| Notebook                           | Purpose                                                        |
-| ---------------------------------- |----------------------------------------------------------------|
-| `extract_calibration_data.ipynb`   | Convert raw movies + TrackMate XML into FUCCI reference curves |
-| `sensor_calibration.ipynb`         | Build a FUCCI sensor model from calibration traces             |
-| `getting_started.ipynb`            | Minimal end-to-end example of FUCCIphase usage                 |
-| `example_estimated.ipynb`          | Visualize fucciphase output tables                             |
-| `percentage_reconstruction.ipynb`  | Smooth and reconstruct %phase trajectories                     |
-| `example_reconstruction.ipynb`     | Recover incomplete/noisy fluorescence traces                   |
-| `example_simulated.ipynb`          | Generate synthetic FUCCI signals for testing                   |
-| `color-tails-by-percentage.ipynb`  | Visualize population-level phase composition                   |
-| `explanation-dtw-alignment.ipynb`  | How DTW alignment works internally                             |
-| `phaselocking-workflow-lazy.ipynb` | Scalable phase-locking for large datasets                      |
----
-
-### 2 — `examples/reproducibility/` [📁 reproducibility](examples/reproducibility)
-
-This is a minimal workflow that uses the sample data. Navigate to the reproducibility directory, then run the following command in one step:
-
-```bash
-fucciphase inputs/merged_linked.ome.xml `
-          -ref ../example_data/hacat_fucciphase_reference.csv `
-          -dt 0.25 `
-          -m MEAN_INTENSITY_CH1 `
-          -c MEAN_INTENSITY_CH2 `
-          --generate_unique_tracks true `
-```
-and to visualize results in napari:
-
-```bash
-fucciphase-napari outputs/merged_linked.ome_processed.csv inputs/downscaled_hacat.ome.tif -m 0 -c 1 -s 2 --pixel_size 0.544
 ```
 
-Below a preview of the output generated by the reproducibility workflow:
+## Quick CLI start
 
-[![Preview of the video](examples/reproducibility/outputs/thumbnail.png)](outputs/video_downscaled_hacat.mp4)
+The smallest runnable example is in
+[`examples/cli_quickstart/`](examples/cli_quickstart). It includes:
 
----
+- a small CSV input table
+- the same table as `.xlsx`
+- a reference curve
+- a sensor JSON file
+- an expected processed output table
 
-### 3 — `examples/example_data/` [📁 example_data](examples/example_data)
+Run the CSV example from the repository root (expected runtime for the demo < 1 minute):
 
-Reference-style FUCCI datasets used for **calibration & sensor building**.
+```bash
+fucciphase examples/cli_quickstart/tiny_tracks.csv \
+    -ref examples/cli_quickstart/tiny_reference.csv \
+    --sensor_file examples/cli_quickstart/tiny_sensor.json \
+    -dt 0.48 \
+    -m MEAN_INTENSITY_CH4 \
+    -c MEAN_INTENSITY_CH3
+```
 
-Includes:
+This writes:
 
-| File               | Meaning                                           |
-| ------------------ | ------------------------------------------------- |
-| `*_reference.csv`  | FUCCI calibration traces used to learn the sensor |
-| `*.json`           | Saved sensor models usable via CLI or notebooks   |
+```text
+outputs/tiny_tracks_processed.csv
+```
 
-Use this folder if you want to train your own sensor or understand expected input format.
+Compare the generated table against:
 
----
-## Basic usage
+```text
+examples/cli_quickstart/tiny_tracks_expected_output.csv
+```
 
-Fucci phase currently supports loading a 
-[TrackMate](https://imagej.net/plugins/trackmate/) XML file:
+The same workflow also works with:
+
+```text
+examples/cli_quickstart/tiny_tracks.xlsx
+```
+
+## Full TrackMate workflow
+
+For a larger end-to-end example based on TrackMate XML and Napari visualization,
+see [`examples/reproducibility/`](examples/reproducibility).
+
+That workflow uses:
+
+- `inputs/merged_linked.ome.xml`
+- `inputs/hacat_fucciphase_reference.csv`
+- `inputs/downscaled_hacat.ome.tif`
+
+Run it from `examples/reproducibility/`:
+
+```bash
+fucciphase inputs/merged_linked.ome.xml \
+    -ref inputs/hacat_fucciphase_reference.csv \
+    -dt 0.25 \
+    -m MEAN_INTENSITY_CH1 \
+    -c MEAN_INTENSITY_CH2 \
+    --generate_unique_tracks
+```
+
+This generates:
+
+```text
+outputs/merged_linked.ome_processed.csv
+outputs/merged_linked.ome_processed.xml
+```
+
+Visualize the result in Napari:
+
+```bash
+fucciphase-napari outputs/merged_linked.ome_processed.csv \
+    inputs/downscaled_hacat.ome.tif \
+    -m 0 -c 1 -s 2 --pixel_size 0.544
+```
+
+Preview media are committed in the repository, while the processed CSV/XML files
+are generated when you run the walkthrough.
+
+[![Preview of the video](examples/reproducibility/outputs/thumbnail.png)](examples/reproducibility/outputs/video_downscaled_hacat.mp4)
+
+## Python API
+
+Use `process_trackmate` for TrackMate XML:
 
 ```python
 from fucciphase import process_trackmate
-from fucciphase.sensor import get_fuccisa_default_sensor
+from fucciphase.sensor import FUCCISASensor
 
-trackmate_xml = "path/to/trackmate.xml"
-channel1 = "MEAN_INTENSITY_CH3"
-channel2 = "MEAN_INTENSITY_CH4"
+sensor = FUCCISASensor(
+    phase_percentages=[33.3, 33.3, 33.4],
+    center=[20.0, 55.0, 70.0, 95.0],
+    sigma=[5.0, 5.0, 10.0, 1.0],
+)
 
-sensor = get_fuccisa_default_sensor()
-
-df = process_trackmate(trackmate_xml,
-                       channels=[channel1, channel2],
-		       sensor=sensor,
-                       thresholds=[0.1, 0.1])
-print(df)
+df = process_trackmate(
+    "path/to/trackmate.xml",
+    channels=["MEAN_INTENSITY_CH1", "MEAN_INTENSITY_CH2"],
+    sensor=sensor,
+    thresholds=[0.1, 0.1],
+)
+print(df[["TRACK_ID", "CELL_CYCLE_PERC_DTW"]].head())
 ```
-The TrackMate XML is converted to a [Pandas](https://pandas.pydata.org/) DataFrame.
-Thus, in general data (e.g., stored in a CSV or XLSX file) that can be parsed into
-a DataFrame is supported.
 
-The runtime of the scripts depends on your datasize. 2D samples with a few hundred to a few thousand cells
-can be processed in a few minutes. Visualization in Napari can take a bit longer.
-Standard processing does not require a powerful computer.
-Make sure that you have sufficient RAM to load videos for visualization in Napari.
+Use `process_dataframe` for tabular CSV/XLSX data that you have already loaded
+into a pandas DataFrame.
 
-### Using your own data
+## What's inside this repository
+
+The repository is organized so you can start with a minimal example, move to a
+full reproducibility workflow, and then explore notebooks or your own data.
+
+### Main example and data folders
+
+- [`examples/cli_quickstart/`](examples/cli_quickstart): smallest CLI example with CSV/XLSX input, reference data, sensor parameters, and an expected output table
+- [`examples/reproducibility/`](examples/reproducibility): TrackMate XML workflow plus Napari visualization and preview media
+- [`examples/notebooks/`](examples/notebooks): Jupyter notebooks for calibration, reconstruction, simulation, and figure generation
+- [`examples/example_data/`](examples/example_data): reference curves and saved sensor JSON files for calibration and testing
+
+### Selected notebooks
+
+| Notebook | Purpose |
+| --- | --- |
+| `getting_started.ipynb` | Minimal end-to-end usage example |
+| `extract_calibration_data.ipynb` | Build reference curves from movies and TrackMate XML |
+| `sensor_calibration.ipynb` | Build or inspect FUCCI sensor models |
+| `example_estimated.ipynb` | Explore processed output tables |
+| `percentage_reconstruction.ipynb` | Smooth and reconstruct phase-percentage trajectories |
+| `example_reconstruction.ipynb` | Recover incomplete or noisy fluorescence traces |
+| `example_simulated.ipynb` | Generate synthetic FUCCI signals for testing |
+| `signal_mode_comparison.ipynb` | Compare alternative signal modes for DTW-based phase alignment |
+| `color-tails-by-percentage.ipynb` | Visualize population-level phase composition |
+| `explanation-dtw-alignment.ipynb` | Explain the DTW alignment used internally |
+| `phaselocking-workflow-lazy.ipynb` | Scalable phase-locking workflow for larger datasets |
+
+For notebook-specific notes, see
+[`examples/notebooks/README.md`](examples/notebooks/README.md). For a higher
+level guide to the example folders, see [`examples/README.md`](examples/README.md).
+
+### Source, tests, and docs
+
+- [`src/fucciphase/`](src/fucciphase): library code and CLI entry points
+- [`tests/`](tests): automated test suite
+- [`doc/`](doc): Sphinx documentation sources
+
+## Using your own data
 
 To process your own dataset:
 
-1. Export tracking from Fiji/TrackMate as `.xml`
+1. Export tracking from Fiji/TrackMate as `.xml`, or provide a tabular
+   `.csv`/`.xlsx` file that can be loaded into a pandas DataFrame.
+2. Build a reference CSV or XLSX file containing at least one full cell cycle.
+   The expected columns are:
 
-
-2. Build a reference CSV (minimum one full cell cycle):
-
+   ```text
+   percentage,time,cyan,magenta
    ```
-   percentage, time, cyan, magenta
-   ```
-   For reference, check the example files available in the `example_data` folder.
 
-
-3. Run:
+   For examples, see the files in [`examples/example_data/`](examples/example_data).
+3. Run FUCCIphase:
 
    ```bash
-   fucciphase your_tracks.xml -ref your_reference.csv -dt <your timestep> -m <ch1> -c <ch2>
+   fucciphase your_tracks.xml -ref your_reference.csv -dt <your_timestep> -m <magenta_channel> -c <cyan_channel>
    ```
-4. Visualize with:
+
+4. If you have an OME-TIFF video and segmentation masks, visualize the result:
 
    ```bash
-   fucciphase-napari your_tracks_processed.csv your_video.ome.tif -m <ch1> -c <ch2> -s <mask>
+   fucciphase-napari your_tracks_processed.csv your_video.ome.tif -m <magenta_index> -c <cyan_index> -s <mask_index>
    ```
 
----
+Runtime depends on data size. Standard processing usually runs comfortably on a
+typical workstation, while Napari visualization may require more RAM to load
+larger videos.
+
 ## Development
-
-To develop fucciphase, clone the repository, install fucciphase in your environment
-and install the pre-commit hooks:
 
 ```bash
 git clone https://github.com/Synthetic-Physiology-Lab/fucciphase
 cd fucciphase
-pip install -e ".[test, dev]"
+pip install -e ".[test,dev,doc]"
 pre-commit install
 ```
-
-If you want to build the documentation, replace the abovementioned pip install by:
-```bash
-pip install -e ".[test, dev, doc]"
-```
----
 
 ## Cite us
 

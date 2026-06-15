@@ -28,7 +28,7 @@ def get_feature_value_at_frame(
     ValueError
         If zero or multiple rows match the requested label.
     """
-    value = labels[labels[label_name] == label, feature].to_numpy()
+    value = labels.loc[labels[label_name] == label, feature].to_numpy()
     if len(value) == 0:
         raise ValueError(f"No rows match label '{label}' in column '{label_name}'.")
     if len(value) > 1:
@@ -104,23 +104,25 @@ def prepare_penalty_df(
         if i == len(frames) - 1:
             continue
         next_frame = frames[i + 1]
-        labels = df.loc[df[frame_name] == frame, label_name]
-        next_labels = df.loc[df[frame_name] == next_frame, label_name]
+        frame_df = df.loc[df[frame_name] == frame]
+        next_frame_df = df.loc[df[frame_name] == next_frame]
+        labels = frame_df[label_name]
+        next_labels = next_frame_df[label_name]
         for label in labels:
             if label == 0:
                 continue
             # get index where frame + label
-            value1 = get_feature_value_at_frame(labels, label_name, label, feature_1)
-            value2 = get_feature_value_at_frame(labels, label_name, label, feature_2)
-            for next_label in labels:
+            value1 = get_feature_value_at_frame(frame_df, label_name, label, feature_1)
+            value2 = get_feature_value_at_frame(frame_df, label_name, label, feature_2)
+            for next_label in next_labels:
                 if next_label == 0:
                     continue
 
                 next_value1 = get_feature_value_at_frame(
-                    next_labels, label_name, label, feature_1
+                    next_frame_df, label_name, next_label, feature_1
                 )
                 next_value2 = get_feature_value_at_frame(
-                    next_labels, label_name, label, feature_2
+                    next_frame_df, label_name, next_label, feature_2
                 )
                 penalty = (
                     3.0 * weight * abs(value1 - next_value1) / (value1 + next_value1)

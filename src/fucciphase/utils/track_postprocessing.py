@@ -40,7 +40,7 @@ def split_track(
         raise ValueError(f"{track_id_name} column is missing.")
     magenta = track[sg2m_channel]
     # get minima of magenta
-    peaks, _ = signal.find_peaks(1.0 / magenta, distance=distance)
+    peaks, _ = signal.find_peaks((1.0 / magenta).to_numpy(), distance=distance)
     magenta_background = magenta.min()
     # filter peaks
     peaks_to_use = []
@@ -293,6 +293,7 @@ def plot_trackscheme(
     """
     cmap_name = "cool"
     cmap = colormaps.get(cmap_name)
+    assert cmap is not None, f"Colormap '{cmap_name}' not found"
     plt.figure(figsize=figsize)
     for track_id in df[track_id_name]:
         track = df.loc[df[track_id_name] == track_id, time_id]
@@ -308,7 +309,7 @@ def plot_trackscheme(
     sc.set_cmap(cmap_name)
 
     cbar = plt.colorbar(ticks=[0, 0.5, 1], location="top")
-    cbar.ax.set_xticklabels([0, 50, 100])
+    cbar.ax.set_xticklabels(["0", "50", "100"])
     return
 
 
@@ -341,12 +342,12 @@ def split_trackmate_tracks(
     # pattern to identify subtracks
     regex = r"Track_[0-9]+\.[a-z]+"
     subtracks = df.loc[df[label_id_name].str.contains(regex), label_id_name].unique()
-    subtracks = sorted(subtracks)
+    subtracks_sorted = sorted(subtracks)
 
     mapping_of_subtracks = {}
     max_track = df[track_id_name].max() + 1
 
-    for subtrack in subtracks:
+    for subtrack in subtracks_sorted:
         mapping_of_subtracks[subtrack] = max_track
         max_track += 1
 
@@ -354,7 +355,7 @@ def split_trackmate_tracks(
     new_track_ids = subtrack_series.transform(lambda x: mapping_of_subtracks[x])
 
     df.loc[:, "UNIQUE_TRACK_ID"] = df[track_id_name].copy()
-    df["UNIQUE_TRACK_ID"].update(new_track_ids)
+    df.loc[new_track_ids.index, "UNIQUE_TRACK_ID"] = new_track_ids
     return
 
 
@@ -394,6 +395,7 @@ def export_lineage_tree_to_svg(
     lt = lineageTree(trackmate_file, file_type="TrackMate")
     cmap_name = "cool"
     cmap = colormaps.get(cmap_name)
+    assert cmap is not None, f"Colormap '{cmap_name}' not found"
 
     # filter spots that are not part of a track
     for track in lt.all_tracks:
@@ -424,14 +426,14 @@ def export_lineage_tree_to_svg(
                 color = df.loc[df["ID"].astype(int) == id, "DISCRETE_PHASE_MAX"].values
                 if len(color) == 0:
                     raise ValueError("ID not in track")
-                color = color[0]
-                if color == "G1":
-                    color = 0.0
-                elif color == "G1/S":
-                    color = 0.4
+                phase = color[0]
+                if phase == "G1":
+                    color_val: float = 0.0
+                elif phase == "G1/S":
+                    color_val = 0.4
                 else:
-                    color = 1.0
-                rgba_value = cmap(color)
+                    color_val = 1.0
+                rgba_value = cmap(color_val)
                 return (255 * rgba_value[0], 255 * rgba_value[1], 255 * rgba_value[2])
 
         else:

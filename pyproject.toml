@@ -8,6 +8,7 @@ build-backend = "hatchling.build"
 # https://hatch.pypa.io/latest/config/metadata/
 [tool.hatch.version]
 source = "vcs"
+fallback-version = "0.0.5.dev0"
 
 # https://peps.python.org/pep-0621/
 [project]
@@ -33,7 +34,7 @@ dependencies = [
     "scipy",
     "numpy",
     "pandas",
-    "openpyxl",   # needed to read csv
+    "openpyxl",   # needed to read xlsx
     "matplotlib",
     "dtaidistance",
     "monotonic-derivative",
@@ -55,15 +56,15 @@ dev = [
     "pre-commit",
 ]
 
-napari  = ["napari", "bioio", "bioio-ome-tiff", "bioio-tifffile"]
+napari  = ["napari", "pyqt6", "bioio", "bioio-ome-tiff", "bioio-tifffile"]
 
 jupyter = ["jupyter"]
 
 doc = ["sphinx"]
 
 [project.urls]
-homepage = "https://github.com/nobias-ht/fucciphase"
-repository = "https://github.com/nobias-ht/fucciphase"
+homepage = "https://github.com/Synthetic-Physiology-Lab/fucciphase"
+repository = "https://github.com/Synthetic-Physiology-Lab/fucciphase"
 
 # Entry points
 # https://peps.python.org/pep-0621/#entry-points
@@ -71,6 +72,12 @@ repository = "https://github.com/nobias-ht/fucciphase"
 [project.scripts]
 fucciphase = "fucciphase.main_cli:main_cli"
 fucciphase-napari = "fucciphase.main_cli:main_visualization"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fucciphase"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"examples/cli_quickstart" = "fucciphase/data/cli_quickstart"
 
 # [project.entry-points."some.group"]
 # tomatoes = "fucciphase:main_tomatoes"
@@ -122,10 +129,23 @@ disallow_subclassing_any = false
 show_error_codes = true
 pretty = true
 
-# # module specific overrides
-# [[tool.mypy.overrides]]
-# module = ["numpy.*",]
-# ignore_errors = true
+# module specific overrides for third-party libraries without stubs
+[[tool.mypy.overrides]]
+module = [
+    "dtaidistance",
+    "dtaidistance.*",
+    "LineageTree",
+    "LineageTree.*",
+    "monotonic_derivative",
+    "napari",
+    "napari.*",
+    "aicsimageio",
+    "aicsimageio.*",
+    "bioio",
+    "bioio.*",
+    "bioio_ome_tiff",
+]
+ignore_missing_imports = true
 # https://docs.pytest.org/en/6.2.x/customize.html
 [tool.pytest.ini_options]
 minversion = "6.0"

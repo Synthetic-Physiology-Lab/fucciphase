@@ -11,6 +11,7 @@ Welcome to fucciphase's documentation!
    :caption: Contents:
 
    usage/installation
+   usage/cli
    usage/quickstart
    examples/examples
    api

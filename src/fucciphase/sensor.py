@@ -99,7 +99,7 @@ class FUCCISensor(ABC):
     def set_accumulation_and_degradation_parameters(
         self, center: list[float], sigma: list[float]
     ) -> None:
-        """Pass list of functions for logistic functions.
+        """Pass list of parameters for logistic functions.
 
         Parameters
         ----------
@@ -440,15 +440,6 @@ class PIPFUCCISensor(FUCCISensor):
             List of channel intensities for all fluorophores
         """
         raise NotImplementedError("Percentage estimate not yet implemented!")
-        if phase not in self.phases:
-            raise ValueError(f"Phase {phase} is not defined for this sensor.")
-        # TODO fill the following structure with life!
-        if phase == "G1":
-            return self._find_g1_percentage(intensities[0])
-        if phase == "S":
-            return self._find_s_percentage(intensities[0])
-        else:
-            return self._find_g2m_percentage(intensities[1])
 
     def get_expected_intensities(
         self, percentage: float | np.ndarray

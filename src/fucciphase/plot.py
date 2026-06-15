@@ -1,5 +1,6 @@
 import logging
 from itertools import cycle
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -88,9 +89,9 @@ def plot_feature(
 
     """
     if feature_name not in df:
-        raise ValueError(f"(Feature {feature_name} not in provided DataFrame.")
+        raise ValueError(f"Feature {feature_name} not in provided DataFrame.")
     if time_column not in df:
-        raise ValueError(f"(Time {time_column} not in provided DataFrame.")
+        raise ValueError(f"Time {time_column} not in provided DataFrame.")
     tracks = df[track_id_name].unique()
     tracks = tracks[tracks >= 0]
 
@@ -167,15 +168,15 @@ def plot_feature_stacked(
         IDs not present in the dataframe.
     """
     if feature_name not in df:
-        raise ValueError(f"(Feature {feature_name} not in provided DataFrame.")
+        raise ValueError(f"Feature {feature_name} not in provided DataFrame.")
     if time_column not in df:
-        raise ValueError(f"(Time {time_column} not in provided DataFrame.")
+        raise ValueError(f"Time {time_column} not in provided DataFrame.")
     if "COLOR" not in df:
         raise ValueError("Run set_phase_colors first on DataFrame")
     tracks = df[track_id_name].unique()
     tracks = tracks[tracks >= 0]
     if selected_tracks is None:
-        selected_tracks = tracks
+        selected_tracks = tracks.tolist()
     else:
         if not set(selected_tracks).issubset(tracks):
             raise ValueError(
@@ -242,7 +243,7 @@ def plot_raw_intensities(
     color2: str = "magenta",
     time_column: str = "FRAME",
     time_label: str = "Frame #",
-    **plot_kwargs: bool,
+    **plot_kwargs: Any,
 ) -> None:
     """Plot intensities of two-channel sensor over time.
 
@@ -294,7 +295,7 @@ def plot_normalized_intensities(
     color2: str = "magenta",
     time_column: str = "FRAME",
     time_label: str = "Frame #",
-    **plot_kwargs: bool,
+    **plot_kwargs: Any,
 ) -> None:
     """Plot normalised intensities of two-channel sensor.
 
@@ -379,7 +380,7 @@ def plot_dtw_query_vs_reference(
     est_percentage_column: str = "CELL_CYCLE_PERC_DTW",
     ground_truth: pd.DataFrame | None = None,
     colors: list[str] | None = None,
-    **plot_kwargs: bool,
+    **plot_kwargs: Any,
 ) -> None:
     """
     Plot query curves and their alignment to a reference cell-cycle curve.
@@ -447,11 +448,12 @@ def plot_dtw_query_vs_reference(
             **plot_kwargs,
         )
         f_cyan = interpolate.interp1d(
-            reference_df[ref_percentage_column], reference_df[channel]
+            reference_df[ref_percentage_column].to_numpy(),
+            reference_df[channel].to_numpy(),
         )
         ax[idx].plot(
             df[est_percentage_column],
-            f_cyan(df[est_percentage_column]),
+            f_cyan(df[est_percentage_column].to_numpy()),
             lw=6,
             alpha=0.5,
             color="red",
@@ -481,7 +483,7 @@ def plot_query_vs_reference_in_time(
     colors: list[str] | None = None,
     channel_titles: list[str] | None = None,
     fig_title: str | None = None,
-    **plot_kwargs: bool,
+    **plot_kwargs: Any,
 ) -> None:
     """
     Plot query and reference curves as a function of time.
@@ -571,9 +573,10 @@ def get_percentage_color(percentage: float) -> tuple:
     """Get color corresponding to percentage."""
     cmap_name = "cool"
     cmap = colormaps.get(cmap_name)
+    assert cmap is not None, f"Colormap '{cmap_name}' not found"
     if np.isnan(percentage):
         logger.warning("NaN percentage value detected, plot will be transparent")
-        rgba_value = (0, 0, 0, 0)
+        rgba_value = (0.0, 0.0, 0.0, 0.0)
     else:
         rgba_value = cmap(percentage / 100.0)
     return (rgba_value[0], rgba_value[1], rgba_value[2], 1.0)
@@ -589,7 +592,7 @@ def plot_cell_trajectory(
     percentage_column: str | None = None,
     coloring_mode: str = "phase",
     line_cycle: list | None = None,
-    **kwargs: int,
+    **kwargs: Any,
 ) -> None:
     """
     Plot cell migration trajectories with phase- or percentage-based coloring.

@@ -1,140 +1,89 @@
-# FUCCIphase – Examples and Tutorials
+# FUCCIphase examples
 
-This folder contains practical examples showing how to use FUCCIphase for:
+This folder contains the main example and tutorial material for FUCCIphase.
 
-- processing TrackMate XML files  
-- estimating cell-cycle phases and percentages  
-- visualizing results with Napari  
-- reproducing analysis pipelines using Jupyter notebooks  
+## Suggested starting points
 
-The folder is organized into two main sections:
-````
-examples/
-│
-├── README.md
-│
-├── example_data/
-│   ├── example_data_tempophase.csv
-│   ├── fuccisa_hacat.json
-│   ├── fuccisa_hela_molcel_2017.json
-│   ├── fuccisa_tempophase.json
-│   └── hacat_fucciphase_reference.csv
-│
-├── notebooks/
-│   ├── color-tails-by-percentage.ipynb
-│   ├── example_estimated.ipynb
-│   ├── example_reconstruction.ipynb
-│   ├── example_simulated.ipynb
-│   ├── explanation-dtw-alignment.ipynb
-│   ├── extract_calibration_data.ipynb
-│   ├── getting_started.ipynb
-│   ├── movie_tails_percentages.mp4
-│   ├── percentage_reconstruction.ipynb
-│   ├── phaselocking-workflow-lazy.ipynb
-│   ├── sensor_calibration.ipynb
-│   └── README.md
-│
-└── reproducibility/
-    ├── README.md
-    │
-    ├── inputs/
-    │   ├── downscaled_hacat.ome.tif
-    │   ├── hacat_fucciphase_reference.csv
-    │   └── merged_linked.ome.xml
-    │
-    └── outputs/
-        ├── thumbnail.png
-        └── video_downscaled_hacat.mp4
-````
----
-# 1. Quickstart: run FUCCIphase on your data
+1. `cli_quickstart/`
+   Small reviewer-facing CLI example with CSV, XLSX, reference data, sensor
+   parameters, and an expected output table.
+2. `reproducibility/`
+   Larger TrackMate XML workflow with Napari visualization and preview media.
+3. `notebooks/`
+   Jupyter notebooks for calibration, reconstruction, simulation, and figure
+   generation.
+4. `example_data/`
+   Reference curves and saved sensor JSON files.
 
-If you already have:
+## Quick CLI example
 
-   - a TrackMate XML file  
-   - a FUCCI reference CSV  
-   - your imaging timestep
-      
-you can run FUCCIphase from the command line:
+From the repository root:
 
 ```bash
-fucciphase path/to/your_tracks.xml -ref path/to/your_reference.csv -dt 0.25 -m MEAN_INTENSITY_CH1 -c MEAN_INTENSITY_CH2 --generate_unique_tracks true
-````
-
-This produces a processed CSV:
+fucciphase examples/cli_quickstart/tiny_tracks.csv \
+    -ref examples/cli_quickstart/tiny_reference.csv \
+    --sensor_file examples/cli_quickstart/tiny_sensor.json \
+    -dt 0.48 \
+    -m MEAN_INTENSITY_CH4 \
+    -c MEAN_INTENSITY_CH3
 ```
-your_tracks.xml_processed.csv
-```
-containing:
-* normalized intensities
-* discrete phases
-* DTW-based cell-cycle percentages
-* per-track metadata
 
-For more details:
+Expected output:
+
+```text
+outputs/tiny_tracks_processed.csv
+```
+
+Reference table for comparison:
+
+```text
+examples/cli_quickstart/tiny_tracks_expected_output.csv
+```
+
+The same example is also provided as:
+
+```text
+examples/cli_quickstart/tiny_tracks.xlsx
+```
+
+## Full TrackMate reproducibility workflow
+
+The TrackMate XML example in `reproducibility/` uses:
+
+- `inputs/merged_linked.ome.xml`
+- `inputs/hacat_fucciphase_reference.csv`
+- `inputs/downscaled_hacat.ome.tif`
+
+Run it from `examples/reproducibility/`:
+
 ```bash
-fucciphase -h
+fucciphase inputs/merged_linked.ome.xml \
+    -ref inputs/hacat_fucciphase_reference.csv \
+    -dt 0.25 \
+    -m MEAN_INTENSITY_CH1 \
+    -c MEAN_INTENSITY_CH2 \
+    --generate_unique_tracks
 ```
 
----
+This generates:
 
-# 2. Visualize your results in Napari
+```text
+outputs/merged_linked.ome_processed.csv
+outputs/merged_linked.ome_processed.xml
+```
 
-You can launch the Napari viewer with:
+Preview assets are committed in the repository. The processed CSV/XML files are
+generated when you run the workflow.
+
+## Napari visualization
 
 ```bash
-fucciphase-napari your_tracks_processed.csv your_video.ome.tif -m 0 -c 1 -s 2 --pixel_size <pixel size>
+fucciphase-napari outputs/merged_linked.ome_processed.csv \
+    inputs/downscaled_hacat.ome.tif \
+    -m 0 -c 1 -s 2 --pixel_size 0.544
 ```
 
-This opens:
+## Support
 
-* raw channels
-* segmentation masks
-* track overlays
-* estimated percentages as floating labels
-
-Useful for:
-
-* debugging
-* figure creation
-* validating results visually
-
----
-
-# 3. Example Jupyter notebooks
-
-The `notebooks/` folder contains lightweight notebooks demonstrating:
-
-| Notebook                        | Description                                     |
-| ------------------------------- | ----------------------------------------------- |
-| getting_started.ipynb           | Minimal example for new users                   |
-| example_simulated.ipynb         | Simulated two-channel FUCCI traces              |
-| example_estimated.ipynb         | Percentage estimation walkthrough               |
-| example_reconstruction.ipynb    | Reconstruct intensity profiles from percentages |
-| explanation-dtw-alignment.ipynb | How DTW subsequence alignment works             |
-| color-tails-by-percentage.ipynb | Example trajectory coloring                     |
-| sensor_calibration.ipynb        | Building reference traces                       |
-
-These notebooks are intended as **mini-tutorials** for common tasks.
-
----
-
-# 4. Full reproducibility tutorial
-
-A complete, end-to-end workflow with real data is located in:
-
-[reproducibility folder](./reproducibility/)
-
-It includes:
-
-* **inputs**: TrackMate XML, reference CSV, example video
-* **outputs**: processed CSV files, thumbnails, exported XML
-
-This is the recommended starting point for reproducing the figures shown in the repository.
-
----
-# 5. Troubleshooting & Support
-
-If you find bugs, unexpected behavior, or want new features, open an issue:
-
-🔗 [https://github.com/Synthetic-Physiology-Lab/fucciphase/issues](https://github.com/Synthetic-Physiology-Lab/fucciphase/issues)
+Report bugs or feature requests at:
+https://github.com/Synthetic-Physiology-Lab/fucciphase/issues

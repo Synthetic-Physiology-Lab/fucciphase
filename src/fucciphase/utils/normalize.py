@@ -211,7 +211,7 @@ def smooth_track(
         Dataframe
     track_ID: int
         Index of track
-    channel : st
+    channel : str
         Name of the channel to smooth
     track_id_name: str
         Name of column with track IDs
@@ -228,7 +228,7 @@ def smooth_track(
 
     # compute the moving average
     ma = signal.savgol_filter(
-        track[channel],
+        track[channel].to_numpy(),
         window_length=moving_average_window,
         polyorder=3,
         mode="nearest",
