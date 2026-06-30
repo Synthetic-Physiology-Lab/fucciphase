@@ -6,6 +6,7 @@
 [![CI](https://github.com/Synthetic-Physiology-Lab/fucciphase/actions/workflows/ci.yml/badge.svg)](https://github.com/Synthetic-Physiology-Lab/fucciphase/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/Synthetic-Physiology-Lab/fucciphase/branch/main/graph/badge.svg)](https://codecov.io/gh/Synthetic-Physiology-Lab/fucciphase)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Synthetic-Physiology-Lab/fucciphase/main.svg)](https://results.pre-commit.ci/latest/github/Synthetic-Physiology-Lab/fucciphase/main)
+[![DOI](https://zenodo.org/badge/679711261.svg)](https://doi.org/10.5281/zenodo.21072936)
 
 FUCCIphase is open-source software for estimating cell-cycle phase and
 cell-cycle percentage from FUCCI fluorescence intensities.
@@ -295,7 +296,13 @@ pre-commit install
 
 ## Cite us
 
-Di Sante, M., Pezzotti, M., Zimmermann, J., Enrico, A., Deschamps, J., Balmas, E.,
+If you use **fucciphase**, please cite both the software and the paper as below:
+
+**Software:** Di Sante, M., Pezzotti, M., Zimmermann, J., Enrico, A., Deschamps, J., Balmas, E.,
+Becca, S., Torchia E., Ballio G., Solito, S., Reali, A., Bertero, A., Jug, F. and Pasqualini, F.S., 2026.
+fucciphase. Zenodo. https://doi.org/10.5281/zenodo.21072936
+
+**Paper:** Di Sante, M., Pezzotti, M., Zimmermann, J., Enrico, A., Deschamps, J., Balmas, E.,
 Becca, S., Solito, S., Reali, A., Bertero, A., Jug, F. and Pasqualini, F.S., 2025.
 CALIPERS: Cell cycle-aware live imaging for phenotyping experiments and regeneration studies.
 bioRxiv, https://doi.org/10.1101/2024.12.19.629259
