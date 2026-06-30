@@ -1,0 +1,42 @@
+{
+  "title": "fucciphase: Cell cycle analysis from FUCCI live imaging",
+  "description": "Python package for cell cycle analysis from FUCCI live-imaging data. Software accompanying the CALIPERS study.",
+  "upload_type": "software",
+  "license": "BSD-3-Clause",
+  "access_right": "open",
+  "keywords": [
+    "cell cycle",
+    "FUCCI",
+    "DeepFUCCI",
+    "live imaging",
+    "bioimage analysis"
+  ],
+  "creators": [
+    { "name": "Di Sante, M." },
+    { "name": "Pezzotti, M." },
+    { "name": "Zimmermann, J." },
+    { "name": "Enrico, A." },
+    { "name": "Deschamps, Joran", "affiliation": "Human Technopole" },
+    { "name": "Balmas, E." },
+    { "name": "Becca, S." },
+    { "name": "Torchia, E." },
+    { "name": "Ballio, G." },
+    { "name": "Solito, S." },
+    { "name": "Reali, A." },
+    { "name": "Bertero, A." },
+    { "name": "Jug, F." },
+    { "name": "Pasqualini, F. S." }
+  ],
+  "related_identifiers": [
+    {
+      "relation": "isSupplementTo",
+      "scheme": "doi",
+      "identifier": "10.1101/2024.12.19.629259"
+    },
+    {
+      "relation": "isSupplementedBy",
+      "scheme": "url",
+      "identifier": "https://github.com/Synthetic-Physiology-Lab/fucciphase"
+    }
+  ]
+}
