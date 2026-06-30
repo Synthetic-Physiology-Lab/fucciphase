@@ -1,0 +1,52 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below, together with the associated paper."
+title: "fucciphase"
+abstract: "Cell cycle analysis from FUCCI live-imaging data."
+type: software
+version: 0.1.0
+date-released: "2026-06-30"
+license: BSD-3-Clause
+repository-code: "https://github.com/Synthetic-Physiology-Lab/fucciphase"
+url: "https://github.com/Synthetic-Physiology-Lab/fucciphase"
+keywords:
+  - cell cycle
+  - FUCCI
+  - DeepFUCCI
+  - live imaging
+  - bioimage analysis
+authors:
+  - { family-names: "Di Sante", given-names: "Moises" }
+  - { family-names: "Pezzotti", given-names: "Melissa" }
+  - { family-names: "Zimmermann", given-names: "Julius" }
+  - { family-names: "Enrico", given-names: "Alessandro" }
+  - { family-names: "Deschamps", given-names: "Joran", email: "joran.deschamps@fht.org" }
+  - { family-names: "Balmas", given-names: "Elisa" }
+  - { family-names: "Becca", given-names: "Silvia" }
+  - { family-names: "Torchia", given-names: "Eloisa" }
+  - { family-names: "Ballio", given-names: "Giulia" }
+  - { family-names: "Solito", given-names: "Samantha" }
+  - { family-names: "Reali", given-names: "Alessandro" }
+  - { family-names: "Bertero", given-names: "Alessandro" }
+  - { family-names: "Jug", given-names: "Florian" }
+  - { family-names: "Pasqualini", given-names: "Francesco S." }
+preferred-citation:
+  type: article
+  title: "CALIPERS: Cell cycle-aware live imaging for phenotyping experiments and regeneration studies"
+  year: 2025
+  journal: "bioRxiv"
+  doi: "10.1101/2024.12.19.629259"
+  authors:
+    - { family-names: "Di Sante", given-names: "M." }
+    - { family-names: "Pezzotti", given-names: "M." }
+    - { family-names: "Zimmermann", given-names: "J." }
+    - { family-names: "Enrico", given-names: "A." }
+    - { family-names: "Deschamps", given-names: "J." }
+    - { family-names: "Balmas", given-names: "E." }
+    - { family-names: "Becca", given-names: "S." }
+    - { family-names: "Torchia", given-names: "E." }
+    - { family-names: "Ballio", given-names: "G." }
+    - { family-names: "Solito", given-names: "S." }
+    - { family-names: "Reali", given-names: "A." }
+    - { family-names: "Bertero", given-names: "A." }
+    - { family-names: "Jug", given-names: "F." }
+    - { family-names: "Pasqualini", given-names: "F. S." }
