@@ -54,13 +54,11 @@ class FUCCISensor(ABC):
     @abstractmethod
     def fluorophores(self) -> int:
         """Number of fluorophores."""
-        pass
 
     @property
     @abstractmethod
     def phases(self) -> list[str]:
         """Function to hard-code the supported phases of a sensor."""
-        pass
 
     @property
     def phase_percentages(self) -> list[float]:
@@ -87,14 +85,12 @@ class FUCCISensor(ABC):
         The discrete phase refers to, for example, G1 or S phase.
         The phase_markers must match the number of used fluorophores.
         """
-        pass
 
     @abstractmethod
     def get_estimated_cycle_percentage(
         self, phase: str, intensities: list[float]
     ) -> float:
         """Estimate percentage based on sensor intensities."""
-        pass
 
     def set_accumulation_and_degradation_parameters(
         self, center: list[float], sigma: list[float]
@@ -120,7 +116,6 @@ class FUCCISensor(ABC):
         self, percentage: float | np.ndarray
     ) -> list[float | np.ndarray]:
         """Return value of calibrated curves."""
-        pass
 
 
 class FUCCISASensor(FUCCISensor):
@@ -153,9 +148,7 @@ class FUCCISASensor(FUCCISensor):
         g1_on = phase_markers[0]
         s_g2_on = phase_markers[1]
         # low intensity at the very beginning of cycle
-        if not g1_on and not s_g2_on:
-            return "G1"
-        elif g1_on and not s_g2_on:
+        if (not g1_on and not s_g2_on) or (g1_on and not s_g2_on):
             return "G1"
         elif not g1_on and s_g2_on:
             return "S/G2/M"
