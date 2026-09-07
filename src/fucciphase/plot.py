@@ -207,10 +207,8 @@ def plot_feature_stacked(
             axs[i].set_ylim(ylim)
         if yticks is not None:
             axs[i].set_yticks(yticks)
-        if time.max() > max_frame:
-            max_frame = time.max()
-        if time.min() < min_frame:
-            min_frame = time.min()
+        max_frame = max(max_frame, time.max())
+        min_frame = min(min_frame, time.min())
 
     if interpolate_time:
         interpolated_time = np.linspace(min_frame, max_frame, num=interpolation_steps)

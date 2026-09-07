@@ -8,7 +8,6 @@ try:
     import napari
 except ImportError:
     HAS_NAPARI = False
-    pass
 
 
 def add_trackmate_data_to_viewer(
@@ -86,7 +85,6 @@ def add_trackmate_data_to_viewer(
     )
     viewer.scale_bar.visible = True
     viewer.scale_bar.unit = "um"
-    return
 
 
 def pandas_df_to_napari_tracks(
