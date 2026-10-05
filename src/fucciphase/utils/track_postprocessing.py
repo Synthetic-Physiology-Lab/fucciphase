@@ -310,7 +310,6 @@ def plot_trackscheme(
 
     cbar = plt.colorbar(ticks=[0, 0.5, 1], location="top")
     cbar.ax.set_xticklabels(["0", "50", "100"])
-    return
 
 
 def split_trackmate_tracks(
@@ -356,7 +355,6 @@ def split_trackmate_tracks(
 
     df.loc[:, "UNIQUE_TRACK_ID"] = df[track_id_name].copy()
     df.loc[new_track_ids.index, "UNIQUE_TRACK_ID"] = new_track_ids
-    return
 
 
 # flake8: noqa: C901
